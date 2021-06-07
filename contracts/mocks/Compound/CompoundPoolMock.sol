@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.4;
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./CTokenMock.sol";
-import "./../BackingTokenMock.sol";
 
 contract CompoundPoolMock {
-    BackingTokenMock private backingToken;
+    ERC20 private backingToken;
     CTokenMock private yieldBearingToken;
 
-    constructor(BackingTokenMock _backingToken, CTokenMock _yieldBearingToken) {
+    constructor(ERC20 _backingToken, CTokenMock _yieldBearingToken) {
         backingToken = _backingToken;
         yieldBearingToken = _yieldBearingToken;
     }
