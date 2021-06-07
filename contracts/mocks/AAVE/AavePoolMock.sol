@@ -1,30 +1,35 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.4;
-import "./../YBTMock.sol";
+import "./ATokenMock.sol";
 import "./../BackingTokenMock.sol";
 
 contract AavePoolMock {
     BackingTokenMock private backingToken;
-    YBTMock private yieldBearingToken;
+    ATokenMock private yieldBearingToken;
 
-    constructor(BackingTokenMock _backingToken, YBTMock _yieldBearingToken) {
+    constructor(BackingTokenMock _backingToken, ATokenMock _yieldBearingToken) {
         backingToken = _backingToken;
         yieldBearingToken = _yieldBearingToken;
     }
 
+    /// Deposit an X amount of backing tokens into this pool
+    /// and give back ATokens in 1:1 ratio
     function deposit(uint256 amount) public {
         require(
             backingToken.balanceOf(msg.sender) >= amount,
-            "sender is too poor"
+            "deposit: sender is too poor"
         );
-        // transfer tokens from msg.sender to this contract
         backingToken.approve(address(this), amount);
         backingToken.transfer(address(this), amount);
-        // and give back YBT to msg.sender in 1:1 ratio
         yieldBearingToken.mint(msg.sender, amount);
     }
 
-    function withdraw() public {}
+    /// Withdraw an X amount of backing tokens from the pool
+    /// and burn ATokens in 1:1 ratio
+    function withdraw(uint256 amount) public {
+        yieldBearingToken.burn(amount);
+        backingToken.transferFrom(address(this), msg.sender, amount);
+    }
 
     function borrow() public {}
 
