@@ -27,7 +27,7 @@ contract AavePoolMock {
             "deposit: sender is too poor"
         );
         backingToken.approve(address(this), amount);
-        backingToken.transfer(address(this), amount);
+        backingToken.transferFrom(msg.sender, address(this), amount);
         yieldBearingToken.mint(msg.sender, amount);
     }
 
@@ -67,5 +67,10 @@ contract AavePoolMock {
     /// @return Total debt of an user
     function getDebt(address user) public view returns (uint256) {
         return debtToken.balanceOf(user);
+    }
+
+    /// @return Total deposit of an user
+    function getDeposit(address user) public view returns (uint256) {
+        return yieldBearingToken.balanceOf(user);
     }
 }
