@@ -12,8 +12,9 @@ contract ATokenMock is ERC20 {
         _mint(to, amount);
     }
 
+    /// @param from Source address to burn tokens from
     /// @param amount Number of tokens to burn on msg.sender
-    function burn(uint256 amount) public {
-        _burn(msg.sender, amount);
+    function burn(address from, uint256 amount) public {
+        _burn(from, amount);
     }
 }
