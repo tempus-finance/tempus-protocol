@@ -11,11 +11,11 @@ describe("AAVE Mock", async () => {
   let owner, addr1, addr2;
 
   beforeEach(async () => {
-    let backingToken      = await deploy("ERC20", ['DAI Stablecoin', 'DAI']);
-    let yieldBearingToken = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
-    let debtToken         = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
+    // let backingToken      = await deploy("ERC20", ['DAI Stablecoin', 'DAI']);
+    // let yieldBearingToken = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
+    // let debtToken         = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
     [owner, addr1, addr2] = await ethers.getSigners();
-    pool = await deploy('AavePoolMock', [owner.address, backingToken, yieldBearingToken, debtToken]);
+    // pool = await deploy('AavePoolMock', [backingToken, yieldBearingToken, debtToken]);
   });
 
   describe("Deposit", async () =>
