@@ -1,28 +1,33 @@
 import { ethers } from "hardhat";
 import { Signer } from "ethers";
 
-async function deploy(name, args) {
-  let factory = await ethers.getContractFactory(name);
-  return await factory.deploy(...args);
-}
-
 describe("AAVE Mock", async () => {
   let pool;
   let owner, addr1, addr2;
 
   beforeEach(async () => {
-    // let backingToken      = await deploy("ERC20", ['DAI Stablecoin', 'DAI']);
-    // let yieldBearingToken = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
-    // let debtToken         = await deploy("ATokenMock", ['AAVE AToken', 'aDAI']);
     [owner, addr1, addr2] = await ethers.getSigners();
-    // pool = await deploy('AavePoolMock', [backingToken, yieldBearingToken, debtToken]);
+
+    let BackingToken = await ethers.getContractFactory("ERC20FixedSupply");
+    let backingToken = await BackingToken.deploy("DAI Stablecoin", "DAI", 1000000);
+
+    let ATokenMock = await ethers.getContractFactory("ATokenMock");
+    let yieldBearingToken = await ATokenMock.deploy('AAVE AToken', 'aDAI');
+    let debtToken         = await ATokenMock.deploy('AAVE AToken', 'aDAI');
+
+    let AavePoolMock = ethers.getContractFactory("AavePoolMock");
+    pool = await (await AavePoolMock).deploy(
+      backingToken.address, 
+      yieldBearingToken.address, 
+      debtToken.address
+    );
   });
 
   describe("Deposit", async () =>
   {
     it("Should deposit the correct amount", async () =>
     {
-      //pool.connect(addr1).deposit(50);
+      pool.connect(addr1).deposit(50);
     });
   });
 });
