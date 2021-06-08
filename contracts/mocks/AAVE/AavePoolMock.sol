@@ -2,9 +2,15 @@
 pragma solidity 0.8.4;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./ATokenMock.sol";
+import "./MathUtils.sol";
+import "./WadRayMath.sol";
+import "./Errors.sol";
+import "./AaveUtils.sol";
 
 // TODO: emit events matching with AAVE, these will be useful for frontend development
 contract AavePoolMock {
+    using WadRayMath for uint256;
+
     ERC20 private backingToken;
     ATokenMock private yieldBearingToken;
     // TODO: This is not complete
@@ -18,6 +24,7 @@ contract AavePoolMock {
         backingToken = _backingToken;
         yieldBearingToken = _yieldBearingToken;
         debtToken = _debtToken;
+        updateState();
     }
 
     /// Deposit an X amount of backing tokens into this pool as collateral
@@ -31,6 +38,7 @@ contract AavePoolMock {
 
         backingToken.transferFrom(msg.sender, address(this), amount);
         yieldBearingToken.mint(msg.sender, amount);
+        updateState();
     }
 
     /// Withdraw an X amount of backing tokens from the pool
@@ -43,6 +51,7 @@ contract AavePoolMock {
                 : amount;
         yieldBearingToken.burn(msg.sender, amountToWithdraw);
         backingToken.transferFrom(address(this), msg.sender, amountToWithdraw);
+        updateState();
     }
 
     /// Borrows an X amount of backing tokens from the pool
@@ -53,6 +62,7 @@ contract AavePoolMock {
         backingToken.transferFrom(address(this), msg.sender, amount);
         debtToken.mint(msg.sender, amount);
         require(getDebt(msg.sender) >= amount, "debt must be > amount");
+        updateState();
     }
 
     /// Repay a part or entirety of borrowed backing tokens + interest
@@ -64,6 +74,7 @@ contract AavePoolMock {
         // TODO: This is not complete
         debtToken.burn(msg.sender, deptToRepay);
         yieldBearingToken.transferFrom(msg.sender, address(this), deptToRepay);
+        updateState();
     }
 
     /// @return Total debt of an user
@@ -76,12 +87,102 @@ contract AavePoolMock {
         return yieldBearingToken.balanceOf(user);
     }
 
+    uint40 private lastUpdateTimestamp;
+    uint256 private currentLiquidityRate;
+    uint256 private liquidityIndex;
+    uint256 private variableBorrowIndex;
+    uint256 private currentVariableBorrowRate;
+
     function getReserveNormalizedIncome(address _underlyingAsset)
         public
         view
         returns (uint256)
     {
-        // TODO: not implemented
-        return 0;
+        return
+            AaveUtils.getNormalizedIncome(
+                lastUpdateTimestamp,
+                liquidityIndex,
+                currentLiquidityRate
+            );
+    }
+
+    /**
+     * @dev Updates the liquidity cumulative index and the variable borrow index.
+     **/
+    function updateState() internal {
+        uint256 scaledVariableDebt = 0;
+        // TODO:
+        //IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
+        uint256 previousVariableBorrowIndex = variableBorrowIndex;
+        uint256 previousLiquidityIndex = liquidityIndex;
+        uint40 lastUpdatedTimestamp = lastUpdateTimestamp;
+
+        _updateIndexes(
+            scaledVariableDebt,
+            previousLiquidityIndex,
+            previousVariableBorrowIndex,
+            lastUpdatedTimestamp
+        );
+
+        // TODO:
+        // _mintToTreasury(
+        //     reserve,
+        //     scaledVariableDebt,
+        //     previousVariableBorrowIndex,
+        //     newLiquidityIndex,
+        //     newVariableBorrowIndex,
+        //     lastUpdatedTimestamp
+        // );
+    }
+
+    /**
+     * @dev Updates the reserve indexes and the timestamp of the update
+     * @param _scaledVariableDebt The scaled variable debt
+     * @param _liquidityIndex The last stored liquidity index
+     * @param _variableBorrowIndex The last stored variable borrow index
+     **/
+    function _updateIndexes(
+        uint256 _scaledVariableDebt,
+        uint256 _liquidityIndex,
+        uint256 _variableBorrowIndex,
+        uint40 timestamp
+    ) internal {
+        uint256 newLiquidityIndex = _liquidityIndex;
+        uint256 newVariableBorrowIndex = _variableBorrowIndex;
+
+        //only cumulating if there is any income being produced
+        if (currentLiquidityRate > 0) {
+            uint256 cumulatedLiquidityInterest =
+                MathUtils.calculateLinearInterest(
+                    currentLiquidityRate,
+                    timestamp
+                );
+            newLiquidityIndex = cumulatedLiquidityInterest.rayMul(
+                _liquidityIndex
+            );
+            require(
+                newLiquidityIndex <= type(uint128).max,
+                Errors.RL_LIQUIDITY_INDEX_OVERFLOW
+            );
+
+            liquidityIndex = uint128(newLiquidityIndex);
+
+            //as the liquidity rate might come only from stable rate loans, we need to ensure
+            //that there is actual variable debt before accumulating
+            if (_scaledVariableDebt != 0) {
+                uint256 cumulatedVariableBorrowInterest =
+                    MathUtils.calculateCompoundedInterest(
+                        currentVariableBorrowRate,
+                        timestamp
+                    );
+                newVariableBorrowIndex = cumulatedVariableBorrowInterest.rayMul(
+                    _variableBorrowIndex
+                );
+                variableBorrowIndex = uint128(newVariableBorrowIndex);
+            }
+        }
+
+        //solium-disable-next-line
+        lastUpdateTimestamp = uint40(block.timestamp);
     }
 }
