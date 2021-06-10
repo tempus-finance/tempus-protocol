@@ -8,15 +8,14 @@ import "./Errors.sol";
 import "./DataTypes.sol";
 import "./ReserveLogic.sol";
 
-// TODO: emit events matching with AAVE, these will be useful for frontend development
 contract AavePoolMock {
     using WadRayMath for uint256;
     using ReserveLogic for DataTypes.ReserveData;
 
-    // Imitating AAVE's multi-reserve here, but we actually
-    // only support a Single reserve in this Mock
-    mapping(address => DataTypes.ReserveData) private reserves;
+    // AAVE supports multi-reserve lending, but in this Mock we only support 1 reserve
+    DataTypes.ReserveData private reserve;
     address private underlyingAsset; // ERC20
+    address private treasury;
 
     /// @dev Initialize AAVE Mock with a single supported reserve.
     /// We only support 1 reserve right now.
@@ -31,7 +30,7 @@ contract AavePoolMock {
         address variableDebtAddress
     ) {
         underlyingAsset = reserveTokenAddress;
-        DataTypes.ReserveData storage reserve = reserves[reserveTokenAddress];
+        treasury = address(this);
         reserve.init(
             aTokenAddress,
             stableDebtAddress,
@@ -113,21 +112,15 @@ contract AavePoolMock {
         uint16 referralCode
     ) public {
         require(underlyingAsset == asset, "invalid reserve asset");
-        DataTypes.ReserveData storage reserve = reserves[asset];
 
         // In original AAVE implementation, state update is done before deposit
-        address aToken = reserve.aTokenAddress;
         reserve.updateState();
-        reserve.updateInterestRates(asset, aToken, amount, 0);
+        reserve.updateInterestRates(asset, amount, 0);
 
-        require(
-            ERC20(underlyingAsset).transferFrom(
-                msg.sender,
-                address(this),
-                amount
-            )
-        );
-        ATokenMock(aToken).mint(onBehalfOf, amount);
+        ERC20 backing = getAssetToken();
+        require(backing.transferFrom(msg.sender, treasury, amount));
+        getYieldToken().mint(onBehalfOf, amount);
+
         // NOTE: ignored isFirstDeposit and event ReserveUsedAsCollateralEnabled
         emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
     }
@@ -147,22 +140,19 @@ contract AavePoolMock {
         address to
     ) public returns (uint256) {
         require(underlyingAsset == asset, "invalid reserve asset");
-        DataTypes.ReserveData storage reserve = reserves[asset];
-        address aToken = reserve.aTokenAddress;
-        uint256 userBalance = ERC20(aToken).balanceOf(msg.sender);
+        ATokenMock yieldToken = getYieldToken();
+        uint256 userBalance = yieldToken.balanceOf(msg.sender);
         uint256 amountToWithdraw =
             (amount == type(uint256).max) ? userBalance : amount;
 
         reserve.updateState();
-        reserve.updateInterestRates(asset, aToken, 0, amountToWithdraw);
+        reserve.updateInterestRates(asset, 0, amountToWithdraw);
 
         // Burns aTokens from `user` and sends the equivalent amount of underlying to
-        ATokenMock(aToken).burn(msg.sender, amountToWithdraw);
-        ERC20(underlyingAsset).transferFrom(
-            address(this),
-            to,
-            amountToWithdraw
-        );
+        yieldToken.burn(msg.sender, amountToWithdraw);
+
+        ERC20 backing = getAssetToken();
+        require(backing.transferFrom(treasury, to, amountToWithdraw));
 
         emit Withdraw(asset, msg.sender, to, amountToWithdraw);
         return amountToWithdraw;
@@ -189,45 +179,24 @@ contract AavePoolMock {
         address onBehalfOf
     ) public {
         require(underlyingAsset == asset, "invalid reserve asset");
-        DataTypes.ReserveData storage reserve = reserves[asset];
         // TODO: validateBorrow() -- make sure the user has enough collateral
         reserve.updateState();
 
-        uint256 currentStableRate = 0;
-        bool stable =
-            DataTypes.InterestRateMode(interestRateMode) ==
-                DataTypes.InterestRateMode.STABLE;
-        if (stable) {
-            currentStableRate = reserve.currentStableBorrowRate;
-            ATokenMock(reserve.stableDebtTokenAddress).mint(
-                onBehalfOf,
-                amount /*,
-                currentStableRate*/
-            );
-        } else {
-            ATokenMock(reserve.variableDebtTokenAddress).mint(
-                onBehalfOf,
-                amount /*,
-                reserve.variableBorrowIndex*/
-            );
-        }
+        ATokenMock debtToken = getDebtToken(interestRateMode);
+        debtToken.mint(onBehalfOf, amount);
 
-        reserve.updateInterestRates(asset, reserve.aTokenAddress, 0, amount);
-        require(
-            ERC20(underlyingAsset).transferFrom(
-                address(this),
-                msg.sender,
-                amount
-            )
-        );
+        reserve.updateInterestRates(asset, 0, amount);
+        ERC20 backing = getAssetToken();
+        require(backing.transferFrom(treasury, msg.sender, amount));
 
+        uint256 currentRate = 0;
         emit Borrow(
             asset,
             msg.sender,
             onBehalfOf,
             amount,
             interestRateMode,
-            stable ? currentStableRate : reserve.currentVariableBorrowRate,
+            currentRate,
             referralCode
         );
     }
@@ -249,47 +218,22 @@ contract AavePoolMock {
         address onBehalfOf
     ) public returns (uint256) {
         require(underlyingAsset == asset, "invalid reserve asset");
-        DataTypes.ReserveData storage reserve = reserves[asset];
-        DataTypes.InterestRateMode interestRateMode =
-            DataTypes.InterestRateMode(rateMode);
-
-        bool stable = interestRateMode == DataTypes.InterestRateMode.STABLE;
-        uint256 stableDebt =
-            IERC20(reserve.stableDebtTokenAddress).balanceOf(onBehalfOf);
-        uint256 variableDebt =
-            IERC20(reserve.variableDebtTokenAddress).balanceOf(onBehalfOf);
 
         // TODO: validateRepay
 
-        uint256 paybackAmount = stable ? stableDebt : variableDebt;
+        ATokenMock debtToken = getDebtToken(rateMode);
+        uint256 paybackAmount = debtToken.balanceOf(onBehalfOf);
         if (amount < paybackAmount) {
             paybackAmount = amount;
         }
 
         reserve.updateState();
 
-        if (interestRateMode == DataTypes.InterestRateMode.STABLE) {
-            ATokenMock(reserve.stableDebtTokenAddress).burn(
-                onBehalfOf,
-                paybackAmount
-            );
-        } else {
-            ATokenMock(reserve.variableDebtTokenAddress).burn(
-                onBehalfOf,
-                paybackAmount
-            );
-        }
+        debtToken.burn(onBehalfOf, paybackAmount);
+        reserve.updateInterestRates(asset, paybackAmount, 0);
 
-        address aToken = reserve.aTokenAddress;
-        reserve.updateInterestRates(asset, aToken, paybackAmount, 0);
-
-        require(
-            ERC20(underlyingAsset).transferFrom(
-                address(this),
-                msg.sender,
-                amount
-            )
-        );
+        ERC20 assetToken = ERC20(underlyingAsset);
+        require(assetToken.transferFrom(address(this), msg.sender, amount));
         emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 
         return paybackAmount;
@@ -304,27 +248,44 @@ contract AavePoolMock {
         returns (uint256)
     {
         require(underlyingAsset == asset, "invalid reserve asset");
-        DataTypes.ReserveData storage reserve = reserves[asset];
         return reserve.getNormalizedIncome();
+    }
+
+    function getAssetToken() private view returns (ERC20) {
+        return ERC20(underlyingAsset);
+    }
+
+    function getYieldToken() private view returns (ATokenMock) {
+        return ATokenMock(reserve.aTokenAddress);
+    }
+
+    enum InterestRateMode {NONE, STABLE, VARIABLE}
+
+    function isStable(uint256 rateMode) private pure returns (bool) {
+        return InterestRateMode(rateMode) == InterestRateMode.STABLE;
+    }
+
+    function getDebtToken(uint256 rateMode) private view returns (ATokenMock) {
+        if (isStable(rateMode)) {
+            return ATokenMock(reserve.stableDebtTokenAddress);
+        }
+        return ATokenMock(reserve.variableDebtTokenAddress);
     }
 
     /// @dev Specific to MOCK
     /// @return Total STABLE debt of an user
     function getStableDebt(address user) public view returns (uint256) {
-        DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
-        return IERC20(reserve.stableDebtTokenAddress).balanceOf(user);
+        return ATokenMock(reserve.stableDebtTokenAddress).balanceOf(user);
     }
 
     /// @dev Specific to MOCK
     /// @return Total VARIABLE debt of an user
     function getVariableDebt(address user) public view returns (uint256) {
-        DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
-        return IERC20(reserve.variableDebtTokenAddress).balanceOf(user);
+        return ATokenMock(reserve.variableDebtTokenAddress).balanceOf(user);
     }
 
     /// @return Total deposit of an user
     function getDeposit(address user) public view returns (uint256) {
-        DataTypes.ReserveData storage reserve = reserves[underlyingAsset];
-        return IERC20(reserve.aTokenAddress).balanceOf(user);
+        return getYieldToken().balanceOf(user);
     }
 }

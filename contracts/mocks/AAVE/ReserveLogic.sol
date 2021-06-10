@@ -207,7 +207,6 @@ library ReserveLogic {
     function updateInterestRates(
         DataTypes.ReserveData storage reserve,
         address reserveAddress,
-        address aTokenAddress,
         uint256 liquidityAdded,
         uint256 liquidityTaken
     ) internal {
