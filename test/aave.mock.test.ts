@@ -6,9 +6,11 @@ describe("AAVE Mock", async () => {
   let pool;
   let owner, user1, user2;
   let asset, aToken, stableDebt, variableDebt;
+  const _1ray = "1000000000000000000000000000";
 
   beforeEach(async () => {
     [owner, user1, user2] = await ethers.getSigners();
+
 
     let BackingToken = await ethers.getContractFactory("ERC20FixedSupply");
     let ATokenMock = await ethers.getContractFactory("ATokenMock");
@@ -37,8 +39,7 @@ describe("AAVE Mock", async () => {
       
       expect(await pool.getDeposit(user1.address)).to.equal(1);
       expect(await asset.balanceOf(user1.address)).to.equal(9);
-      expect(await pool.getReserveNormalizedIncome(asset.address))
-        .to.equal("1000000000000000000000000000");
+      expect(await pool.getReserveNormalizedIncome(asset.address)).to.equal(_1ray);
       console.log("Pool.OngoingInterest:", await pool.getReserveNormalizedIncome(asset.address));
     });
   });

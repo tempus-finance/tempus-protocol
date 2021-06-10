@@ -25,10 +25,7 @@ library PercentageMath {
             return 0;
         }
 
-        require(
-            value <= (type(uint256).max - HALF_PERCENT) / percentage,
-            Errors.MATH_MULTIPLICATION_OVERFLOW
-        );
+        require(value <= (type(uint256).max - HALF_PERCENT) / percentage, Errors.MATH_MULTIPLICATION_OVERFLOW);
 
         return (value * percentage + HALF_PERCENT) / PERCENTAGE_FACTOR;
     }
@@ -43,10 +40,7 @@ library PercentageMath {
         require(percentage != 0, Errors.MATH_DIVISION_BY_ZERO);
         uint256 halfPercentage = percentage / 2;
 
-        require(
-            value <= (type(uint256).max - halfPercentage) / PERCENTAGE_FACTOR,
-            Errors.MATH_MULTIPLICATION_OVERFLOW
-        );
+        require(value <= (type(uint256).max - halfPercentage) / PERCENTAGE_FACTOR, Errors.MATH_MULTIPLICATION_OVERFLOW);
 
         return (value * PERCENTAGE_FACTOR + halfPercentage) / percentage;
     }

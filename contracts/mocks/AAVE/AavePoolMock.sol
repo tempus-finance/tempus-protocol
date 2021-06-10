@@ -54,8 +54,7 @@ contract AavePoolMock {
         reserve.updateState();
         reserve.updateInterestRates(asset, amount, 0);
 
-        ERC20 backing = getAssetToken();
-        require(backing.transferFrom(msg.sender, treasury, amount));
+        require(getAssetToken().transferFrom(msg.sender, treasury, amount));
         getYieldToken().mint(onBehalfOf, amount);
     }
 
@@ -83,9 +82,7 @@ contract AavePoolMock {
 
         // Burns aTokens from `user` and sends the equivalent amount of underlying to
         yieldToken.burn(msg.sender, amountToWithdraw);
-
-        ERC20 backing = getAssetToken();
-        require(backing.transferFrom(treasury, to, amountToWithdraw));
+        require(getAssetToken().transferFrom(treasury, to, amountToWithdraw));
 
         return amountToWithdraw;
     }
@@ -98,8 +95,6 @@ contract AavePoolMock {
     /// @param asset The address of the underlying asset to borrow
     /// @param amount The amount to be borrowed
     /// @param interestRateMode The interest rate mode at which the user wants to borrow: 1 for Stable, 2 for Variable
-    /// @param referralCode Code used to register the integrator originating the operation, for potential rewards.
-    ///   0 if the action is executed directly by the user, without any middle-man
     /// @param onBehalfOf Address of the user who will receive the debt. Should be the address of the borrower itself
     /// calling the function if he wants to borrow against his own collateral, or the address of the credit delegator
     /// if he has been given credit delegation allowance
@@ -107,7 +102,7 @@ contract AavePoolMock {
         address asset,
         uint256 amount,
         uint256 interestRateMode,
-        uint16 referralCode,
+        uint16, /*referralCode*/
         address onBehalfOf
     ) public {
         require(underlyingAsset == asset, "invalid reserve asset");
@@ -118,8 +113,7 @@ contract AavePoolMock {
         debtToken.mint(onBehalfOf, amount);
 
         reserve.updateInterestRates(asset, 0, amount);
-        ERC20 backing = getAssetToken();
-        require(backing.transferFrom(treasury, msg.sender, amount));
+        require(getAssetToken().transferFrom(treasury, msg.sender, amount));
     }
 
     /// @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -149,12 +143,11 @@ contract AavePoolMock {
         }
 
         reserve.updateState();
-
         debtToken.burn(onBehalfOf, paybackAmount);
-        reserve.updateInterestRates(asset, paybackAmount, 0);
 
-        ERC20 assetToken = ERC20(underlyingAsset);
-        require(assetToken.transferFrom(treasury, msg.sender, amount));
+        // update interest rates after debtTokens have been burned
+        reserve.updateInterestRates(asset, paybackAmount, 0);
+        require(getAssetToken().transferFrom(treasury, msg.sender, amount));
 
         return paybackAmount;
     }
@@ -165,6 +158,32 @@ contract AavePoolMock {
     function getReserveNormalizedIncome(address asset) public view returns (uint256) {
         require(underlyingAsset == asset, "invalid reserve asset");
         return reserve.getNormalizedIncome();
+    }
+
+    /// @dev Specific to MOCK. Sets the current interest rates to enable
+    /// getReserveNormalizedIncome() calculation.
+    /// @param liquidityIndex Asset liquidity index. Expressed in ray (1e27)
+    /// @param currentLiquidityRate Current supply rate. Expressed in ray (1e27)
+    function setInterestRates(uint256 liquidityIndex, uint256 currentLiquidityRate) public {
+        reserve.liquidityIndex = uint128(liquidityIndex);
+        reserve.currentLiquidityRate = uint128(currentLiquidityRate);
+    }
+
+    /// @dev Specific to MOCK
+    /// @return Total STABLE debt of an user
+    function getStableDebt(address user) public view returns (uint256) {
+        return ATokenMock(reserve.stableDebtTokenAddress).balanceOf(user);
+    }
+
+    /// @dev Specific to MOCK
+    /// @return Total VARIABLE debt of an user
+    function getVariableDebt(address user) public view returns (uint256) {
+        return ATokenMock(reserve.variableDebtTokenAddress).balanceOf(user);
+    }
+
+    /// @return Total deposit of an user
+    function getDeposit(address user) public view returns (uint256) {
+        return getYieldToken().balanceOf(user);
     }
 
     function getAssetToken() private view returns (ERC20) {
@@ -186,22 +205,5 @@ contract AavePoolMock {
             return ATokenMock(reserve.stableDebtTokenAddress);
         }
         return ATokenMock(reserve.variableDebtTokenAddress);
-    }
-
-    /// @dev Specific to MOCK
-    /// @return Total STABLE debt of an user
-    function getStableDebt(address user) public view returns (uint256) {
-        return ATokenMock(reserve.stableDebtTokenAddress).balanceOf(user);
-    }
-
-    /// @dev Specific to MOCK
-    /// @return Total VARIABLE debt of an user
-    function getVariableDebt(address user) public view returns (uint256) {
-        return ATokenMock(reserve.variableDebtTokenAddress).balanceOf(user);
-    }
-
-    /// @return Total deposit of an user
-    function getDeposit(address user) public view returns (uint256) {
-        return getYieldToken().balanceOf(user);
     }
 }

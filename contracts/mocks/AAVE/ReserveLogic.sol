@@ -50,11 +50,7 @@ library ReserveLogic {
      * @param reserve The reserve object
      * @return the normalized income. expressed in ray
      **/
-    function getNormalizedIncome(DataTypes.ReserveData storage reserve)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNormalizedIncome(DataTypes.ReserveData storage reserve) internal view returns (uint256) {
         uint40 timestamp = reserve.lastUpdateTimestamp;
 
         // solium-disable-next-line
@@ -64,9 +60,7 @@ library ReserveLogic {
         }
 
         uint256 cumulated =
-            MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(
-                reserve.liquidityIndex
-            );
+            MathUtils.calculateLinearInterest(reserve.currentLiquidityRate, timestamp).rayMul(reserve.liquidityIndex);
 
         return cumulated;
     }
@@ -77,43 +71,17 @@ library ReserveLogic {
      **/
     function updateState(DataTypes.ReserveData storage reserve) internal {
         uint256 scaledVariableDebt = IERC20(reserve.variableDebtTokenAddress).totalSupply();
-        //   IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
-        uint256 previousVariableBorrowIndex = reserve.variableBorrowIndex;
-        uint256 previousLiquidityIndex = reserve.liquidityIndex;
-        uint40 lastUpdatedTimestamp = reserve.lastUpdateTimestamp;
-
-        _updateIndexes(
-            reserve,
-            scaledVariableDebt,
-            previousLiquidityIndex,
-            previousVariableBorrowIndex,
-            lastUpdatedTimestamp
-        );
-    }
-
-    /**
-     * @dev Updates the reserve indexes and the timestamp of the update
-     * @param reserve The reserve reserve to be updated
-     * @param scaledVariableDebt The scaled variable debt
-     * @param liquidityIndex The last stored liquidity index
-     * @param variableBorrowIndex The last stored variable borrow index
-     **/
-    function _updateIndexes(
-        DataTypes.ReserveData storage reserve,
-        uint256 scaledVariableDebt,
-        uint256 liquidityIndex,
-        uint256 variableBorrowIndex,
-        uint40 timestamp
-    ) internal returns (uint256, uint256) {
+        uint256 liquidityIndex = reserve.liquidityIndex;
         uint256 currentLiquidityRate = reserve.currentLiquidityRate;
+        uint256 variableBorrowIndex = reserve.variableBorrowIndex;
+        uint40 timestamp = reserve.lastUpdateTimestamp;
 
         uint256 newLiquidityIndex = liquidityIndex;
         uint256 newVariableBorrowIndex = variableBorrowIndex;
 
         //only cumulating if there is any income being produced
         if (currentLiquidityRate > 0) {
-            uint256 cumulatedLiquidityInterest =
-                MathUtils.calculateLinearInterest(currentLiquidityRate, timestamp);
+            uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(currentLiquidityRate, timestamp);
             newLiquidityIndex = cumulatedLiquidityInterest.rayMul(liquidityIndex);
             require(newLiquidityIndex <= type(uint128).max, Errors.RL_LIQUIDITY_INDEX_OVERFLOW);
 
@@ -122,25 +90,16 @@ library ReserveLogic {
             //as the liquidity rate might come only from stable rate loans, we need to ensure
             //that there is actual variable debt before accumulating
             if (scaledVariableDebt != 0) {
-                uint256 cumulatedVariableBorrowInterest =
-                    MathUtils.calculateCompoundedInterest(
-                        reserve.currentVariableBorrowRate,
-                        timestamp
-                    );
-                newVariableBorrowIndex = cumulatedVariableBorrowInterest.rayMul(
-                    variableBorrowIndex
-                );
-                require(
-                    newVariableBorrowIndex <= type(uint128).max,
-                    "variable borrow index overflow"
-                );
+                uint256 cumuVariableBorrowInterest =
+                    MathUtils.calculateCompoundedInterest(reserve.currentVariableBorrowRate, timestamp);
+                newVariableBorrowIndex = cumuVariableBorrowInterest.rayMul(variableBorrowIndex);
+                require(newVariableBorrowIndex <= type(uint128).max, "variable borrow index overflow");
                 reserve.variableBorrowIndex = uint128(newVariableBorrowIndex);
             }
         }
 
         //solium-disable-next-line
         reserve.lastUpdateTimestamp = uint40(block.timestamp);
-        return (newLiquidityIndex, newVariableBorrowIndex);
     }
 
     struct UpdateInterestRatesLocalVars {
