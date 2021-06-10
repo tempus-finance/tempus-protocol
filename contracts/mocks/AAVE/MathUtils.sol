@@ -17,18 +17,14 @@ library MathUtils {
      * @param lastUpdateTimestamp The timestamp of the last update of the interest
      * @return The interest rate linearly accumulated during the timeDelta, in ray
      **/
-
     function calculateLinearInterest(uint256 rate, uint40 lastUpdateTimestamp)
         internal
         view
         returns (uint256)
     {
         //solium-disable-next-line
-        uint256 timeDifference =
-            block.timestamp.sub(uint256(lastUpdateTimestamp));
-
-        return
-            (rate.mul(timeDifference) / SECONDS_PER_YEAR).add(WadRayMath.ray());
+        uint256 timeDifference = block.timestamp.sub(uint256(lastUpdateTimestamp));
+        return (rate.mul(timeDifference) / SECONDS_PER_YEAR).add(WadRayMath.ray());
     }
 
     /**
@@ -66,13 +62,9 @@ library MathUtils {
         uint256 basePowerThree = basePowerTwo.rayMul(ratePerSecond);
 
         uint256 secondTerm = exp.mul(expMinusOne).mul(basePowerTwo) / 2;
-        uint256 thirdTerm =
-            exp.mul(expMinusOne).mul(expMinusTwo).mul(basePowerThree) / 6;
+        uint256 thirdTerm = exp.mul(expMinusOne).mul(expMinusTwo).mul(basePowerThree) / 6;
 
-        return
-            WadRayMath.ray().add(ratePerSecond.mul(exp)).add(secondTerm).add(
-                thirdTerm
-            );
+        return WadRayMath.ray().add(ratePerSecond.mul(exp)).add(secondTerm).add(thirdTerm);
     }
 
     /**
@@ -80,15 +72,11 @@ library MathUtils {
      * @param rate The interest rate (in ray)
      * @param lastUpdateTimestamp The timestamp from which the interest accumulation needs to be calculated
      **/
-    function calculateCompoundedInterest(
-        uint256 rate,
-        uint40 lastUpdateTimestamp
-    ) internal view returns (uint256) {
-        return
-            calculateCompoundedInterest(
-                rate,
-                lastUpdateTimestamp,
-                block.timestamp
-            );
+    function calculateCompoundedInterest(uint256 rate, uint40 lastUpdateTimestamp)
+        internal
+        view
+        returns (uint256)
+    {
+        return calculateCompoundedInterest(rate, lastUpdateTimestamp, block.timestamp);
     }
 }

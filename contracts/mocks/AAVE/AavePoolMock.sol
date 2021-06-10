@@ -32,12 +32,7 @@ contract AavePoolMock {
     ) {
         underlyingAsset = reserveTokenAddress;
         treasury = address(this);
-        reserve.init(
-            aTokenAddress,
-            stableDebtAddress,
-            variableDebtAddress,
-            address(0)
-        );
+        reserve.init(aTokenAddress, stableDebtAddress, variableDebtAddress, address(0));
     }
 
     /// @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
@@ -47,13 +42,11 @@ contract AavePoolMock {
     /// @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
     ///   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
     ///   is a different wallet
-    /// @param referralCode Code used to register the integrator originating the operation, for potential rewards.
-    ///   0 if the action is executed directly by the user, without any middle-man
     function deposit(
         address asset,
         uint256 amount,
         address onBehalfOf,
-        uint16 referralCode
+        uint16 /*referralCode*/
     ) public {
         require(underlyingAsset == asset, "invalid reserve asset");
 
@@ -83,8 +76,7 @@ contract AavePoolMock {
         require(underlyingAsset == asset, "invalid reserve asset");
         ATokenMock yieldToken = getYieldToken();
         uint256 userBalance = yieldToken.balanceOf(msg.sender);
-        uint256 amountToWithdraw =
-            (amount == type(uint256).max) ? userBalance : amount;
+        uint256 amountToWithdraw = (amount == type(uint256).max) ? userBalance : amount;
 
         reserve.updateState();
         reserve.updateInterestRates(asset, 0, amountToWithdraw);
@@ -170,11 +162,7 @@ contract AavePoolMock {
     /// @dev Returns the normalized income per unit of asset
     /// @param asset The address of the underlying asset of the reserve
     /// @return The reserve's normalized income
-    function getReserveNormalizedIncome(address asset)
-        public
-        view
-        returns (uint256)
-    {
+    function getReserveNormalizedIncome(address asset) public view returns (uint256) {
         require(underlyingAsset == asset, "invalid reserve asset");
         return reserve.getNormalizedIncome();
     }
