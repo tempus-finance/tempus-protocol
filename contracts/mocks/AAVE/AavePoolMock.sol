@@ -30,13 +30,7 @@ contract AavePoolMock {
     /// Deposit an X amount of backing tokens into this pool as collateral
     /// and mint new ATokens in 1:1 ratio
     function deposit(uint256 amount) public {
-        uint256 balance = backingToken.balanceOf(msg.sender);
-        require(balance >= amount, "deposit: sender is too poor");
-
-        uint256 allowance = backingToken.allowance(msg.sender, address(this));
-        require(allowance >= amount, "deposit: not enough allowance");
-
-        backingToken.transferFrom(msg.sender, address(this), amount);
+        require(backingToken.transferFrom(msg.sender, address(this), amount));
         yieldBearingToken.mint(msg.sender, amount);
         updateState();
     }
@@ -93,11 +87,8 @@ contract AavePoolMock {
     uint256 private variableBorrowIndex;
     uint256 private currentVariableBorrowRate;
 
-    function getReserveNormalizedIncome(address _underlyingAsset)
-        public
-        view
-        returns (uint256)
-    {
+    /// @dev Ongoing interest accumulated by the reserve
+    function getReserveNormalizedIncome() public view returns (uint256) {
         return
             AaveUtils.getNormalizedIncome(
                 lastUpdateTimestamp,
@@ -110,21 +101,19 @@ contract AavePoolMock {
      * @dev Updates the liquidity cumulative index and the variable borrow index.
      **/
     function updateState() internal {
-        uint256 scaledVariableDebt = 0;
-        // TODO:
-        //IVariableDebtToken(reserve.variableDebtTokenAddress).scaledTotalSupply();
+        uint256 scaledVariableDebt = debtToken.totalSupply();
         uint256 previousVariableBorrowIndex = variableBorrowIndex;
         uint256 previousLiquidityIndex = liquidityIndex;
-        uint40 lastUpdatedTimestamp = lastUpdateTimestamp;
+        uint40 lastTimestamp = lastUpdateTimestamp;
 
         _updateIndexes(
             scaledVariableDebt,
             previousLiquidityIndex,
             previousVariableBorrowIndex,
-            lastUpdatedTimestamp
+            lastTimestamp
         );
 
-        // TODO:
+        // TODO: mint extra aTokens to treasury based on accrued interest
         // _mintToTreasury(
         //     reserve,
         //     scaledVariableDebt,
