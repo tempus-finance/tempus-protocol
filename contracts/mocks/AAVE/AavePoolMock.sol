@@ -8,6 +8,7 @@ import "./Errors.sol";
 import "./DataTypes.sol";
 import "./ReserveLogic.sol";
 
+// TODO: emit events matching with AAVE, these will be useful for frontend development
 contract AavePoolMock {
     using WadRayMath for uint256;
     using ReserveLogic for DataTypes.ReserveData;
@@ -39,63 +40,6 @@ contract AavePoolMock {
         );
     }
 
-    /// @dev Emitted on deposit()
-    /// @param reserve The address of the underlying asset of the reserve
-    /// @param user The address initiating the deposit
-    /// @param onBehalfOf The beneficiary of the deposit, receiving the aTokens
-    /// @param amount The amount deposited
-    /// @param referral The referral code used
-    event Deposit(
-        address indexed reserve,
-        address user,
-        address indexed onBehalfOf,
-        uint256 amount,
-        uint16 indexed referral
-    );
-
-    /// @dev Emitted on withdraw()
-    /// @param reserve The address of the underlyng asset being withdrawn
-    /// @param user The address initiating the withdrawal, owner of aTokens
-    /// @param to Address that will receive the underlying
-    /// @param amount The amount to be withdrawn
-    event Withdraw(
-        address indexed reserve,
-        address indexed user,
-        address indexed to,
-        uint256 amount
-    );
-
-    /// @dev Emitted on borrow() and flashLoan() when debt needs to be opened
-    /// @param reserve The address of the underlying asset being borrowed
-    /// @param user The address of the user initiating the borrow(), receiving the funds on borrow() or just
-    /// initiator of the transaction on flashLoan()
-    /// @param onBehalfOf The address that will be getting the debt
-    /// @param amount The amount borrowed out
-    /// @param borrowRateMode The rate mode: 1 for Stable, 2 for Variable
-    /// @param borrowRate The numeric rate at which the user has borrowed
-    /// @param referral The referral code used
-    event Borrow(
-        address indexed reserve,
-        address user,
-        address indexed onBehalfOf,
-        uint256 amount,
-        uint256 borrowRateMode,
-        uint256 borrowRate,
-        uint16 indexed referral
-    );
-
-    /// @dev Emitted on repay()
-    /// @param reserve The address of the underlying asset of the reserve
-    /// @param user The beneficiary of the repayment, getting his debt reduced
-    /// @param repayer The address of the user initiating the repay(), providing the funds
-    /// @param amount The amount repaid
-    event Repay(
-        address indexed reserve,
-        address indexed user,
-        address indexed repayer,
-        uint256 amount
-    );
-
     /// @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
     /// - E.g. User deposits 100 USDC and gets in return 100 aUSDC
     /// @param asset The address of the underlying asset to deposit
@@ -120,9 +64,6 @@ contract AavePoolMock {
         ERC20 backing = getAssetToken();
         require(backing.transferFrom(msg.sender, treasury, amount));
         getYieldToken().mint(onBehalfOf, amount);
-
-        // NOTE: ignored isFirstDeposit and event ReserveUsedAsCollateralEnabled
-        emit Deposit(asset, msg.sender, onBehalfOf, amount, referralCode);
     }
 
     /// @dev Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
@@ -154,7 +95,6 @@ contract AavePoolMock {
         ERC20 backing = getAssetToken();
         require(backing.transferFrom(treasury, to, amountToWithdraw));
 
-        emit Withdraw(asset, msg.sender, to, amountToWithdraw);
         return amountToWithdraw;
     }
 
@@ -188,17 +128,6 @@ contract AavePoolMock {
         reserve.updateInterestRates(asset, 0, amount);
         ERC20 backing = getAssetToken();
         require(backing.transferFrom(treasury, msg.sender, amount));
-
-        uint256 currentRate = 0;
-        emit Borrow(
-            asset,
-            msg.sender,
-            onBehalfOf,
-            amount,
-            interestRateMode,
-            currentRate,
-            referralCode
-        );
     }
 
     /// @notice Repays a borrowed `amount` on a specific reserve, burning the equivalent debt tokens owned
@@ -233,8 +162,7 @@ contract AavePoolMock {
         reserve.updateInterestRates(asset, paybackAmount, 0);
 
         ERC20 assetToken = ERC20(underlyingAsset);
-        require(assetToken.transferFrom(address(this), msg.sender, amount));
-        emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
+        require(assetToken.transferFrom(treasury, msg.sender, amount));
 
         return paybackAmount;
     }
