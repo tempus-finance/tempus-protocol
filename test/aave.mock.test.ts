@@ -4,24 +4,25 @@ import { expect } from "chai";
 
 describe("AAVE Mock", async () => {
   let pool;
-  let backingToken;
-  let owner, addr1, addr2;
+  let owner, user1, user2;
+  let asset, aToken, stableDebt, variableDebt;
 
   beforeEach(async () => {
-    [owner, addr1, addr2] = await ethers.getSigners();
+    [owner, user1, user2] = await ethers.getSigners();
 
     let BackingToken = await ethers.getContractFactory("ERC20FixedSupply");
-    backingToken = await BackingToken.deploy("DAI Stablecoin", "DAI", 1000000);
-
     let ATokenMock = await ethers.getContractFactory("ATokenMock");
-    let yieldBearingToken = await ATokenMock.deploy('AAVE AToken', 'aDAI');
-    let debtToken         = await ATokenMock.deploy('AAVE AToken', 'aDAI');
+    asset = await BackingToken.deploy("DAI Stablecoin", "DAI", 1000000);
+    aToken       = await ATokenMock.deploy('AAVE AToken', 'aDAI');
+    stableDebt   = await ATokenMock.deploy('AAVE AToken', 'aDAI');
+    variableDebt = await ATokenMock.deploy('AAVE AToken', 'aDAI');
 
     let AavePoolMock = await ethers.getContractFactory("AavePoolMock");
     pool = await AavePoolMock.deploy(
-      backingToken.address, 
-      yieldBearingToken.address, 
-      debtToken.address
+      asset.address, 
+      aToken.address, 
+      stableDebt.address, 
+      variableDebt.address
     );
   });
 
@@ -29,13 +30,40 @@ describe("AAVE Mock", async () => {
   {
     it("Should deposit the correct amount", async () =>
     {
-      backingToken.connect(owner).transfer(addr1.address, 10);
+      asset.connect(owner).transfer(user1.address, 10);
 
-      backingToken.connect(addr1).approve(pool.address, 1);
-      pool.connect(addr1).deposit(1);
+      asset.connect(user1).approve(pool.address, 1);
+      pool.connect(user1).deposit(asset.address, 1, user1.address, 0);
       
-      expect(await pool.getDeposit(addr1.address)).to.equal(1);
-      expect(await backingToken.balanceOf(addr1.address)).to.equal(9);
+      expect(await pool.getDeposit(user1.address)).to.equal(1);
+      expect(await asset.balanceOf(user1.address)).to.equal(9);
+      expect(await pool.getReserveNormalizedIncome(asset.address))
+        .to.equal("1000000000000000000000000000");
+      console.log("Pool.OngoingInterest:", await pool.getReserveNormalizedIncome(asset.address));
+    });
+  });
+
+  describe("Withdraw", async () =>
+  {
+    it("Should succeed if we have a previous deposit", async () =>
+    {
+      // TODO
+    });
+  });
+
+  describe("Borrow", async () =>
+  {
+    it("Should borrow if enough deposited collateral", async () =>
+    {
+      // TODO
+    });
+  });
+
+  describe("Repay", async () =>
+  {
+    it("Should reduce debt if repaid", async () =>
+    {
+      // TODO
     });
   });
 });
