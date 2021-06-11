@@ -52,7 +52,7 @@ contract AavePoolMock {
 
         // In original AAVE implementation, state update is done before deposit
         reserve.updateState();
-        reserve.updateInterestRates(asset, amount, 0);
+        reserve.updateInterestRates(amount, 0);
 
         require(getAssetToken().transferFrom(msg.sender, treasury, amount));
         getYieldToken().mint(onBehalfOf, amount);
@@ -78,7 +78,7 @@ contract AavePoolMock {
         uint256 amountToWithdraw = (amount == type(uint256).max) ? userBalance : amount;
 
         reserve.updateState();
-        reserve.updateInterestRates(asset, 0, amountToWithdraw);
+        reserve.updateInterestRates(0, amountToWithdraw);
 
         // Burns aTokens from `user` and sends the equivalent amount of underlying to
         yieldToken.burn(msg.sender, amountToWithdraw);
@@ -112,7 +112,7 @@ contract AavePoolMock {
         ATokenMock debtToken = getDebtToken(interestRateMode);
         debtToken.mint(onBehalfOf, amount);
 
-        reserve.updateInterestRates(asset, 0, amount);
+        reserve.updateInterestRates(0, amount);
         require(getAssetToken().transferFrom(treasury, msg.sender, amount));
     }
 
@@ -146,7 +146,7 @@ contract AavePoolMock {
         debtToken.burn(onBehalfOf, paybackAmount);
 
         // update interest rates after debtTokens have been burned
-        reserve.updateInterestRates(asset, paybackAmount, 0);
+        reserve.updateInterestRates(paybackAmount, 0);
         require(getAssetToken().transferFrom(treasury, msg.sender, amount));
 
         return paybackAmount;

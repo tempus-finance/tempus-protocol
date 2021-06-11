@@ -103,7 +103,6 @@ library ReserveLogic {
     }
 
     struct UpdateInterestRatesLocalVars {
-        address stableDebtTokenAddress;
         uint256 availableLiquidity;
         uint256 totalStableDebt;
         uint256 newLiquidityRate;
@@ -121,7 +120,6 @@ library ReserveLogic {
      **/
     function updateInterestRates(
         DataTypes.ReserveData storage reserve,
-        address reserveAddress,
         uint256 liquidityAdded,
         uint256 liquidityTaken
     ) internal {
@@ -151,10 +149,10 @@ library ReserveLogic {
 
         // TODO: implement this
         UpdateInterestRatesLocalVars memory vars;
-        vars.stableDebtTokenAddress = reserve.stableDebtTokenAddress;
-
-        vars.totalStableDebt = IERC20(vars.stableDebtTokenAddress).totalSupply();
-        vars.totalVariableDebt = IERC20(reserve.variableDebtTokenAddress).totalSupply();
+        vars.totalStableDebt = IERC20(reserve.stableDebtTokenAddress).totalSupply();
+        vars.totalVariableDebt = IERC20(reserve.variableDebtTokenAddress).totalSupply().rayMul(
+            reserve.variableBorrowIndex
+        );
         vars.avgStableRate = 0;
         vars.newLiquidityRate = 0;
         vars.newStableRate = 0;
