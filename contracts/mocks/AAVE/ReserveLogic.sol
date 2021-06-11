@@ -120,7 +120,7 @@ library ReserveLogic {
         //   reserve.configuration.getReserveFactor()
         // );
 
-        uint256 availableLiquidity = IERC20(reserve.aTokenAddress).balanceOf(account);
+        //uint256 availableLiquidity = IERC20(reserve.aTokenAddress).balanceOf(account);
 
         // TODO: implement this
         UpdateInterestRatesLocalVars memory vars;

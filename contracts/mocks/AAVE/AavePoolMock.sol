@@ -31,7 +31,7 @@ contract AavePoolMock {
     ) {
         underlyingAsset = reserveTokenAddress;
         treasury = address(this);
-        reserve.init(aTokenAddress, stableDebtAddress, variableDebtAddress, address(0));
+        reserve.init(aTokenAddress, stableDebtAddress, variableDebtAddress);
     }
 
     /// @dev Deposits an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
