@@ -2,18 +2,14 @@
 pragma solidity 0.8.4;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./ATokenMock.sol";
-import "./MathUtils.sol";
-import "./WadRayMath.sol";
-import "./DataTypes.sol";
 import "./ReserveLogic.sol";
 
 // TODO: emit events matching with AAVE, these will be useful for frontend development
 contract AavePoolMock {
-    using WadRayMath for uint256;
-    using ReserveLogic for DataTypes.ReserveData;
+    using ReserveLogic for ReserveLogic.ReserveData;
 
     // AAVE supports multi-reserve lending, but in this Mock we only support 1 reserve
-    DataTypes.ReserveData private reserve;
+    ReserveLogic.ReserveData private reserve;
     address private underlyingAsset; // ERC20
     address private treasury;
 
