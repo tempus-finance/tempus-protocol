@@ -72,9 +72,10 @@ library ReserveLogic {
         uint256 liquidityRate = reserve.currentLiquidityRate;
         // only cumulating if there is any income being produced
         if (liquidityRate > 0) {
-            uint40 timestamp = reserve.lastUpdateTimestamp;
-            uint256 cumLiquidityInterest = calculateLinearInterest(liquidityRate, timestamp);
-            uint256 newLiquidityIndex = cumLiquidityInterest.rayMul(reserve.liquidityIndex);
+            uint40 prevTimestamp = reserve.lastUpdateTimestamp;
+            uint256 cumLiquidityInterest = calculateLinearInterest(liquidityRate, prevTimestamp);
+            uint256 prevLiquidityIndex = reserve.liquidityIndex;
+            uint256 newLiquidityIndex = cumLiquidityInterest.rayMul(prevLiquidityIndex);
             require(newLiquidityIndex <= type(uint128).max, "liquidity index overflow");
             reserve.liquidityIndex = uint128(newLiquidityIndex);
         }
@@ -130,15 +131,15 @@ library ReserveLogic {
 
         //uint256 availableLiquidity = IERC20(reserve.aTokenAddress).balanceOf(account);
 
-        // TODO: implement this
-        UpdateInterestRatesLocalVars memory vars;
-        vars.totalStableDebt = IERC20(reserve.stableDebtTokenAddress).totalSupply();
-        vars.avgStableRate = 0;
-        vars.newLiquidityRate = 0;
-        vars.newStableRate = 0;
-        vars.newVariableRate = 0;
-        require(vars.newLiquidityRate <= type(uint128).max, "liquidity rate overflow");
-        reserve.currentLiquidityRate = uint128(vars.newLiquidityRate);
+        // AAVE defines current liquidity rate as RL = Ro * U, which is a function of
+        // the overall borrow rate Ro and the utilization rate U
+
+        uint256 overallBorrowRate = 0;
+        uint256 utilizationRate = 0;
+        uint256 newLiquidityRate = overallBorrowRate.rayMul(utilizationRate);
+
+        require(newLiquidityRate <= type(uint128).max, "liquidity rate overflow");
+        reserve.currentLiquidityRate = uint128(newLiquidityRate);
     }
 
     /// @dev Ignoring leap years
@@ -162,8 +163,10 @@ library ReserveLogic {
      *
      *  (1+x)^n = 1+n*x+[n/2*(n-1)]*x^2+[n/6*(n-1)*(n-2)*x^3...
      *
-     * The approximation slightly underpays liquidity providers and undercharges borrowers, with the advantage of great gas cost reductions
-     * The whitepaper contains reference to the approximation and a table showing the margin of error per different time periods
+     * The approximation slightly underpays liquidity providers and undercharges borrowers,
+     * with the advantage of great gas cost reductions
+     * The whitepaper contains reference to the approximation and a table
+     * showing the margin of error per different time periods
      *
      * @param rate The interest rate, in ray
      * @param lastUpdateTimestamp The timestamp of the last update of the interest
@@ -182,9 +185,7 @@ library ReserveLogic {
         }
 
         uint256 expMinusOne = exp - 1;
-
         uint256 expMinusTwo = exp > 2 ? exp - 2 : 0;
-
         uint256 ratePerSecond = rate / SECONDS_PER_YEAR;
 
         uint256 basePowerTwo = ratePerSecond.rayMul(ratePerSecond);

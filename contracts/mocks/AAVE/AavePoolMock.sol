@@ -162,6 +162,7 @@ contract AavePoolMock {
     function setInterestRates(uint256 liquidityIndex, uint256 currentLiquidityRate) public {
         reserve.liquidityIndex = uint128(liquidityIndex);
         reserve.currentLiquidityRate = uint128(currentLiquidityRate);
+        // TODO: Mint tokens after liquidity rate has changed
     }
 
     /// @dev Specific to MOCK
