@@ -4,7 +4,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./ATokenMock.sol";
 import "./MathUtils.sol";
 import "./WadRayMath.sol";
-import "./Errors.sol";
 import "./DataTypes.sol";
 import "./ReserveLogic.sol";
 
