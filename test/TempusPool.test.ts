@@ -22,8 +22,9 @@ describe("Tempus Pool", async () => {
     await aave.deposit(owner, 1000);
     await aave.earn.transfer(owner, user, 500);
 
-    maturityTime = await blockTimestamp() + 60*60; // Maturity is in 1hr
-    pool = await TempusPool.deploy(aave.earn, "AavePriceOracle", maturityTime);
+    let duration = 60*60; // One hour.
+    maturityTime = await blockTimestamp() + duration;
+    pool = await TempusPool.deploy(aave.earn, "AavePriceOracle", duration);
   });
 
   describe("Deploy", async () =>

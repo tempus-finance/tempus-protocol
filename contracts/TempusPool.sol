@@ -29,18 +29,18 @@ contract TempusPool is ITempusPool {
     /// Constructs Pool with underlying token, start and maturity date
     /// @param token underlying yield bearing token
     /// @param oracle the price oracle correspoding to the token
-    /// @param maturity maturity time of this pool
+    /// @param duration pool duration in seconds
     constructor(
         address token,
         IPriceOracle oracle,
-        uint256 maturity
+        uint256 duration
     ) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
 
         yieldBearingToken = token;
         priceOracle = oracle;
         startTime = block.timestamp;
-        maturityTime = maturity;
+        maturityTime = startTime + duration;
         initialExchangeRate = oracle.currentRate(token);
 
         // TODO add maturity
