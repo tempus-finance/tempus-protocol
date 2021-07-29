@@ -30,6 +30,13 @@ function getNodeUrl(networkName: string) : string {
   return uri;
 }
 
+const TEST_ACCOUNTS_KEYS = [
+  "0x6c6c264916401a7c067c014c61e8c89dba5525e904a6631fd84ccc6e0829f0b3",
+  "0xddb0d7ed4eae780e20fef9bf8d4591b3766526cee8b7307ebb8ea597cd16d066",
+  "0x18728648caa52cc938670482acfdcb9196d002b8c06b902679d7b4429df97ef3",
+  "0x35ed970f932d0e41f4bd7e1e95ca44a0229c73408f9b6f9cf4f949f3699599cc"
+];
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (args: any, hre: any) => {
@@ -76,19 +83,7 @@ module.exports = {
               : undefined,
           }
         : undefined,
-      accounts: [{
-        balance: "10000000000000000000000",
-        privateKey: "0x6c6c264916401a7c067c014c61e8c89dba5525e904a6631fd84ccc6e0829f0b3"
-      }, {
-        balance: "10000000000000000000000",
-        privateKey: "0xddb0d7ed4eae780e20fef9bf8d4591b3766526cee8b7307ebb8ea597cd16d066"
-      }, {
-        balance: "10000000000000000000000",
-        privateKey: "0x18728648caa52cc938670482acfdcb9196d002b8c06b902679d7b4429df97ef3"
-      }, {
-        balance: "10000000000000000000000",
-        privateKey: "0x35ed970f932d0e41f4bd7e1e95ca44a0229c73408f9b6f9cf4f949f3699599cc"
-      }]
+      accounts: TEST_ACCOUNTS_KEYS.map(privateKey => ({ privateKey, balance: "10000000000000000000000" }))
     }
   },
   namedAccounts: {

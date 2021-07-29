@@ -48,6 +48,8 @@
     "lint": "prettier --write \"contracts/**/*.sol\"",
     "lint-check": "prettier --check \"contracts/**/*.sol\"",
     "start-local": "npx hardhat node",
+    "start-local:fork:mainnet": "cross-env HARDHAT_FORK=mainnet HARDHAT_FORK_NUMBER=12862536 npx hardhat node",
+    "deploy-local:fork:mainnet": "cross-env HARDHAT_FORK=mainnet npx hardhat run scripts/deploy.local.fork.ts --network localhost",
     "deploy-local": "npx hardhat run scripts/deploy.local.ts --network localhost",
     "deploy-ci": "npx hardhat run scripts/deploy.local.ts",
     "increase-time": "npx hardhat run scripts/increaseTime.local.ts --network localhost"
