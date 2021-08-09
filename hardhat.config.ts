@@ -57,7 +57,7 @@ module.exports = {
     path: './abi-artifacts',
     clear: false,
     flat: true,
-    only: ['TempusToken'],
+    only: [],
     spacing: 2
   },
   solidity: {
