@@ -43,13 +43,13 @@ contract CErc20 is CTokenMock, CErc20Interface {
         _burn(msg.sender, redeemTokens);
 
         // transfer backing tokens to redeemer
-        IERC20(underlying).transfer(msg.sender, redeemAmount);
+        IERC20(underlying).safeTransfer(msg.sender, redeemAmount);
         return 0; // success
     }
 
     function doTransferIn(address from, uint amount) internal override returns (uint) {
         IERC20 backingToken = IERC20(underlying);
-        backingToken.transferFrom(from, address(this), amount);
+        backingToken.safeTransferFrom(from, address(this), amount);
         return amount;
     }
 }
