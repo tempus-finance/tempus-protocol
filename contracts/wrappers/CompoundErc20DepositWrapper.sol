@@ -72,7 +72,7 @@ contract CompoundErc20DepositWrapper {
         // -- deposit wrapper now owns Assets
 
         uint256 backing = yieldBearingTokens.mulf18(token.exchangeRateStored());
-        backingToken.transfer(msg.sender, backing);
+        backingToken.safeTransfer(msg.sender, backing);
 
         return backing;
     }
