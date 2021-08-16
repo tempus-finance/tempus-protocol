@@ -4,7 +4,7 @@
 Smart contracts of Tempus Finance
 
 [![Coverage Status](https://coveralls.io/repos/github/tempus-finance/tempus-protocol/badge.svg?branch=master&t=3oDH6q)](https://coveralls.io/github/tempus-finance/tempus-protocol?branch=master)
-  
+
 
 ## Compiling and running tests
 
