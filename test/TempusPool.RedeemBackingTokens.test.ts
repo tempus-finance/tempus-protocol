@@ -1,7 +1,8 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Signer } from "./utils/ContractBase";
-import { ITestPool, PoolType } from "./pool-utils/ITestPool";
+import { PoolType } from "./utils/TempusPool";
+import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPoolType } from "./pool-utils/MultiPoolTestSuite";
 
 describeForEachPoolType("TempusPool Redeem", [PoolType.Aave, PoolType.Compound], (pool:ITestPool) =>
@@ -15,7 +16,7 @@ describeForEachPoolType("TempusPool Redeem", [PoolType.Aave, PoolType.Compound],
 
   it("Should redeem correct BackingTokens after depositing BackingTokens", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.asset().transfer(owner, user, 1000);
 
     await pool.asset().approve(user, pool.tempus.address, 100);
@@ -32,7 +33,7 @@ describeForEachPoolType("TempusPool Redeem", [PoolType.Aave, PoolType.Compound],
 
   it("Should redeem more BackingTokens after changing rate to 2.0", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.asset().transfer(owner, user, 1000);
     await pool.asset().approve(user, pool.tempus.address, 100);
     (await pool.expectDepositBT(user, 100)).to.equal('success');
@@ -63,7 +64,7 @@ describeForEachPoolType("TempusPool Redeem", [PoolType.Lido], (pool:ITestPool) =
 
   it("Should revert on redeem", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.asset().transfer(owner, user, 1000);
     await pool.asset().approve(user, pool.tempus.address, 100);
     (await pool.expectDepositBT(user, 100)).to.equal('success');

@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { ITestPool, PoolType } from "./pool-utils/ITestPool";
+import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 import { Signer } from "./utils/ContractBase";
 import { toWei } from "./utils/Decimal";
@@ -16,7 +16,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should emit correct event on redemption", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
 
     await pool.depositYBT(user, 100);
@@ -32,7 +32,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should redeem exactly equal to deposit if no yield and no fees", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -44,7 +44,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should fail with insufficient share balances", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -58,7 +58,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should fail before maturity with uneqal shares", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -69,7 +69,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work before maturity with equal shares, without yield", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -81,7 +81,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work before maturity with equal shares, with yield", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -102,7 +102,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work after maturity with negative yield", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -128,7 +128,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work after maturity with negative yield between maturity and redemption", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -154,7 +154,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work after maturity with unequal shares, without yield", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -166,7 +166,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work after maturity with unequal shares, with yield", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -191,7 +191,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should work after maturity with additional yield after maturity", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);
@@ -224,7 +224,7 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 
   it("Should redeem correct amount of tokens with multiple users depositing", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500], [user2, 500]]);
 
     await pool.depositYBT(user, 100, /*recipient:*/user);

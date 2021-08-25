@@ -1,7 +1,8 @@
-import { ITestPool, PoolType } from "./ITestPool";
+import { ITestPool } from "./ITestPool";
 import { AaveTestPool } from "./AaveTestPool";
 import { LidoTestPool } from "./LidoTestPool";
 import { CompoundTestPool } from "./CompoundTestPool";
+import { PoolType } from "../utils/TempusPool";
 
 function createTestPool(type:PoolType): ITestPool {
   switch (type) {
@@ -26,10 +27,10 @@ export function describeForEachPoolType(title:string, poolTypes:PoolType[], fn:(
 {
   for (let type of poolTypes)
   {
-      describe(title + " <> " + type.toString(), () =>
-      {
-        const pool = createTestPool(type);
-        fn(pool);
-      });
+    describe(title + " <> " + type.toString(), () =>
+    {
+      const pool = createTestPool(type);
+      fn(pool);
+    });
   }
 }

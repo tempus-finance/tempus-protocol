@@ -15,13 +15,18 @@ export class Aave extends ContractBase {
 
   /**
    * @param totalSupply Total DAI supply
+   * @param initialRate Initial interest rate
    */
-  static async create(totalSupply:Number): Promise<Aave> {
+  static async create(totalSupply:Number, initialRate:Number = 1.0): Promise<Aave> {
     // using WEI, because DAI has 18 decimal places
     const asset = await ERC20.deploy("ERC20FixedSupply", "DAI Stablecoin", "DAI", toWei(totalSupply));
     const pool = await ContractBase.deployContract("AavePoolMock", asset.address);
     const yieldToken = await ERC20.attach("ATokenMock", await pool.yieldToken());
-    return new Aave(pool, asset, yieldToken);
+    const aave = new Aave(pool, asset, yieldToken);
+    if (initialRate != 1.0) {
+      await aave.setLiquidityIndex(initialRate);
+    }
+    return aave;
   }
 
   /**

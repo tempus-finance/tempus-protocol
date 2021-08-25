@@ -1,32 +1,35 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
 import { NumberOrString, toWei, ONE_WEI } from "./Decimal";
-import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
+import { ContractBase, SignerOrAddress, Signer, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
-import { expect } from "chai";
 
 /**
  * Type safe wrapper over LidoMock
  */
 export class Lido extends ERC20 {
-  asset:ERC20; // ETH
+  // asset is ETH
+  asset:ERC20; // wETH mock
   yieldToken:ERC20; // StETH
 
-  constructor(pool:Contract, asset:ERC20) {
+  constructor(pool:Contract, mockAsset:ERC20) {
     super("LidoMock", pool);
-    this.asset = asset;
+    this.asset = mockAsset;
     this.yieldToken = this; // for Lido, the pool itself is the Yield Token
   }
-  
+
   /**
-   * @param totalSupply Total ETH supply
+   * @param totalSupply Total MOCK wETH supply
+   * @param initialRate Initial interest rate
    */
-  static async create(totalSupply:Number): Promise<Lido> {
-    // using WEI, because ETH has 18 decimal places
-    const asset = await ERC20.deploy("ERC20FixedSupply", "ETH Mock", "ETH", toWei(totalSupply));
+  static async create(totalSupply:Number, initialRate:Number = 1.0): Promise<Lido> {
+    const asset = await ERC20.deploy("ERC20FixedSupply", "wETH Mock", "wETH", toWei(totalSupply));
     const pool = await ContractBase.deployContract("LidoMock");
-    return new Lido(pool, asset);
+    const lido = new Lido(pool, asset);
+    if (initialRate != 1.0) {
+      await lido.setInterestRate(initialRate);
+    }
+    return lido;
   }
 
   /** @return stETH balance of an user */
@@ -103,16 +106,16 @@ export class Lido extends ERC20 {
    *                   This could be different than # of depositBufferedEther(1) calls.
    * @param balance Actual balance in the ETH2 oracle
    */
-  async pushBeacon(owner: SignerWithAddress, validators:number, balance:number) {
+  async pushBeacon(owner:Signer, validators:number, balance:number) {
     return await this.connect(owner).pushBeacon(validators, toWei(balance));
   }
   // pushes balance to achieve certain amount of `totalRewards`
-  async pushBeaconRewards(owner: SignerWithAddress, validators:number, rewards:number) {
+  async pushBeaconRewards(owner:Signer, validators:number, rewards:number) {
     // push X eth reward, rewards = balance - 32*validators
     const balance = rewards + 32*validators;
     return await this.pushBeacon(owner, validators, balance);
   }
-  async withdraw(signer: SignerWithAddress, shareAmount:Number) {
+  async withdraw(signer:Signer, shareAmount:Number) {
     // We ignore the pubKeyHash.
     const hash =  ethers.utils.formatBytes32String("");
     return await this.connect(signer).withdraw(toWei(shareAmount), hash);

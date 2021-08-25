@@ -78,7 +78,7 @@ describe("TempusAMM", async () => {
     expect(ampInv.amplification).to.equal(0);
     await tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
     ampInv = await tempusAMM.getLastInvariant();
-    expect(ampInv.invariant).to.equal(181.81795965461126);
+    expect(ampInv.invariant).to.be.within(181, 182);
     expect(ampInv.amplification).to.equal(5000);
   });
 
@@ -215,7 +215,7 @@ describe("TempusAMM", async () => {
     await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
 
     expect(+await tempusAMM.balanceOf(user)).to.be.within(181, 182);
-    expect(+await tempusAMM.getRate()).to.be.equal(1.0019961163769575);
+    expect(+await tempusAMM.getRate()).to.be.within(1.0019, 1.002);
 
     // do more swaps
     await tempusAMM.swapGivenIn(owner, tempusAMM.yieldShare.address, tempusAMM.principalShare.address, 100);

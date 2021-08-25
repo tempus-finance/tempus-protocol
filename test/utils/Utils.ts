@@ -17,6 +17,14 @@ export async function increaseTime(addSeconds: number) : Promise<void> {
 }
 
 /**
+ * Set current EVM time
+ */
+export async function setEvmTime(timestamp:number) : Promise<void> {
+  await ethers.provider.send("evm_setNextBlockTimestamp", [timestamp]);
+  await ethers.provider.send("evm_mine", []);
+}
+
+/**
  * Tries to get the Revert Message from an Error
  */
 export function getRevertMessage(e:Error): string {

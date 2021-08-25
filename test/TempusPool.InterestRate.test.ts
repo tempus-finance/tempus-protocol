@@ -16,7 +16,7 @@ describeForEachPool("TempusPool InterestRate", (pool:ITestPool) =>
 
   it("Should give correct Interest Rate and token amounts with Rate=1.0", async () =>
   {
-    await pool.createTempusPool(/*initialRate:*/1.0, 60 * 60);
+    await pool.createTempusPool(/*initialRate:*/1.0, 60 * 60, /*yieldEst:*/0.1);
     let interestRate = await pool.tempus.currentInterestRate();
     let numAssetTokens = await pool.tempus.numAssetsPerYieldToken(2, interestRate);
     let numYieldTokens = await pool.tempus.numYieldTokensPerAsset(3, interestRate);
@@ -27,7 +27,7 @@ describeForEachPool("TempusPool InterestRate", (pool:ITestPool) =>
 
   it("Should give correct Interest Rate and token amounts with Rate=2.0", async () =>
   {
-    await pool.createTempusPool(/*initialRate:*/2.0, 60 * 60);
+    await pool.createTempusPool(/*initialRate:*/2.0, 60 * 60, /*yieldEst:*/0.1);
     let interestRate = await pool.tempus.currentInterestRate();
     let numAssetTokens = await pool.tempus.numAssetsPerYieldToken(2, interestRate);
     let numYieldTokens = await pool.tempus.numYieldTokensPerAsset(2, interestRate);

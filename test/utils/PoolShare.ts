@@ -1,9 +1,12 @@
 import { Contract } from "ethers";
 import { NumberOrString } from "./Decimal";
-import { SignerOrAddress, addressOf, ContractBase } from "./ContractBase";
-import { ERC20 } from "./ERC20";
+import { ContractBase } from "./ContractBase";
 import { ERC20OwnerMintable } from "./ERC20OwnerMintable";
-import { TempusPool } from "./TempusPool";
+
+export enum ShareKind {
+  Principal = "PrincipalShare",
+  Yield = "YieldShare",
+}
 
 export class PoolShare extends ERC20OwnerMintable {
   constructor(contractName:string, contract:Contract) {
@@ -11,11 +14,10 @@ export class PoolShare extends ERC20OwnerMintable {
   }
 
   /**
-   * @param kind "yield" or "principal"
+   * @param kind ShareKind.Principal or ShareKind.Yield
    */
-  static async attach(kind:string, address:string): Promise<PoolShare> {
-    const isYield = (kind == "yield");
-    const contractName = isYield ? "YieldShare" : "PrincipalShare";
+  static async attach(kind:ShareKind, address:string): Promise<PoolShare> {
+    const contractName = kind.toString();
     const contract = await ContractBase.attachContract(contractName, address);
     return new PoolShare(contractName, contract);
   }

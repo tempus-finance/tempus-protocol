@@ -1,17 +1,13 @@
 import { expect } from "chai";
 import { Transaction } from "ethers";
+import { ethers, deployments } from "hardhat";
 import { Signer, SignerOrAddress } from "../utils/ContractBase";
-import { TempusPool } from "../utils/TempusPool";
+import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../utils/TempusPool";
+import { blockTimestamp, setEvmTime } from "../utils/Utils";
 import { ERC20 } from "../utils/ERC20";
+import { PoolShare } from "../utils/PoolShare";
 import { NumberOrString } from "../utils/Decimal";
-import { getRevertMessage, increaseTime } from "../utils/Utils";
-
-export enum PoolType
-{
-  Aave = "Aave",
-  Lido = "Lido",
-  Compound = "Compound",
-}
+import { getRevertMessage } from "../utils/Utils";
 
 export class UserState {
   principalShares:Number;
@@ -27,10 +23,24 @@ export class UserState {
   }
 }
 
+// Stores all required state for a unique ITestPool fixture
+export class FixtureState {
+  maturityTime:number; // UNIX timestamp in milliseconds
+  names:TempusSharesNames;
+  getInitialContractState:(options?: any)=>Promise<any>;
+  constructor(maturityTime:number, names:TempusSharesNames, getState:(options?: any)=>Promise<any>) {
+    this.maturityTime = maturityTime;
+    this.names = names;
+    this.getInitialContractState = getState;
+  }
+}
+
+// When we create TestPool fixtures with different parameters,
+// each parameter set is kept separately here
+const POOL_FIXTURES: { [signature: string]: FixtureState } = {};
+
 export abstract class ITestPool {
   type:PoolType;
-  principalName:string; // TPS
-  yieldName:string; // TYS
 
   // if true, underlying pool pegs YieldToken 1:1 to BackingToken
   // ex true: deposit(100) with rate 1.0 will yield 100 TPS and TYS
@@ -39,12 +49,17 @@ export abstract class ITestPool {
 
   // initialized by createTempusPool()
   tempus:TempusPool;
-  maturityTime:number;
+  signers:Signer[];
 
-  constructor(type:PoolType, principalName:string, yieldName:string, yieldPeggedToAsset:boolean) { 
+  // common state reset when a fixture is instantiated
+  initialRate:number; // initial interest rate
+  yieldEst:number; // initial estimated yield
+  maturityTime:number; // UNIX timestamp in milliseconds
+  poolDuration:number; // pool duration in seconds
+  names:TempusSharesNames;
+
+  constructor(type:PoolType, yieldPeggedToAsset:boolean) { 
     this.type = type;
-    this.principalName = principalName;
-    this.yieldName = yieldName;
     this.yieldPeggedToAsset = yieldPeggedToAsset;
   }
 
@@ -54,6 +69,11 @@ export abstract class ITestPool {
   abstract asset(): ERC20;
 
   /**
+   * @return The yield token of the backing tool
+   */
+  abstract yieldToken(): ERC20;
+
+  /**
    * @return Current Yield Bearing Token balance of the user
    */
   abstract yieldTokenBalance(user:SignerOrAddress): Promise<NumberOrString>;
@@ -61,7 +81,7 @@ export abstract class ITestPool {
   /**
    * This must create the TempusPool instance
    */
-  abstract createTempusPool(initialRate:number, poolDurationSeconds:number): Promise<TempusPool>;
+  abstract createTempusPool(initialRate:number, poolDurationSeconds:number, yieldEst:number): Promise<TempusPool>;
 
   /**
    * @param rate Sets the Interest Rate for the underlying mock pool
@@ -179,7 +199,7 @@ export abstract class ITestPool {
    * Fast forwards time to after maturity and Finalized the pool
    */
   async fastForwardToMaturity(): Promise<void> {
-    await increaseTime(this.maturityTime);
+    await setEvmTime(this.maturityTime + 1);
     return this.tempus.finalize();
   }
 
@@ -213,6 +233,53 @@ export abstract class ITestPool {
     state.yieldShares = Number(await this.tempus.yieldShare.balanceOf(user));
     state.yieldBearing = Number(await this.yieldTokenBalance(user));
     return state;
+  }
+
+  protected async createPool(
+    initialRate:number,
+    poolDuration:number,
+    yieldEst:number,
+    tpsName:string,
+    tysName:string,
+    newPool: ()=>Promise<any>,
+    restorePool: (contracts:any)=>void
+  ): Promise<TempusPool> {
+    this.initialRate = initialRate;
+    this.yieldEst = yieldEst;
+    this.poolDuration = poolDuration;
+
+    const signature = this.type+"|"+initialRate+"|"+poolDuration+"|"+yieldEst;
+    let f:FixtureState = POOL_FIXTURES[signature];
+
+    if (!f) // initialize a new fixture
+    {
+      const maturityTime = await blockTimestamp() + poolDuration;
+      const names = generateTempusSharesNames(tpsName, tysName, maturityTime);
+      f = new FixtureState(maturityTime, names, deployments.createFixture(async () =>
+      {
+        await deployments.fixture(undefined, { keepExistingDeployments: true, });
+        // Note: for fixtures, all contracts must be initialized inside this callback
+        const contracts = await newPool();
+        const t = await TempusPool.deploy(this.type, this.yieldToken(), maturityTime, yieldEst, names);
+        const [owner,user,user2] = await ethers.getSigners();
+        return {
+          signers: { owner:owner, user:user, user2:user2 },
+          contracts: { ...contracts, tc:t.contract, tps:t.principalShare.contract, tys:t.yieldShare.contract}
+        };
+      }));
+      POOL_FIXTURES[signature] = f; // save for later use
+    }
+
+    // always restore pool from fixture (that's just the way the fixture approach works bro)
+    const s = await f.getInitialContractState();
+    this.maturityTime = f.maturityTime;
+    this.names = f.names;
+    this.signers = [s.signers.owner, s.signers.user, s.signers.user2];
+
+    restorePool(s.contracts);
+    const principals = new PoolShare("PrincipalShare", s.contracts.tps);
+    const yields = new PoolShare("YieldShare", s.contracts.tys);
+    return new TempusPool(this.type, s.contracts.tc, this.yieldToken(), principals, yields);
   }
 }
 

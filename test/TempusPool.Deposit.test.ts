@@ -1,11 +1,10 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { ITestPool, PoolType } from "./pool-utils/ITestPool";
+import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 
 import { Signer } from "./utils/ContractBase";
 import { toWei } from "./utils/Decimal";
-import { increaseTime } from "./utils/Utils";
 
 describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 {
@@ -18,7 +17,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should emit correct event on deposit", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
     await expect(pool.depositYBT(user, 100)).to.emit(pool.tempus.contract, 'Deposited').withArgs(
       user.address,
@@ -32,7 +31,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should allow depositing 100 (initialRate=1.0)", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500]]);
     (await pool.userState(user)).expect(0, 0, /*yieldBearing:*/500);
 
@@ -42,7 +41,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should allow depositing 100 again (initialRate=1.0)", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500]]);
 
     (await pool.expectDepositYBT(user, 100)).to.equal('success');
@@ -54,7 +53,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should get different yield tokens when depositing 100 (initialRate=1.25)", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.25, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.25, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
 
     (await pool.userState(user)).expect(0, 0, /*yieldBearing:*/100);
@@ -72,7 +71,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should revert on negative yield during deposit", async () => 
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500]]);
     await pool.setInterestRate(0.8);
 
@@ -81,7 +80,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should increase YBT 2x after changing rate to 2.0", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     (await pool.expectDepositYBT(user, 100)).to.equal('success');
@@ -108,7 +107,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should allow depositing with different recipient", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 100]]);
 
     (await pool.userState(user)).expect(0, 0, /*yieldBearing:*/100);
@@ -121,17 +120,16 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should not allow depositing after finalization", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500]]);
 
-    await increaseTime(60*60);
-    await pool.tempus.finalize();
+    await pool.fastForwardToMaturity();
     (await pool.expectDepositYBT(user, 100)).to.equal('Maturity reached.');
   });
 
   it("Should allow depositing from multiple users", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500],[user2, 500]]);
 
     (await pool.userState(user)).expect(0, 0, /*yieldBearing:*/500);
@@ -148,7 +146,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 
   it("Should allow depositing from multiple users with different rates", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500],[user2, 500]]);
 
     (await pool.expectDepositYBT(user, 100)).to.equal('success');

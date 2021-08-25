@@ -3,7 +3,13 @@ import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
 import { NumberOrString, toWei } from "./Decimal";
 import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
-import { PoolShare } from "./PoolShare";
+import { PoolShare, ShareKind } from "./PoolShare";
+
+export enum PoolType {
+  Aave = "Aave",
+  Lido = "Lido",
+  Compound = "Compound",
+}
 
 export interface TempusSharesNames {
   principalName: string;
@@ -33,12 +39,14 @@ export function generateTempusSharesNames(ybtName:string, ybtSymbol:string, matu
  * Wrapper around TempusPool
  */
 export class TempusPool extends ContractBase {
+  type:PoolType;
   yieldBearing:ERC20; // actual yield bearing token such as AToken or CToken
   principalShare:PoolShare;
   yieldShare:PoolShare;
 
-  constructor(contractName: string, pool:Contract, yieldBearing:ERC20, principalShare:PoolShare, yieldShare:PoolShare) {
-    super(contractName, 18, pool);
+  constructor(type:PoolType, pool:Contract, yieldBearing:ERC20, principalShare:PoolShare, yieldShare:PoolShare) {
+    super(type+"TempusPool", 18, pool);
+    this.type = type;
     this.yieldBearing = yieldBearing;
     this.principalShare = principalShare;
     this.yieldShare = yieldShare;
@@ -55,7 +63,7 @@ export class TempusPool extends ContractBase {
    * @param tempusShareNames Symbol names for TPS+TYS
    */
   static async deployAave(yieldToken:ERC20, maturityTime:number, estimatedYield:number, tempusShareNames:TempusSharesNames): Promise<TempusPool> {
-    return TempusPool.deploy("AaveTempusPool", yieldToken, maturityTime, estimatedYield, tempusShareNames);
+    return TempusPool.deploy(PoolType.Aave, yieldToken, maturityTime, estimatedYield, tempusShareNames);
   }
 
   /**
@@ -66,7 +74,7 @@ export class TempusPool extends ContractBase {
    * @param tempusShareNames Symbol names for TPS+TYS
    */
   static async deployCompound(yieldToken:ERC20, maturityTime:number, estimatedYield:number, tempusShareNames:TempusSharesNames): Promise<TempusPool> {
-    return TempusPool.deploy("CompoundTempusPool", yieldToken, maturityTime, estimatedYield, tempusShareNames);
+    return TempusPool.deploy(PoolType.Compound, yieldToken, maturityTime, estimatedYield, tempusShareNames);
   }
 
   /**
@@ -77,12 +85,12 @@ export class TempusPool extends ContractBase {
    * @param tempusShareNames Symbol names for TPS+TYS
    */
   static async deployLido(yieldToken:ERC20, maturityTime:number, estimatedYield:number, tempusShareNames:TempusSharesNames): Promise<TempusPool> {
-    return TempusPool.deploy("LidoTempusPool", yieldToken, maturityTime, estimatedYield, tempusShareNames);
+    return TempusPool.deploy(PoolType.Lido, yieldToken, maturityTime, estimatedYield, tempusShareNames);
   }
 
-  private static async deploy(contractName: string, yieldToken:ERC20, maturityTime:number, estimatedYield:number, tempusShareNames:TempusSharesNames): Promise<TempusPool> {
+  static async deploy(type:PoolType, yieldToken:ERC20, maturityTime:number, estimatedYield:number, tempusShareNames:TempusSharesNames): Promise<TempusPool> {
     const pool = await ContractBase.deployContract(
-      contractName,
+      type+"TempusPool",
       yieldToken.address, 
       maturityTime,
       toWei(estimatedYield),
@@ -92,9 +100,9 @@ export class TempusPool extends ContractBase {
       tempusShareNames.yieldSymbol
     );
 
-    const principalShare = await PoolShare.attach("principal", await pool.principalShare());
-    const yieldShare = await PoolShare.attach("yield", await pool.yieldShare());
-    return new TempusPool(contractName, pool, yieldToken, principalShare, yieldShare);
+    const principalShare = await PoolShare.attach(ShareKind.Principal, await pool.principalShare());
+    const yieldShare = await PoolShare.attach(ShareKind.Yield, await pool.yieldShare());
+    return new TempusPool(type, pool, yieldToken, principalShare, yieldShare);
   }
 
   /**
@@ -272,12 +280,4 @@ export class TempusPool extends ContractBase {
   async transferFees(owner:SignerOrAddress, recipient:SignerOrAddress, amount:NumberOrString) {
     await this.contract.connect(owner).transferFees(addressOf(recipient), this.toBigNum(amount));
   }
-}
-
-// DEPRECATED, use `ITestPool.userState()` and `state.expect()` to get actual test failure line #
-export async function expectUserState(pool:TempusPool, owner:SignerOrAddress, principalShares:number, yieldShares:number, yieldBearing:number) {
-  expect(await pool.principalShare.balanceOf(owner)).to.equal(principalShares);
-  expect(await pool.yieldShare.balanceOf(owner)).to.equal(yieldShares);
-  // BUG: this is wrong for Lido, which requires sharesOf() to get the YBT
-  expect(await pool.yieldBearing.balanceOf(owner)).to.equal(yieldBearing);
 }

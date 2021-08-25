@@ -1,7 +1,7 @@
 
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { ITestPool, PoolType } from "./pool-utils/ITestPool";
+import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 
 import { Signer } from "./utils/ContractBase";
@@ -18,7 +18,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
   it("Should issue appropriate shares after depositing Backing Tokens", async () =>
   {
     const depositAmount = 100;
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 500]]);
     (await pool.userState(user)).expect(0, 0, /*yieldBearing:*/500);
     
@@ -29,7 +29,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
   });
   it("Should issue appropriate shares after depositing Backing Tokens after changing rate to 2.0", async () =>
   {
-    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/);
+    await pool.createTempusPool(/*initialRate*/1.0, 60*60 /*maturity in 1hr*/, /*yieldEst:*/0.1);
     await pool.setupAccounts(owner, [[user, 200]]);
 
     await pool.asset().approve(user, pool.tempus.address, 200);

@@ -1,5 +1,3 @@
-
-import { ethers } from "hardhat";
 import { utils } from "ethers";
 import { expect } from "chai";
 import { ITestPool } from "./pool-utils/ITestPool";
@@ -7,7 +5,7 @@ import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 
 import { Signer } from "./utils/ContractBase";
 import { TempusPool } from "./utils/TempusPool";
-import { expectRevert, blockTimestamp, increaseTime } from "./utils/Utils";
+import { expectRevert, blockTimestamp } from "./utils/Utils";
 
 describeForEachPool("TempusPool Deploy", (testPool:ITestPool) =>
 {
@@ -16,13 +14,14 @@ describeForEachPool("TempusPool Deploy", (testPool:ITestPool) =>
 
   beforeEach(async () =>
   {
-    [owner, user, user2] = await ethers.getSigners();
-    pool = await testPool.createTempusPool(/*initialRate:*/1.0, 60 * 60);
+    pool = await testPool.createTempusPool(/*initialRate:*/1.0, 60 * 60, /*yieldEst:*/0.1);
+    [owner, user, user2] = testPool.signers;
   });
 
   it("Should revert if maturity is less than current time", async () =>
   {
-    (await expectRevert(testPool.createTempusPool(/*initialRate:*/1.0, -60))).to.equal("maturityTime is after startTime");
+    (await expectRevert(testPool.createTempusPool(/*initialRate:*/1.0, -60, /*yieldEst:*/0.1)))
+      .to.equal("maturityTime is after startTime");
   });
   
   it("Version is correct", async () =>
@@ -30,7 +29,7 @@ describeForEachPool("TempusPool Deploy", (testPool:ITestPool) =>
     expect(await pool.version()).to.equal(1);
   });
 
-  it("undelying protocol name is correct", async () => 
+  it("Underlying protocol name is correct", async () => 
   {
     const protocol:string = utils.parseBytes32String(await pool.protocolName());
     expect(protocol).to.equal(testPool.type);
@@ -61,16 +60,14 @@ describeForEachPool("TempusPool Deploy", (testPool:ITestPool) =>
 
   it("Finalize on/after maturity", async () =>
   {
-    await increaseTime(60*60);
-    await pool.finalize();
+    await testPool.fastForwardToMaturity();
     expect(await pool.matured()).to.equal(true);
   });
 
   it("Finalizing multiple times", async () =>
   {
     (await expectRevert(pool.finalize())).to.equal("Maturity not been reached yet.");
-    await increaseTime(60*60);
-    await pool.finalize();
+    await testPool.fastForwardToMaturity();
     expect(await pool.matured()).to.equal(true);
     await pool.finalize();
     await pool.finalize();
@@ -81,15 +78,15 @@ describeForEachPool("TempusPool Deploy", (testPool:ITestPool) =>
   it("Principal shares initial details", async () =>
   {
     expect(await pool.principalShare.totalSupply()).to.equal(0);
-    expect(await pool.principalShare.name()).to.equal(testPool.principalName);
-    expect(await pool.principalShare.symbol()).to.equal(testPool.principalName);
+    expect(await pool.principalShare.name()).to.equal(testPool.names.principalName);
+    expect(await pool.principalShare.symbol()).to.equal(testPool.names.principalSymbol);
   });
 
   it("Yield shares initial details", async () =>
   {
     expect(await pool.yieldShare.totalSupply()).to.equal(0);
-    expect(await pool.yieldShare.name()).to.equal(testPool.yieldName);
-    expect(await pool.yieldShare.symbol()).to.equal(testPool.yieldName);
+    expect(await pool.yieldShare.name()).to.equal(testPool.names.yieldName);
+    expect(await pool.yieldShare.symbol()).to.equal(testPool.names.yieldSymbol);
   });
 
   it("Should revert on collecting fees as there is no fees", async () => 

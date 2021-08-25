@@ -109,6 +109,6 @@ module.exports = {
     cDaiHolder: '0x9b4772e59385ec732bccb06018e318b7b3477459'
   },
   mocha: {
-    timeout: 40000
+    timeout: 120000
   }
 };
