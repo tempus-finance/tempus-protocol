@@ -98,6 +98,17 @@ jobs:
       - run:
           command:
             yarn deploy-ci
+  localDeploymentForkMainnet:
+    executor:
+      name: node/default
+      tag: '15.11'
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          command:
+            yarn deploy-ci:fork:mainnet
   runMythX-Pool:
     executor:
       name: node/default
@@ -154,6 +165,9 @@ workflows:
   test_local_deployment:
     jobs:
       - localDeployment
+  test_local_deployment_fork_mainnet:
+    jobs:
+      - localDeploymentForkMainnet
   mythx_pool:
     jobs:
       - runMythX-Pool
