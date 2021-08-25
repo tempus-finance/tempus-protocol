@@ -71,7 +71,7 @@ contract CompoundTempusPool is TempusPool {
         assert(cToken.balanceOf(address(this)) >= yieldBearingTokensAmount);
 
         IERC20(backingToken).safeIncreaseAllowance(msg.sender, yieldBearingTokensAmount);
-        cToken.redeem(yieldBearingTokensAmount);
+        require(cToken.redeem(yieldBearingTokensAmount) == 0, "CErc20 redeem failed");
 
         uint256 backing = (yieldBearingTokensAmount * cToken.exchangeRateStored()) / 1e18;
         IERC20(backingToken).safeTransfer(recipient, backing);
