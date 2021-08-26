@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { NumberOrString, fromWei, toWei } from "./Decimal";
+import { MAX_UINT256, NumberOrString, fromWei, toWei } from "./Decimal";
 import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { PoolShare, ShareKind } from "./PoolShare";
@@ -113,6 +113,7 @@ export class TempusPool extends ContractBase {
         tempusShareNames.principalSymbol,
         tempusShareNames.yieldName,
         tempusShareNames.yieldSymbol,
+        MAX_UINT256, // Pools have unbounded TVL
         "0x00000" /* hardcoded referral code */
       );
     } else if (type === PoolType.Lido) {
@@ -126,6 +127,7 @@ export class TempusPool extends ContractBase {
         tempusShareNames.principalSymbol,
         tempusShareNames.yieldName,
         tempusShareNames.yieldSymbol,
+        MAX_UINT256, // Pools have unbounded TVL
         "0x0000000000000000000000000000000000000000" /* hardcoded referrer */
       );
     } else {
@@ -138,7 +140,8 @@ export class TempusPool extends ContractBase {
         tempusShareNames.principalName,
         tempusShareNames.principalSymbol,
         tempusShareNames.yieldName,
-        tempusShareNames.yieldSymbol
+        tempusShareNames.yieldSymbol,
+        MAX_UINT256 // Pools have unbounded TVL
       );
     }
 
