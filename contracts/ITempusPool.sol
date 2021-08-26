@@ -57,6 +57,9 @@ interface ITempusPool is ITempusFees {
     /// @return The TempusController address that is authorized to perform restricted actions
     function controller() external view returns (address);
 
+    /// Returns the total value locked (TVL) cap in terms of yield bearing token.
+    function tvlCap() external view returns (uint256);
+
     /// @return Start time of the pool.
     function startTime() external view returns (uint256);
 

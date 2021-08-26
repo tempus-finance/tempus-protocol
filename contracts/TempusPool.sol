@@ -34,6 +34,8 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
 
     bool public override matured;
 
+    uint256 public immutable override tvlCap;
+
     FeesConfig feesConfig;
 
     /// total amount of fees accumulated in pool
@@ -50,6 +52,7 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
     /// @param principalSymbol symbol of Tempus Principal Share
     /// @param yieldName name of Tempus Yield Share
     /// @param yieldSymbol symbol of Tempus Yield Share
+    /// @param _tvlCap The deposit (TVL) cap in terms of yield bearing token
     constructor(
         address token,
         address bToken,
@@ -60,7 +63,8 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         string memory principalName,
         string memory principalSymbol,
         string memory yieldName,
-        string memory yieldSymbol
+        string memory yieldSymbol,
+        uint256 _tvlCap
     ) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
 
@@ -71,6 +75,7 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         maturityTime = maturity;
         initialInterestRate = initInterestRate;
         initialEstimatedYield = estimatedFinalYield;
+        tvlCap = _tvlCap;
 
         principalShare = new PrincipalShare(this, principalName, principalSymbol);
         yieldShare = new YieldShare(this, yieldName, yieldSymbol);
@@ -165,6 +170,10 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         )
     {
         require(!matured, "Maturity reached.");
+
+        uint256 depositedYieldTokens = IERC20(yieldBearingToken).balanceOf(address(this));
+        require((depositedYieldTokens + yieldTokenAmount) <= tvlCap, "TVL limit reached.");
+
         rate = updateInterestRate(yieldBearingToken);
         require(rate >= initialInterestRate, "Negative yield!");
 

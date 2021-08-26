@@ -24,6 +24,7 @@ contract AaveTempusPool is TempusPool {
         string memory principalSymbol,
         string memory yieldName,
         string memory yieldSymbol,
+        uint256 tvlCap,
         uint16 referrerCode
     )
         TempusPool(
@@ -36,7 +37,8 @@ contract AaveTempusPool is TempusPool {
             principalName,
             principalSymbol,
             yieldName,
-            yieldSymbol
+            yieldSymbol,
+            tvlCap
         )
     {
         aavePool = token.POOL();

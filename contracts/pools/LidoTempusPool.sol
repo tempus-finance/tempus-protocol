@@ -18,6 +18,7 @@ contract LidoTempusPool is TempusPool {
         string memory principalSymbol,
         string memory yieldName,
         string memory yieldSymbol,
+        uint256 tvlCap,
         address referrerAddress
     )
         TempusPool(
@@ -30,7 +31,8 @@ contract LidoTempusPool is TempusPool {
             principalName,
             principalSymbol,
             yieldName,
-            yieldSymbol
+            yieldSymbol,
+            tvlCap
         )
     {
         // TODO: consider adding sanity check for _lido.name() and _lido.symbol()
