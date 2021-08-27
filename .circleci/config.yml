@@ -209,6 +209,24 @@ jobs:
           command: |
             yarn echidna-test-assertion:pool:yearn
 
+  slither:
+    executor:
+      name: node/default
+      tag: '15.11'
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: "Install slither"
+          command: |
+            sudo apt update
+            sudo apt install python3-pip
+            sudo pip3 install slither-analyzer
+      - run:
+          name: "Run slither"
+          command: yarn slither
+
 workflows:
   code_coverage:
     jobs:
@@ -254,6 +272,9 @@ workflows:
       - job-echidna-yearn-pool
       - job-echidna-assertion-lido-pool
       - job-echidna-assertion-yearn-pool
+  slither:
+    jobs:
+      - slither
 
 notify:
   webhooks:
