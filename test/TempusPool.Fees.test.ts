@@ -28,12 +28,12 @@ describeForEachPool("TempusPool Fees", (pool:ITestPool) =>
   {
     await pool.createDefault();
 
-    await pool.tempus.setFeesConfig(owner, 0.15, 0.05, 0.02);
+    await pool.tempus.setFeesConfig(owner, { depositPercent: 0.15, earlyRedeemPercent: 0.05, matureRedeemPercent: 0.02 });
 
     let feesConfig = await pool.tempus.getFeesConfig();
-    expect(feesConfig.depositPercent).to.equal(parseDecimal("0.15", 18));
-    expect(feesConfig.earlyRedeemPercent).to.equal(parseDecimal("0.05", 18));
-    expect(feesConfig.matureRedeemPercent).to.equal(parseDecimal("0.02", 18));
+    expect(feesConfig.depositPercent).to.equal(0.15);
+    expect(feesConfig.earlyRedeemPercent).to.equal(0.05);
+    expect(feesConfig.matureRedeemPercent).to.equal(0.02);
   });
 
   it("Should collect tokens as fees during deposit() if fees != 0", async () =>
@@ -41,7 +41,7 @@ describeForEachPool("TempusPool Fees", (pool:ITestPool) =>
     await pool.createDefault();
     await pool.setupAccounts(owner, [[user, 500]]);
 
-    await pool.tempus.setFeesConfig(owner, 0.01, 0.0, 0.0);
+    await pool.tempus.setFeesConfig(owner, { depositPercent: 0.01, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.0 });
     await pool.depositYBT(user, 100);
     expect(await pool.tempus.contractBalance()).to.equal(100); // all 100 in the pool
     // but user receives 99
@@ -54,7 +54,7 @@ describeForEachPool("TempusPool Fees", (pool:ITestPool) =>
     await pool.createDefault();
     await pool.setupAccounts(owner, [[user, 500]]);
 
-    await pool.tempus.setFeesConfig(owner, 0.0, 0.01, 0.0);
+    await pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 0.01, matureRedeemPercent: 0.0 });
     await pool.depositYBT(user, 100);
     expect(await pool.tempus.contractBalance()).to.equal(100); // all 100 in the pool
     (await pool.userState(user)).expect(100, 100, /*yieldBearing:*/400);
@@ -70,7 +70,7 @@ describeForEachPool("TempusPool Fees", (pool:ITestPool) =>
     await pool.createDefault();
     await pool.setupAccounts(owner, [[user, 500]]);
 
-    await pool.tempus.setFeesConfig(owner, 0.0, 0.0, 0.02);
+    await pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.02 });
     await pool.depositYBT(user, 100);
     expect(await pool.tempus.contractBalance()).to.equal(100); // all 100 in the pool
     (await pool.userState(user)).expect(100, 100, /*yieldBearing:*/400);
@@ -89,7 +89,7 @@ describeForEachPool("TempusPool Fees", (pool:ITestPool) =>
     await pool.createDefault();
     await pool.setupAccounts(owner, [[user, 500]]);
 
-    await pool.tempus.setFeesConfig(owner, 0.10, 0.0, 0.0);
+    await pool.tempus.setFeesConfig(owner, { depositPercent: 0.10, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.0 });
     await pool.depositYBT(user, 100, /*recipient:*/user);
     expect(await pool.tempus.contractBalance()).to.equal(100);
 

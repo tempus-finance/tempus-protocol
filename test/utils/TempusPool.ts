@@ -276,7 +276,12 @@ export class TempusPool extends ContractBase {
   }
 
   async getFeesConfig(): Promise<TempusFeesConfig> {
-    return await this.contract.getFeesConfig();
+    let feesConfig = await this.contract.getFeesConfig();
+    return {
+      depositPercent: this.fromBigNum(feesConfig.depositPercent),
+      earlyRedeemPercent: this.fromBigNum(feesConfig.earlyRedeemPercent),
+      matureRedeemPercent: this.fromBigNum(feesConfig.matureRedeemPercent)
+    }
   }
 
   /**
@@ -284,14 +289,12 @@ export class TempusPool extends ContractBase {
    */
   async setFeesConfig(
     owner:SignerOrAddress,
-    depositPercent:NumberOrString,
-    earlyRedeemPercent:NumberOrString,
-    matureRedeemPercent:NumberOrString
+    feesConfig: TempusFeesConfig
   ): Promise<void> {
     await this.contract.connect(owner).setFeesConfig({
-      depositPercent: this.toBigNum(depositPercent),
-      earlyRedeemPercent: this.toBigNum(earlyRedeemPercent),
-      matureRedeemPercent: this.toBigNum(matureRedeemPercent),
+      depositPercent: this.toBigNum(feesConfig.depositPercent),
+      earlyRedeemPercent: this.toBigNum(feesConfig.earlyRedeemPercent),
+      matureRedeemPercent: this.toBigNum(feesConfig.matureRedeemPercent)
     });
   }
 
