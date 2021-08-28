@@ -8,7 +8,7 @@ import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 
 contract ComptrollerMock is ComptrollerStorage, ComptrollerInterface {
-    uint public exchangeRate; // current exchange rate as 1e18 decimal
+    uint public exchangeRate; // MOCK exchange rate as 1e18 decimal
 
     // used for mocks, it will force-fail the next deposit or redeem
     bool public mockFailNextDepositOrRedeem;
