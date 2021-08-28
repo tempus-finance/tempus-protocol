@@ -14,6 +14,9 @@ interface ICToken is IERC20 {
     /// Contract which oversees inter-cToken operations
     function comptroller() external view returns (IComptroller);
 
+    /// Number of decimals of this CToken
+    function decimals() external view returns (uint8);
+
     /// Calculates and returns the current exchange rate. The value has a fixed precision of 18 decimal places.
     function exchangeRateCurrent() external returns (uint);
 

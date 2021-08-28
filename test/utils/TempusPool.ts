@@ -59,9 +59,6 @@ export class TempusPool extends ContractBase {
     this.yieldBearing = yieldBearing;
     this.principalShare = principalShare;
     this.yieldShare = yieldShare;
-    if (this.yieldBearing.decimals != this.decimals) {
-      throw new Error("TempusPool decimals must equal backing asset decimals");
-    }
   }
 
   /**

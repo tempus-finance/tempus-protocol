@@ -15,8 +15,9 @@ contract CErc20 is CTokenMock, CErc20Interface {
         ComptrollerMock comptrollerInterface,
         address underlyingAsset,
         string memory name,
-        string memory symbol
-    ) CTokenMock(comptrollerInterface, name, symbol) {
+        string memory symbol,
+        uint8 decimals
+    ) CTokenMock(comptrollerInterface, name, symbol, decimals) {
         underlying = underlyingAsset;
     }
 

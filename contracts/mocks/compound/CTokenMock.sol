@@ -7,12 +7,20 @@ import "./CTokenInterfaces.sol";
 
 /// Yield Bearing Token for Compound - CToken
 abstract contract CTokenMock is ERC20, CTokenInterface {
+    uint8 internal immutable contractDecimals;
+
     constructor(
         ComptrollerInterface comptrollerInterface,
         string memory name,
-        string memory symbol
+        string memory symbol,
+        uint8 tokenDecimals
     ) ERC20(name, symbol) {
+        contractDecimals = tokenDecimals;
         comptroller = comptrollerInterface;
+    }
+
+    function decimals() public view override returns (uint8) {
+        return contractDecimals;
     }
 
     function exchangeRateStored() public view override returns (uint) {

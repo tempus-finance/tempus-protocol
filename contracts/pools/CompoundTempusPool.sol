@@ -3,7 +3,6 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "../TempusPool.sol";
 import "../protocols/compound/ICErc20.sol";
@@ -15,8 +14,8 @@ contract CompoundTempusPool is TempusPool {
     using Fixed256x18 for uint256;
 
     ICErc20 internal immutable cToken;
-    uint256 internal immutable exchangeRateDecimals;
-    uint256 internal immutable exchangeRateConversionScalar;
+    uint256 internal immutable exchangeRateDecimals; // Number of decimals for Compound's exchangeRate
+    uint256 internal immutable exchangeRateScalar; // Scalar for converting Compound exchangeRate to 1e18 decimal
     bytes32 public immutable override protocolName = "Compound";
 
     constructor(
@@ -51,7 +50,7 @@ contract CompoundTempusPool is TempusPool {
         cToken = token;
         uint256 decimals = getExchangeRateDecimals(token);
         exchangeRateDecimals = decimals;
-        exchangeRateConversionScalar = getRateConversionScalar(decimals);
+        exchangeRateScalar = getRateConversionScalar(decimals);
     }
 
     function depositToUnderlying(uint256 amount) internal override returns (uint256) {
@@ -87,11 +86,14 @@ contract CompoundTempusPool is TempusPool {
         return backing;
     }
 
+    /// @return Number of decimals used with Compound's exchangeRate functions
     function getExchangeRateDecimals(ICErc20 token) internal view returns (uint256) {
         // https://compound.finance/docs/ctokens#exchange-rate
-        return 18 - 8 + IERC20Metadata(address(token)).decimals();
+        return 18 - 8 + token.decimals();
     }
 
+    /// @return A scalar multiplier for converting from Compound's exchangeRate to 1e18 decimal
+    ///         For decimals=24 scalar=1e6, for decimals=14 scalar=1e4
     function getRateConversionScalar(uint256 decimals) internal pure returns (uint256) {
         if (decimals > 18) {
             return 1**(decimals - 18);
@@ -103,11 +105,11 @@ contract CompoundTempusPool is TempusPool {
     }
 
     /// @dev Converts compound's exchange rate to 1e18 decimal
-    function compoundRateTo1e18(uint256 rate) internal view returns (uint256) {
-        return compoundRateTo1e18(rate, exchangeRateDecimals, exchangeRateConversionScalar);
+    function compoundRateToFixed256x18(uint256 rate) internal view returns (uint256) {
+        return compoundRateToFixed256x18(rate, exchangeRateDecimals, exchangeRateScalar);
     }
 
-    function compoundRateTo1e18(
+    function compoundRateToFixed256x18(
         uint256 rate,
         uint256 decimals,
         uint256 scalar
@@ -126,19 +128,19 @@ contract CompoundTempusPool is TempusPool {
         uint256 rate = token.exchangeRateCurrent();
         uint256 decimals = getExchangeRateDecimals(token);
         uint256 scalar = getRateConversionScalar(decimals);
-        return compoundRateTo1e18(rate, decimals, scalar);
+        return compoundRateToFixed256x18(rate, decimals, scalar);
     }
 
     /// @return Updated current Interest Rate as an 1e18 decimal
     function updateInterestRate(address token) internal override returns (uint256) {
         // NOTE: exchangeRateCurrent() will accrue interest and gets the latest Interest Rate
         //       We use this to avoid arbitrage
-        return compoundRateTo1e18(ICToken(token).exchangeRateCurrent());
+        return compoundRateToFixed256x18(ICToken(token).exchangeRateCurrent());
     }
 
     /// @return Current Interest Rate as an 1e18 decimal
     function storedInterestRate(address token) internal view override returns (uint256) {
-        return compoundRateTo1e18(ICToken(token).exchangeRateStored());
+        return compoundRateToFixed256x18(ICToken(token).exchangeRateStored());
     }
 
     function numAssetsPerYieldToken(uint yieldTokens, uint rate) public pure override returns (uint) {
