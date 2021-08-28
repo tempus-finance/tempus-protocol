@@ -77,7 +77,7 @@
     "increase-time": "npx hardhat run scripts/increaseTime.local.ts --network localhost",
     "mythx-install": "pip install mythx-cli",
     "mythx-amm": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/amm/TempusAMM.sol",
-    "mythx-pool": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/pools/AaveTempusPool.sol contracts/pools/CompoundTempusPool.sol contracts/pools/LidoTempusPool.sol",
+    "mythx-pool": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/TempusController.sol contracts/pools/AaveTempusPool.sol contracts/pools/CompoundTempusPool.sol contracts/pools/LidoTempusPool.sol contracts/pools/RariTempusPool.sol contracts/pools/YearnTempusPool.sol",
     "mythx-misc": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/stats/Stats.sol contracts/token/TempusToken.sol contracts/token/vesting/ERC20Vesting.sol",
     "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither .",
     "echidna-test:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --format text",
