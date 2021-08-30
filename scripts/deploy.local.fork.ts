@@ -47,13 +47,9 @@ class DeployLocalForked {
     // Deploy stats contract
     const statistics = await ContractBase.deployContract("Stats");
 
-    // Make deposit into pool to increase pool TVL
-    const { aDaiHolder } = await getNamedAccounts();
-    await this.makeDeposit(1000, tempusPool, aDaiHolder, aDaiToken);
-    await this.sendTransaction(10000, aDaiHolder, owner.address, aDaiToken);
-
     // Log required information to console.
     console.log(`Deployed TempusPool contract at: ${tempusPool.address}`);
+    console.log(`Deployed TempusPool AMM at: ${tempusAMM.address}`);
     console.log(`TPS deployed at: ${tempusPool.principalShare.address}`)
     console.log(`TYS deployed at: ${tempusPool.yieldShare.address}`);
     console.log(`YBT address: ${tempusPool.yieldBearing.address}`);
@@ -62,36 +58,5 @@ class DeployLocalForked {
     console.log(`Deployed Vault at: ${vault.address}`);
   }
 
-  static async makeDeposit(amount: number, pool: TempusPool, from: string, token: ERC20) {
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [from],
-    });
-    const fromSigner = await ethers.getSigner(from);
-  
-    await token.approve(fromSigner, fromSigner, amount);
-    await pool.controller.depositYieldBearing(fromSigner, pool, amount, fromSigner);
-    
-    await network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: [from],
-    });
-  }
-
-  static async sendTransaction(amount: number, from: string, to: string, token: ERC20) {
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [from],
-    });
-    const fromSigner = await ethers.getSigner(from);
-    
-    await token.approve(fromSigner, fromSigner, amount);
-    await token.transfer(fromSigner, to, amount);
-
-    await network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: [from],
-    });
-  }
 }
 DeployLocalForked.deploy();

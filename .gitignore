@@ -10,3 +10,4 @@ typechain/*
 .env
 .vscode/*
 mythxOutput.json
+deposit.local.config.ts
