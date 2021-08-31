@@ -15,6 +15,7 @@ class DeployLocalForked {
 
     const aDaiToken = new ERC20("ERC20", (await ethers.getContract('aToken_Dai')));
     const wEthToken = new ERC20("ERC20", (await ethers.getContract('aToken_Weth')));
+    const stETHToken = new ERC20("ILido", (await ethers.getContract('Lido')));
   
     const latestBlock = await ethers.provider.getBlock('latest');
     console.log(`Latest block number: ${latestBlock.number}`);
@@ -23,20 +24,42 @@ class DeployLocalForked {
     const authorizer = await ContractBase.deployContract("Authorizer", owner.address);
     const vault = await ContractBase.deployContract("Vault", authorizer.address, wEthToken.address, 3 * MONTH, MONTH);
 
-    // Deploy Tempus pool backed by Aave (aDAI Token)
-    const maturityTime = latestBlock.timestamp + DAY * 365;
-    const names = generateTempusSharesNames("aDai aave token", "aDai", maturityTime);
-    const yieldEst = 0.1;
+    // Deploy Tempus Controller
     const tempusController: TempusController = await TempusController.deploy();
-    const tempusPool = await TempusPool.deployAave(aDaiToken, tempusController, maturityTime, yieldEst, names);
+
+    // Deploy Tempus pool backed by Aave (aDAI Token)
+    const maturityTimeAave = latestBlock.timestamp + DAY * 365;
+    const poolNamesAave = generateTempusSharesNames("aDai aave token", "aDai", maturityTimeAave);
+    const yieldEstAave = 0.1;
+    const tempusPoolAave = await TempusPool.deployAave(aDaiToken, tempusController, maturityTimeAave, yieldEstAave, poolNamesAave);
+
+    // Deploy Tempus pool backed by Lido (stETH Token)
+    const maturityTimeLido = latestBlock.timestamp + DAY * 365;
+    const yieldEstLido = 0.1;
+    const namesLido = generateTempusSharesNames("Lido stETH", "stETH", maturityTimeLido);
+    const tempusPoolLido = await TempusPool.deployLido(stETHToken, tempusController, maturityTimeLido, yieldEstLido, namesLido);
 
     // Deploy TempusAMM for Aave TempusPool - we have one AMM per TempusPool
-    let tempusAMM = await ContractBase.deployContract(
+    let tempusAMMAave = await ContractBase.deployContract(
       "TempusAMM",
       vault.address,
       "Tempus LP token",
       "LP",
-      tempusPool.address,
+      tempusPoolAave.address,
+      5,
+      toWei(0.002),
+      3 * MONTH,
+      MONTH,
+      owner.address
+    );
+
+    // Deploy TempusAMM for Lido TempusPool - we have one AMM per TempusPool
+    let tempusAMMLido = await ContractBase.deployContract(
+      "TempusAMM",
+      vault.address,
+      "Tempus LP token",
+      "LP",
+      tempusPoolLido.address,
       5,
       toWei(0.002),
       3 * MONTH,
@@ -48,15 +71,22 @@ class DeployLocalForked {
     const statistics = await ContractBase.deployContract("Stats");
 
     // Log required information to console.
-    console.log(`Deployed TempusPool contract at: ${tempusPool.address}`);
-    console.log(`Deployed TempusPool AMM at: ${tempusAMM.address}`);
-    console.log(`TPS deployed at: ${tempusPool.principalShare.address}`)
-    console.log(`TYS deployed at: ${tempusPool.yieldShare.address}`);
-    console.log(`YBT address: ${tempusPool.yieldBearing.address}`);
-    console.log(`Deployed Statistics contract at: ${statistics.address}`);
+    console.log('=========== Aave Tempus Pool Info ===========');
+    console.log(`Deployed TempusPool Aave contract at: ${tempusPoolAave.address}`);
+    console.log(`TPS Aave deployed at: ${tempusPoolAave.principalShare.address}`)
+    console.log(`TYS Aave deployed at: ${tempusPoolAave.yieldShare.address}`);
+    console.log(`YBT Aave address: ${tempusPoolAave.yieldBearing.address}`);
+    console.log(`Deployed TempusPool Aave AMM at: ${tempusAMMAave.address}`);
+    console.log('=========== Lido Tempus Pool Info ===========');
+    console.log(`Deployed TempusPool Lido contract at: ${tempusPoolLido.address}`);
+    console.log(`TPS Lido deployed at: ${tempusPoolLido.principalShare.address}`)
+    console.log(`TYS Lido deployed at: ${tempusPoolLido.yieldShare.address}`);
+    console.log(`YBT Lido address: ${tempusPoolLido.yieldBearing.address}`);
+    console.log(`Deployed TempusPool Lido AMM at: ${tempusAMMLido.address}`);
+    console.log('=========== Singleton Contracts Info ========');
+    console.log(`Deployed Stats contract at: ${statistics.address}`);
     console.log(`Deployed TempusController at: ${tempusController.address}`);
     console.log(`Deployed Vault at: ${vault.address}`);
   }
-
 }
 DeployLocalForked.deploy();
