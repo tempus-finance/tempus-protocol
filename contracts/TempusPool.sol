@@ -234,7 +234,7 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         YieldShare(address(yieldShare)).burnFrom(from, yieldAmount);
 
         uint256 currentRate = updateInterestRate(yieldBearingToken);
-        (redeemedYieldTokens, , interestRate) = getRedemptionAmounts(principalAmount, yieldAmount, currentRate);
+        (redeemedYieldTokens, interestRate) = getRedemptionAmounts(principalAmount, yieldAmount, currentRate);
 
         // Collect fees on redeem
         uint256 redeemFees = matured ? feesConfig.matureRedeemPercent : feesConfig.earlyRedeemPercent;
@@ -249,27 +249,14 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         uint256 principalAmount,
         uint256 yieldAmount,
         uint256 currentRate
-    )
-        private
-        view
-        returns (
-            uint256 redeemableYieldTokens,
-            uint256 redeemableBackingTokens,
-            uint256 interestRate
-        )
-    {
+    ) private view returns (uint256 redeemableYieldTokens, uint256 interestRate) {
         interestRate = effectiveRate(currentRate);
 
-        if (interestRate < initialInterestRate) {
-            redeemableBackingTokens = (principalAmount * interestRate) / initialInterestRate;
-        } else {
+        if (interestRate > initialInterestRate) {
             uint256 rateDiff = interestRate - initialInterestRate;
             // this is expressed in backing token
             uint256 amountPerYieldShareToken = rateDiff.divf18(initialInterestRate);
             uint256 redeemAmountFromYieldShares = yieldAmount.mulf18(amountPerYieldShareToken);
-
-            // TODO: Scale based on number of decimals for tokens
-            redeemableBackingTokens = principalAmount + redeemAmountFromYieldShares;
         }
 
         redeemableYieldTokens = numYieldTokensPerAsset(redeemableBackingTokens, currentRate);
