@@ -1,4 +1,4 @@
 {
   "detectors_to_exclude": "solc-version",
-  "filter_paths": "node_modules/@openzeppelin|contracts/mocks|contracts/amm|contracts/TempusController.sol"
+  "filter_paths": "node_modules/@openzeppelin|contracts/amm|contracts/TempusController.sol"
 }
