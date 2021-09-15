@@ -31,7 +31,7 @@ class DeployLocalForked {
 
     // Deploy Tempus pool backed by Compound (cDAI Token)
     const maturityTimeCompound = latestBlock.timestamp + DAY * 365;
-    const poolNamesCompound = generateTempusSharesNames("aDai aave token", "aDai", maturityTimeAave);
+    const poolNamesCompound = generateTempusSharesNames("cDai compound token", "cDai", maturityTimeAave);
     const yieldEstCompound = 0.13;
     const tempusPoolCompound = await TempusPool.deployCompound(cDaiToken, tempusController, maturityTimeCompound, yieldEstCompound, poolNamesCompound);
 
@@ -55,7 +55,7 @@ class DeployLocalForked {
       owner.address
     );
 
-    // Deploy TempusAMM for Aave TempusPool - we have one AMM per TempusPool
+    // Deploy TempusAMM for Compound TempusPool - we have one AMM per TempusPool
     let tempusAMMCompound = await ContractBase.deployContract(
       "TempusAMM",
       "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
@@ -95,10 +95,10 @@ class DeployLocalForked {
     console.log(`Deployed TempusPool Aave AMM at: ${tempusAMMAave.address}`);
     console.log('=========== Compound Tempus Pool Info ===========');
     console.log(`Deployed TempusPool Compound contract at: ${tempusPoolCompound.address}`);
-    console.log(`TPS Aave deployed at: ${tempusPoolCompound.principalShare.address}`)
-    console.log(`TYS Aave deployed at: ${tempusPoolCompound.yieldShare.address}`);
-    console.log(`YBT Aave address: ${tempusPoolCompound.yieldBearing.address}`);
-    console.log(`Deployed TempusPool Aave AMM at: ${tempusAMMCompound.address}`);
+    console.log(`TPS Compound deployed at: ${tempusPoolCompound.principalShare.address}`)
+    console.log(`TYS Compound deployed at: ${tempusPoolCompound.yieldShare.address}`);
+    console.log(`YBT Compound address: ${tempusPoolCompound.yieldBearing.address}`);
+    console.log(`Deployed TempusPool Compound AMM at: ${tempusAMMCompound.address}`);
     console.log('=========== Lido Tempus Pool Info ===========');
     console.log(`Deployed TempusPool Lido contract at: ${tempusPoolLido.address}`);
     console.log(`TPS Lido deployed at: ${tempusPoolLido.principalShare.address}`)

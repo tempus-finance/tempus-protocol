@@ -17,6 +17,7 @@ class DeployLocalForked {
     const owner = (await ethers.getSigners())[0];
 
     const aDaiToken = new ERC20("ERC20", (await ethers.getContract('aToken_Dai')));
+    const cDaiToken = new ERC20("ERC20", (await ethers.getContract('cToken_Dai')));
     const stEthToken = new ERC20("ILido", (await ethers.getContract('Lido')));
     const daiToken = new ERC20("ERC20", (await ethers.getContract('Dai')));
 
@@ -38,26 +39,43 @@ class DeployLocalForked {
     const tempusPoolAMMAave = new TempusAMM(tempusPoolAMMAaveContract, vaultContract, tempusPoolAave);
     ////
 
+    // Connect to Compound Tempus Pool contracts
+    const principalShareTokenCompound = await ethers.getContractAt('PrincipalShare', depositConfig.addresses.tempusPools[1].principalShare);
+    const yieldShareTokenCompound = await ethers.getContractAt('YieldShare', depositConfig.addresses.tempusPools[1].yieldShare);
+    const poolSharePrincipalCompound = new PoolShare('PoolShare', principalShareTokenCompound);
+    const poolShareYieldCompound = new PoolShare('PoolShare', yieldShareTokenCompound);
+
+    const tempusPoolCompoundContract = await ethers.getContractAt('TempusPool', depositConfig.addresses.tempusPools[1].address);
+    const tempusPoolCompound = new TempusPool(PoolType.Compound, tempusPoolCompoundContract, tempusController, cDaiToken, poolSharePrincipalCompound, poolShareYieldCompound);
+
+    const tempusPoolAMMCompoundContract = await ethers.getContractAt('TempusAMM', depositConfig.addresses.tempusPools[1].amm);
+    const tempusPoolAMMCompound = new TempusAMM(tempusPoolAMMCompoundContract, vaultContract, tempusPoolCompound);
+    ////
+
     // Connect to Lido Tempus Pool contracts
-    const principalShareTokenLido = await ethers.getContractAt('PrincipalShare', depositConfig.addresses.tempusPools[1].principalShare);
-    const yieldShareTokenLido = await ethers.getContractAt('YieldShare', depositConfig.addresses.tempusPools[1].yieldShare);
+    const principalShareTokenLido = await ethers.getContractAt('PrincipalShare', depositConfig.addresses.tempusPools[2].principalShare);
+    const yieldShareTokenLido = await ethers.getContractAt('YieldShare', depositConfig.addresses.tempusPools[2].yieldShare);
     const poolSharePrincipalLido = new PoolShare('PoolShare', principalShareTokenLido);
     const poolShareYieldLido = new PoolShare('PoolShare', yieldShareTokenLido);
 
-    const tempusPoolLidoContract = await ethers.getContractAt('TempusPool', depositConfig.addresses.tempusPools[1].address);
-    const tempusPoolLido = new TempusPool(PoolType.Aave, tempusPoolLidoContract, tempusController, stEthToken, poolSharePrincipalLido, poolShareYieldLido);
+    const tempusPoolLidoContract = await ethers.getContractAt('TempusPool', depositConfig.addresses.tempusPools[2].address);
+    const tempusPoolLido = new TempusPool(PoolType.Lido, tempusPoolLidoContract, tempusController, stEthToken, poolSharePrincipalLido, poolShareYieldLido);
 
-    const tempusPoolAMMLidoContract = await ethers.getContractAt('TempusAMM', depositConfig.addresses.tempusPools[1].amm);
+    const tempusPoolAMMLidoContract = await ethers.getContractAt('TempusAMM', depositConfig.addresses.tempusPools[2].amm);
     const tempusPoolAMMLido = new TempusAMM(tempusPoolAMMLidoContract, vaultContract, tempusPoolLido);
     ////
-
-    const { aDaiHolder } = await getNamedAccounts();
 
     // Send tokens required for Aave pool to owner user
     await this.sendTransaction(10000, depositConfig.holders.DAI, owner.address, daiToken);
     console.log('Sent 10000 DAI to owner address');
-    await this.sendTransaction(10000, aDaiHolder, owner.address, aDaiToken);
+    await this.sendTransaction(10000, depositConfig.holders.aDAI, owner.address, aDaiToken);
     console.log('Sent 10000 aDAI to owner address');
+
+    // Send tokens required for Compound pool to owner user
+    await this.sendTransaction(10000, depositConfig.holders.DAI, owner.address, daiToken);
+    console.log('Sent 10000 DAI to owner address');
+    await this.sendTransaction(10000, depositConfig.holders.cDAI, owner.address, cDaiToken);
+    console.log('Sent 10000 cDAI to owner address');
 
     // Send tokens required for Lido pool to owner user
     await this.sendTransaction(10000, depositConfig.holders.stETH, owner.address, stEthToken);
@@ -78,6 +96,14 @@ class DeployLocalForked {
     console.log('Provided 1/1 liquidity to Lido Pool');
     await this.makeSwapGivenIn(tempusPoolAMMLido, owner, principalShareTokenLido.address, yieldShareTokenLido.address, 0.5);
     console.log('Swapped 0.5 TPS in Lido Pool');
+
+    // Make deposits into Compound Pool
+    await this.makeDeposit(5000, tempusPoolCompound, owner.address, cDaiToken);
+    console.log('Made a deposit of 5000 cDAI tokens into Compound Pool');
+    await this.provideLiquidity(tempusPoolAMMCompound, owner, 1000, 1000);
+    console.log('Provided 1000/1000 liquidity to Compound Pool');
+    await this.makeSwapGivenIn(tempusPoolAMMCompound, owner, principalShareTokenCompound.address, yieldShareTokenCompound.address, 100);
+    console.log('Swapped 100 TPS in Compound Pool');
   }
 
   static async provideLiquidity(amm: TempusAMM, owner: SignerWithAddress, principalAmount: number, yieldAmount: number, ) {
