@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 import { toWei } from "./utils/Decimal";
-import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
 {
@@ -322,8 +321,8 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
     await pool.createDefault();
     let [owner, user] = pool.signers;
     await pool.setupAccounts(owner, [[user, 500]]);
-    
-    (await expectRevert(pool.tempus.redeem(user, 1, 1))).to.equal("Only callable by TempusController");
+
+    await expect(pool.tempus.redeem(user, 1, 1)).to.be.revertedWith("Only callable by TempusController");
   });
 
 });

@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { Comptroller } from "../../utils/Comptroller";
 import { Signer } from "../../utils/ContractBase";
-import { expectRevert } from "../../utils/Utils";
 import { CompoundTestPool } from "../../pool-utils/CompoundTestPool";
 
 describe("Compound Mock", async () =>
@@ -81,10 +80,10 @@ describe("Compound Mock", async () =>
         expect(await pool.isParticipant(user)).to.be.true;
         expect(await pool.mintAllowed(user, 10)).to.be.true;
         await pool.exitMarket(user);
-        (await expectRevert(pool.exitMarket(user))).to.not.equal('success'); // calling it twice should revert
+        await expect(pool.exitMarket(user)).to.be.reverted; // calling it twice should revert
         expect(await pool.isParticipant(user)).to.be.false;
         expect(await pool.mintAllowed(user, 10)).to.be.false;
-        (await expectRevert(pool.mint(user, 4))).to.equal("mint is not allowed");
+        await expect(pool.mint(user, 4)).to.be.revertedWith("mint is not allowed");
     });
   });
 });

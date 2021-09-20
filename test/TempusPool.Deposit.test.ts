@@ -2,10 +2,8 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
-
 import { Signer } from "./utils/ContractBase";
 import { toWei } from "./utils/Decimal";
-import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
 {
@@ -102,7 +100,7 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
     await pool.createDefault();
     await pool.setupAccounts(owner, [[user, 500]]);
     
-    (await expectRevert(pool.tempus.deposit(user, 1, user))).to.equal("Only callable by TempusController");
+    await expect(pool.tempus.deposit(user, 1, user)).to.be.revertedWith("Only callable by TempusController");
   });
 
   it("Should increase YBT 2x after changing rate to 2.0", async () =>

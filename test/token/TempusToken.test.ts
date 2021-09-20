@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { toWei } from "../utils/Decimal"
-import { expectRevert } from "../utils/Utils";
 import { Signer } from "../utils/ContractBase";
 import { TempusToken } from "../utils/TempusToken";
 
@@ -69,7 +68,7 @@ describe("Tempus Token", async () => {
       expect(await token.balanceOf(user1)).to.equal(amount);
 
       // User tries to burn another user's tokens
-      (await expectRevert(token.burnFrom(user2, user1, amount))).to.equal("ERC20: burn amount exceeds allowance");
+      await expect(token.burnFrom(user2, user1, amount)).to.be.revertedWith("ERC20: burn amount exceeds allowance");
     });
 
     it("Should not allow owner to burn users' tokens", async () =>
@@ -80,7 +79,7 @@ describe("Tempus Token", async () => {
       expect(await token.balanceOf(user1)).to.equal(amount);
 
       // Owner burns User, but more than existing
-      (await expectRevert(token.burnFrom(owner, user1, 10))).to.equal("ERC20: burn amount exceeds allowance");
+      await expect(token.burnFrom(owner, user1, 10)).to.be.revertedWith("ERC20: burn amount exceeds allowance");
     });
   });
 });
