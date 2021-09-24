@@ -29,13 +29,13 @@ class DepositLocalForked {
     this.controller = new TempusController('TempusController', tempusControllerContract);
 
     await this.sendTransaction(100000000, depositConfig.holders.DAI, this.owner.address, tokenMap.get('DAI'));
-    console.log('Sent 10000 DAI to owner address');
+    console.log('Sent 100000000 DAI to owner address');
     await this.sendTransaction(10000, depositConfig.holders.aDAI, this.owner.address, tokenMap.get('aDai'));
     console.log('Sent 10000 aDAI to owner address');
     await this.sendTransaction(10000, depositConfig.holders.cDAI, this.owner.address, tokenMap.get('cDai'));
     console.log('Sent 10000 cDAI to owner address');
-    await this.sendTransaction(10000, depositConfig.holders.stETH, this.owner.address, tokenMap.get('stETH'));
-    console.log('Sent 10000 stETH to owner address');
+    await this.sendTransaction(250000, depositConfig.holders.stETH, this.owner.address, tokenMap.get('stETH'));
+    console.log('Sent 250000 stETH to owner address');
 
     for (let i = 0; i < depositConfig.addresses.tempusPools.length; i++) {
       const poolDepositInfo = depositConfig.addresses.tempusPools[i] as DeployedPoolInfo;
@@ -70,11 +70,16 @@ class DepositLocalForked {
       await tempusPool.controller.depositBacking(this.owner, tempusPool, 10000000, this.owner);
     }
     else {
-      await tempusPool.controller.depositYieldBearing(this.owner, tempusPool, 10000000, this.owner);
+      await tempusPool.controller.depositYieldBearing(this.owner, tempusPool, 100000, this.owner);
     }
 
     // Provide liquidity
-    await tempusPoolAMM.provideLiquidity(this.owner, (9000000 * poolDepositConfig.estimatedYield), 9000000, TempusAMMJoinKind.INIT);
+    if (depositBacking) {
+        await tempusPoolAMM.provideLiquidity(this.owner, (9000000 * poolDepositConfig.estimatedYield), 9000000, TempusAMMJoinKind.INIT);
+    }
+    else {
+        await tempusPoolAMM.provideLiquidity(this.owner, (90000 * poolDepositConfig.estimatedYield), 90000, TempusAMMJoinKind.INIT);
+    }
 
     // Make a swap
     await tempusPoolAMM.swapGivenIn(this.owner, principalShareToken.address, yieldShareToken.address, 25);

@@ -63,10 +63,10 @@ interface DeployPoolParams {
 class DeployLocalForked {
   private readonly VAULT_ADDRESS = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
   private readonly HOLDERS = {
-    DAI: '0x7641a5e890478bea2bdc4cafff960ac4ae96886e',
+    DAI: '0xE78388b4CE79068e89Bf8aA7f218eF6b9AB0e9d0',
     aDAI: '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
     cDAI: '0x9b4772e59385ec732bccb06018e318b7b3477459',
-    stETH: '0x06920C9fC643De77B99cB7670A944AD31eaAA260'
+    stETH: '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022'
   }
 
   private controller: TempusController;
@@ -119,7 +119,7 @@ class DeployLocalForked {
       deploy: TempusPool.deployAave
     });
 
-    console.log('Deploying Compound Pool - cDAI - 1 year duration...');
+    /*console.log('Deploying Compound Pool - cDAI - 1 year duration...');
     await this.deployPool({
       poolType: PoolType.Compound,
       backingToken: 'DAI',
@@ -145,7 +145,7 @@ class DeployLocalForked {
       lpName: 'Tempus Compound LP Token - 1',
       lpSymbol: 'LPcDAI - 1',
       deploy: TempusPool.deployCompound
-    });
+    });*/
 
     console.log('Deploying Lido Pool - stETH - 1 year duration...');
     await this.deployPool({
