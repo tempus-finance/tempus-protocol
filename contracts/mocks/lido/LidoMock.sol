@@ -23,6 +23,14 @@ contract LidoMock is StETH {
     // used for mocks, it will force-fail the next deposit or redeem
     bool public mockFailNextDepositOrRedeem;
 
+    constructor(
+        uint8 decimals,
+        string memory name,
+        string memory symbol
+    ) StETH(decimals, name, symbol) {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
     /// @notice MOCK ONLY
     function setFailNextDepositOrRedeem(bool fail) public {
         mockFailNextDepositOrRedeem = fail;

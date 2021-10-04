@@ -15,15 +15,22 @@ contract ATokenMock is ERC20, IAToken {
 
     address public immutable override UNDERLYING_ASSET_ADDRESS;
     ILendingPool public override POOL;
+    uint8 private immutable contractDecimals;
 
     constructor(
         ILendingPool pool,
         address underlyingAssetAddress,
+        uint8 _decimals,
         string memory name,
         string memory symbol
     ) ERC20(name, symbol) {
         POOL = pool;
         UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
+        contractDecimals = _decimals;
+    }
+
+    function decimals() public view override returns (uint8) {
+        return contractDecimals;
     }
 
     function balanceOf(address account) public view override(ERC20, IERC20) returns (uint256) {

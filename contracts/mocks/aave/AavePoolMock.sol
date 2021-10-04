@@ -20,10 +20,22 @@ contract AavePoolMock is ILendingPool {
     /// @dev Initialize AAVE Mock with a single supported reserve.
     /// We only support 1 reserve right now.
     /// @param asset The single ERC20 reserve token, such as DAI
-    constructor(IERC20 asset) {
+    constructor(
+        IERC20 asset,
+        uint128 index,
+        uint8 decimals,
+        string memory aTokenName,
+        string memory aTokenSymbol
+    ) {
         assetToken = asset;
-        yieldToken = new ATokenMock(ILendingPool(address(this)), address(asset), "AaveAToken", "AAT");
-        liquidityIndex = uint128(WadRayMath.ray()); // 1ray
+        yieldToken = new ATokenMock(
+            ILendingPool(address(this)),
+            address(asset),
+            decimals,
+            aTokenName,
+            aTokenSymbol
+        );
+        liquidityIndex = index; // default should be 1ray
     }
 
     /// @notice MOCK ONLY

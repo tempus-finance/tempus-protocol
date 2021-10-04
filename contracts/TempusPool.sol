@@ -50,8 +50,8 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
     uint256 public override totalFees;
 
     /// Constructs Pool with underlying token, start and maturity date
-    /// @param token underlying yield bearing token
-    /// @param bToken backing token (or zero address if ETH)
+    /// @param _yieldBearingToken Yield Bearing Token, such as cDAI or aUSDC
+    /// @param _backingToken backing token (or zero address if ETH)
     /// @param ctrl The authorized TempusController of the pool
     /// @param maturity maturity time of this pool
     /// @param initInterestRate initial interest rate of the pool
@@ -63,8 +63,8 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
     /// @param yieldSymbol symbol of Tempus Yield Share
     /// @param maxFeeSetup Maximum fee percentages that this pool can have
     constructor(
-        address token,
-        address bToken,
+        address _yieldBearingToken,
+        address _backingToken,
         address ctrl,
         uint256 maturity,
         uint256 initInterestRate,
@@ -78,8 +78,8 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
     ) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
 
-        yieldBearingToken = token;
-        backingToken = bToken;
+        yieldBearingToken = _yieldBearingToken;
+        backingToken = _backingToken;
         controller = ctrl;
         startTime = block.timestamp;
         maturityTime = maturity;
@@ -91,7 +91,7 @@ abstract contract TempusPool is ITempusPool, PermanentlyOwnable {
         maxEarlyRedeemFee = maxFeeSetup.earlyRedeemPercent;
         maxMatureRedeemFee = maxFeeSetup.matureRedeemPercent;
 
-        uint8 backingDecimals = bToken != address(0) ? IERC20Metadata(bToken).decimals() : 18;
+        uint8 backingDecimals = _backingToken != address(0) ? IERC20Metadata(_backingToken).decimals() : 18;
         principalShare = new PrincipalShare(this, principalName, principalSymbol, backingDecimals);
         yieldShare = new YieldShare(this, yieldName, yieldSymbol, backingDecimals);
     }

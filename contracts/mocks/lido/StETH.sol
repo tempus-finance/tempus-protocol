@@ -76,26 +76,40 @@ abstract contract StETH is ILido {
      */
     uint256 internal totalShares = 0;
 
+    string internal contractName;
+    string internal contractSymbol;
+    uint8 internal contractDecimals;
+
+    constructor(
+        uint8 _decimals,
+        string memory _name,
+        string memory _symbol
+    ) {
+        contractName = _name;
+        contractSymbol = _symbol;
+        contractDecimals = _decimals;
+    }
+
     /**
      * @return the name of the token.
      */
-    function name() public override pure returns (string memory) {
-        return "Liquid staked Ether 2.0";
+    function name() public override view returns (string memory) {
+        return contractName;
     }
 
     /**
      * @return the symbol of the token, usually a shorter version of the
      * name.
      */
-    function symbol() public override pure returns (string memory) {
-        return "stETH";
+    function symbol() public override view returns (string memory) {
+        return contractSymbol;
     }
 
     /**
      * @return the number of decimals for getting user representation of a token amount.
      */
-    function decimals() public override pure returns (uint8) {
-        return 18;
+    function decimals() public override view returns (uint8) {
+        return contractDecimals;
     }
 
     /**
