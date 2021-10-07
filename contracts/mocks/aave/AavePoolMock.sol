@@ -28,13 +28,7 @@ contract AavePoolMock is ILendingPool {
         string memory aTokenSymbol
     ) {
         assetToken = asset;
-        yieldToken = new ATokenMock(
-            ILendingPool(address(this)),
-            address(asset),
-            decimals,
-            aTokenName,
-            aTokenSymbol
-        );
+        yieldToken = new ATokenMock(ILendingPool(address(this)), address(asset), decimals, aTokenName, aTokenSymbol);
         liquidityIndex = index; // default should be 1ray
     }
 
