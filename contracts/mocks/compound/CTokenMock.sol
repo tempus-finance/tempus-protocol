@@ -21,12 +21,15 @@ abstract contract CTokenMock is ERC20, CTokenInterface {
         return 8;
     }
 
-    // Stored exchange rate as 1e28 decimal
-    function exchangeRateStored() public view override returns (uint) {
+    /// Calculates and returns the current exchange rate.
+    /// The decimal precision depends on the formula: 18 - 8 + Underlying Token Decimals
+    function exchangeRateCurrent() public view override returns (uint) {
         return ComptrollerMock(address(comptroller)).exchangeRate();
     }
 
-    function exchangeRateCurrent() public view override returns (uint) {
+    /// Calculates and returns the last stored rate.
+    /// The decimal precision depends on the formula: 18 - 8 + Underlying Token Decimals
+    function exchangeRateStored() public view override returns (uint) {
         return ComptrollerMock(address(comptroller)).exchangeRate();
     }
 
@@ -46,7 +49,7 @@ abstract contract CTokenMock is ERC20, CTokenInterface {
         uint err = comptroller.mintAllowed(address(this), minter, mintAmount);
         require(err == 0, "mint is not allowed");
 
-        uint exchangeRate = exchangeRateStored(); // exchangeRate is 28 decimal precision
+        uint exchangeRate = exchangeRateStored(); // exchangeRate has variable decimal precision
 
         /*
          *  We call `doTransferIn` for the minter and the mintAmount.

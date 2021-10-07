@@ -19,7 +19,6 @@ contract CErc20 is CTokenMock, CErc20Interface {
         string memory symbol
     ) CTokenMock(comptrollerInterface, name, symbol) {
         underlying = underlyingAsset;
-        require(IERC20Metadata(underlyingAsset).decimals() == 18, "underlying decimals must be 18");
     }
 
     /// @notice Sender supplies assets into the market and receives cTokens in exchange

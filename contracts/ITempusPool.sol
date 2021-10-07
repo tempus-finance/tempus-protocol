@@ -228,5 +228,5 @@ interface ITempusPool is ITempusFees {
     /// @param backingTokens Amount of Backing Tokens in BT decimal precision
     /// @param interestRate The current interest rate
     /// @return Amount of YBT for specified @param backingTokens
-    function numYieldTokensPerAsset(uint backingTokens, uint interestRate) external view returns (uint);
+    function numYieldTokensPerAsset(uint backingTokens, uint interestRate) external pure returns (uint);
 }
