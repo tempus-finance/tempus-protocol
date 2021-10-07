@@ -1,6 +1,7 @@
 import { Transaction } from "ethers";
 import { ethers } from "hardhat";
 import { ITestPool, TempusAMMParams } from "./ITestPool";
+import { TokenInfo } from "./TokenInfo";
 import { ContractBase, Signer, SignerOrAddress } from "../utils/ContractBase";
 import { ERC20 } from "../utils/ERC20";
 import { TempusPool, PoolType } from "../utils/TempusPool";
@@ -9,8 +10,12 @@ import { fromWei, NumberOrString } from "../utils/Decimal";
 
 export class LidoTestPool extends ITestPool {
   lido:Lido;
-  constructor() {
+  ASSET_TOKEN:TokenInfo;
+  YIELD_TOKEN:TokenInfo;
+  constructor(ASSET_TOKEN:TokenInfo, YIELD_TOKEN:TokenInfo) {
     super(PoolType.Lido, /*yieldPeggedToAsset:*/true);
+    this.ASSET_TOKEN = ASSET_TOKEN;
+    this.YIELD_TOKEN = YIELD_TOKEN;
   }
   public pool(): ContractBase {
     return this.lido;
@@ -43,8 +48,8 @@ export class LidoTestPool extends ITestPool {
   }
 
   async createWithAMM(params:TempusAMMParams): Promise<TempusPool> {
-    return await this.initPool(params, 'TPS-stETH', 'TYS-stETH', async () => {
-      return await Lido.create(1000000000, this.initialRate);
+    return await this.initPool(params, this.YIELD_TOKEN.name, this.YIELD_TOKEN.symbol, async () => {
+      return await Lido.create(this.ASSET_TOKEN, this.YIELD_TOKEN, this.initialRate);
     }, (pool:ContractBase) => {
       this.lido = <Lido>pool;
     });

@@ -307,8 +307,8 @@ export abstract class ITestPool {
 
   protected async initPool(
     p:TempusAMMParams,
-    tpsName:string,
-    tysName:string,
+    ybtName:string,
+    ybtSymbol:string,
     newPool:()=>Promise<ContractBase>,
     setPool:(pool:ContractBase)=>void
   ): Promise<TempusPool> {
@@ -316,24 +316,27 @@ export abstract class ITestPool {
     this.poolDuration = p.poolDuration;
     this.yieldEst = p.yieldEst;
 
-    const sig = [this.type, p.initialRate, p.poolDuration, p.yieldEst, p.ammSwapFee, p.ammAmplification].join("|");
+    const sig = [this.type, ybtSymbol, p.initialRate, p.poolDuration, p.yieldEst, p.ammSwapFee, p.ammAmplification].join("|");
     let f:FixtureState = POOL_FIXTURES[sig];
 
     if (!f) // initialize a new fixture
     {
       const controller = await TempusController.instance();
       const maturityTime = await blockTimestamp() + this.poolDuration;
-      const names = generateTempusSharesNames(tpsName, tysName, maturityTime);
+      const names = generateTempusSharesNames(ybtName, ybtSymbol, maturityTime);
       f = new FixtureState(maturityTime, names, deployments.createFixture(async () =>
       {
         const startTime = Date.now();
 
-        await deployments.fixture(undefined, { keepExistingDeployments: true, });
+        await deployments.fixture(undefined, { keepExistingDeployments: false, });
         // Note: for fixtures, all contracts must be initialized inside this callback
         const [owner,user,user2] = await ethers.getSigners();
         const pool = await newPool();
+        const asset = (pool as any).asset;
         const ybt = (pool as any).yieldToken;
-        const tempus = await TempusPool.deploy(this.type, controller, ybt, maturityTime, p.yieldEst, names, this.type == PoolType.Compound ? 28 : 18);
+        const tempus = await TempusPool.deploy(
+          this.type, controller, asset, ybt, maturityTime, p.yieldEst, names
+        );
         const amm = await TempusAMM.create(owner, p.ammAmplification, p.ammSwapFee, tempus);
 
         // always report the instantiation of new fixtures,

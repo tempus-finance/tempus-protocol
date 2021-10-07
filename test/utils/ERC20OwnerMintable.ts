@@ -7,8 +7,13 @@ import { ERC20 } from "./ERC20";
  * Type safe wrapper of ERC20OwnerMintableToken
  */
 export class ERC20OwnerMintable extends ERC20 {
-  constructor(contractName?:string, contract?:Contract) {
-    super(contractName ?? "ERC20OwnerMintableToken", 18, contract);
+  constructor(contractName:string, decimals:number, contract:Contract) {
+    super(contractName, decimals, contract);
+  }
+
+  static async create(contractName:string, name:string, symbol:string): Promise<ERC20OwnerMintable> {
+    const contract = await this.deployContract(contractName, name, symbol);
+    return new ERC20OwnerMintable(contractName, 18, contract);
   }
 
   /** @returns The manager who is allowed to mint and burn. */

@@ -10,7 +10,7 @@ describe("Owner Mintable Token", async () => {
 
   beforeEach(async () => {
     [owner, user] = await ethers.getSigners();
-    token = await ERC20OwnerMintable.deployClass(ERC20OwnerMintable, "Owner Mintable Test Token", "OTEST");
+    token = await ERC20OwnerMintable.create("ERC20OwnerMintableToken", "Owner Mintable Test Token", "OTEST");
   });
 
   describe("Deploy", async () =>

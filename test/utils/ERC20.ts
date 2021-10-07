@@ -43,10 +43,11 @@ export class ERC20 extends ContractBase {
    * Attaches to any contract address and attempts to convert it to ERC20
    * @param contractName Name of the solidity contract
    * @param contractAddress Address of the contract
+   * @param decimals Contract decimals
    */
-  static async attach(contractName:string, contractAddress:string): Promise<ERC20> {
+  static async attach(contractName:string, contractAddress:string, decimals:number): Promise<ERC20> {
     const contract = await this.attachContract(contractName, contractAddress);
-    return await new ERC20(contractName, 18).initialize(contract);
+    return new ERC20(contractName, decimals, contract);
   }
 
   /** @return ERC20 name of this contract */

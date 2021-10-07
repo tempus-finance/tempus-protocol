@@ -1,31 +1,39 @@
 import { Contract, BigNumber } from "ethers";
-import { formatDecimal, NumberOrString, parseDecimal, toWei } from "./Decimal";
+import { formatDecimal, NumberOrString, parseDecimal } from "./Decimal";
 import { addressOf, ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
+import { TokenInfo } from "../pool-utils/TokenInfo";
 
 export class Comptroller extends ContractBase {
   asset:ERC20; // backing asset DAI or null if ETH
   yieldToken:ERC20; // yield token - cDAI or CEther
+  ratePrecision:number; // decimal precision of Exchange Rate
   
-  constructor(pool:Contract, asset: ERC20|null, yieldToken:ERC20) {
+  constructor(pool:Contract, asset: ERC20|null, yieldToken:ERC20, ratePrecision:number) {
     super("ComptrollerMock", yieldToken.decimals, pool);
     this.asset = asset!;
     this.yieldToken = yieldToken;
+    this.ratePrecision = ratePrecision;
     if (yieldToken.decimals !== 8) {
       throw new Error("Compound's YieldToken cDAI must have 8 decimal precision");
     }
   }
 
   /**
-   * @note We only support CErc20 because CEther has almost no yield
-   * @param totalErc20Supply Total supply amount of the asset token
+   * @param ASSET ASSET token info
+   * @param YIELD YIELD token info
    * @param initialRate Initial interest rate
    */
-  static async create(totalErc20Supply:number = 0, initialRate:number = 1.0): Promise<Comptroller> {
-    const pool = await ContractBase.deployContract("ComptrollerMock", parseDecimal(initialRate, 28));
-    const asset = await ERC20.deploy("ERC20FixedSupply", 18, "DAI Stablecoin", "DAI", toWei(totalErc20Supply));
-    const cToken = await ERC20.deploy("CErc20", 8, pool.address, asset.address, "Compound DAI Yield Token", "cDAI");
-    return new Comptroller(pool, asset, cToken);
+  static async create(ASSET:TokenInfo, YIELD:TokenInfo, initialRate:Number): Promise<Comptroller> {
+    const ratePrec = (10 + ASSET.decimals); // exchange rate precision = 18 - 8 + Underlying Token Decimals
+    const pool = await ContractBase.deployContract("ComptrollerMock", parseDecimal(initialRate, ratePrec));
+    const asset = await ERC20.deploy(
+      "ERC20FixedSupply", ASSET.decimals, ASSET.decimals, ASSET.name, ASSET.symbol, parseDecimal(ASSET.totalSupply, ASSET.decimals)
+    );
+    const cToken = await ERC20.deploy(
+      "CErc20", YIELD.decimals, pool.address, asset.address, YIELD.name, YIELD.symbol
+    );
+    return new Comptroller(pool, asset, cToken, ratePrec);
   }
 
   /**
@@ -43,15 +51,15 @@ export class Comptroller extends ContractBase {
   }
 
   /**
-   * @return Current Exchange Rate, converted from 1e28 decimal
+   * @return Current Exchange Rate, converted from exchange rate decimal which has variable decimal precision
    *         The default initial exchange rate on compound is 0.02
    */
   async exchangeRate(): Promise<NumberOrString> {
-    return formatDecimal(await this.contract.exchangeRate(), 28);
+    return formatDecimal(await this.contract.exchangeRate(), this.ratePrecision);
   }
 
   /**
-   * Sets the pool Exchange Rate, converting it to an 1e28 decimal
+   * Sets the pool Exchange Rate, converting it to exchange rate decimal which has variable decimal precision
    */
   async setExchangeRate(exchangeRate:NumberOrString, owner:SignerOrAddress = null): Promise<void> {
     if (owner !== null) {
@@ -63,7 +71,7 @@ export class Comptroller extends ContractBase {
         await this.asset.transfer(owner, this.yieldToken.address, increaseBy);
       }
     }
-    await this.contract.setExchangeRate(parseDecimal(exchangeRate.toString(), 28));
+    await this.contract.setExchangeRate(parseDecimal(exchangeRate, this.ratePrecision));
   }
 
   /**
