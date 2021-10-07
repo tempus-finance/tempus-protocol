@@ -20,7 +20,6 @@ export class Aave extends ContractBase {
    * @param initialRate Initial interest rate
    */
   static async create(ASSET:TokenInfo, YIELD:TokenInfo, initialRate:Number): Promise<Aave> {
-    //console.log("Aave.create %s:%s %s:%s", ASSET.symbol, ASSET.decimals, YIELD.symbol, YIELD.decimals);
     const asset = await ERC20.deploy(
       "ERC20FixedSupply", ASSET.decimals, ASSET.decimals, ASSET.name, ASSET.symbol, parseDecimal(ASSET.totalSupply, ASSET.decimals)
     );

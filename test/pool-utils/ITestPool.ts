@@ -328,7 +328,7 @@ export abstract class ITestPool {
       {
         const startTime = Date.now();
 
-        await deployments.fixture(undefined, { keepExistingDeployments: false, });
+        await deployments.fixture(undefined, { keepExistingDeployments: true, });
         // Note: for fixtures, all contracts must be initialized inside this callback
         const [owner,user,user2] = await ethers.getSigners();
         const pool = await newPool();

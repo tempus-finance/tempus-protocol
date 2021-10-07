@@ -55,11 +55,6 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
       let ASSET_TOKEN:TokenInfo = pair[0];
       let YIELD_TOKEN:TokenInfo = pair[1];
 
-      if (only) {
-        console.log("declare %s %s ASSET=%s:%s YIELD=%s:%s",
-          title, type, ASSET_TOKEN.symbol, ASSET_TOKEN.decimals, YIELD_TOKEN.symbol, YIELD_TOKEN.decimals);
-      }
-
       const describeTestBody = () =>
       {
         // HACK: manually measure time, since new yarn hardhat+mocha stopped reporting them
