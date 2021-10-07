@@ -2,21 +2,21 @@ import { expect } from "chai";
 import { Comptroller } from "../../utils/Comptroller";
 import { Signer } from "../../utils/ContractBase";
 import { expectRevert } from "../../utils/Utils";
-import { CompoundTestPool } from "../../pool-utils/CompoundTestPool";
+import { PoolType } from "../../utils/TempusPool";
+import { ITestPool } from "../../pool-utils/ITestPool";
+import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
-describe("Compound Mock", async () =>
+describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:ITestPool) =>
 {
   let owner:Signer, user:Signer;
   let pool:Comptroller;
-  let testPool:CompoundTestPool;
 
   describe("Compound CErc20", async () =>
   {
     beforeEach(async () =>
     {
-      testPool = new CompoundTestPool();
-      await testPool.create({ initialRate:0.02, poolDuration:60*60, yieldEst:0.1 })
-      pool = testPool.compound;
+      await testPool.create({ initialRate:0.02, poolDuration:60*60, yieldEst:0.1 });
+      pool = (testPool as any).compound;
 
       [owner, user] = testPool.signers;
       await pool.asset.transfer(owner, user, 10); // give user 10 asset coins

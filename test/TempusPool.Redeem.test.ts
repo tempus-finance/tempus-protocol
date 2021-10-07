@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
-import { formatDecimal, parseDecimal, toWei } from "./utils/Decimal";
 import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
@@ -17,12 +16,12 @@ describeForEachPool("TempusPool Redeem", (pool:ITestPool) =>
       pool.tempus.address, // pool
       user.address, // redeemer
       user.address, // recipient
-      toWei(100), // principal amount
-      toWei(100), // yield amount
+      pool.tempus.principalShare.toBigNum(100), // principal amount
+      pool.tempus.yieldShare.toBigNum(100), // yield amount
       pool.tempus.yieldBearing.toBigNum(100), // yield bearing token amount
-      toWei(100), // backing token amount
-      toWei(0), // fee
-      parseDecimal("1.0", pool.tempus.exchangeRatePrec), // rate
+      pool.tempus.asset.toBigNum(100), // backing token amount
+      pool.tempus.yieldShare.toBigNum(0), // fee
+      pool.tempus.toContractExchangeRate(1.0), // rate
       true // early redeem
     );
   });

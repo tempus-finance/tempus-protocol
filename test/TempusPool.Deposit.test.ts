@@ -4,7 +4,6 @@ import { ITestPool } from "./pool-utils/ITestPool";
 import { describeForEachPool } from "./pool-utils/MultiPoolTestSuite";
 
 import { Signer } from "./utils/ContractBase";
-import { parseDecimal, toWei } from "./utils/Decimal";
 import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
@@ -44,10 +43,10 @@ describeForEachPool("TempusPool Deposit", (pool:ITestPool) =>
       user.address, /*depositor*/
       user.address, /*recipient*/
       pool.tempus.yieldBearing.toBigNum(100), /*yieldTokenAmount*/
-      toWei(100), /*backingTokenValue*/
-      toWei(100), /*shareAmounts*/
-      parseDecimal("1.0", pool.tempus.exchangeRatePrec), /*interestRate*/
-      toWei(0) /*fee*/
+      pool.tempus.asset.toBigNum(100), /*backingTokenValue*/
+      pool.tempus.principalShare.toBigNum(100), /*shareAmounts*/
+      pool.tempus.toContractExchangeRate(1.0), /*interestRate*/
+      pool.tempus.yieldBearing.toBigNum(0) /*fee*/
     );
   });
 

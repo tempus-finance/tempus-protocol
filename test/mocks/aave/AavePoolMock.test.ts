@@ -1,19 +1,19 @@
 import { expect } from "chai";
 import { Aave } from "../../utils/Aave";
 import { Signer } from "../../utils/ContractBase";
-import { AaveTestPool } from "../../pool-utils/AaveTestPool";
+import { PoolType } from "../../utils/TempusPool";
+import { ITestPool } from "../../pool-utils/ITestPool";
+import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
-describe("AAVE Mock", async () =>
+describeForEachPool.type("AAVE Mock", [PoolType.Aave], async (testPool:ITestPool) =>
 {
   let owner:Signer, user:Signer;
-  let pool: Aave;
-  let testPool: AaveTestPool;
+  let pool:Aave;
 
   beforeEach(async () =>
   {
-    testPool = new AaveTestPool();
     await testPool.createDefault();
-    pool = testPool.aave;
+    pool = (testPool as any).aave;
 
     [owner, user] = testPool.signers;
     await pool.asset.transfer(owner, user, 10); // give user 10 asset coins
