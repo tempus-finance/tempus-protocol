@@ -64,7 +64,8 @@ interface IERC20Vesting {
     /// @param newAddress Address for new token receiver
     function transferVesting(address oldAddress, address newAddress) external;
 
-    /// @dev Stops vesting for receiver and sends all tokens back to wallet
+    /// @dev Stops vesting for receiver
+    /// Sends unvested tokens back to wallet, and vested to the receiver.
     /// @param receiver Address of account for which we are stopping vesting
     function stopVesting(address receiver) external;
 

@@ -90,9 +90,18 @@ contract ERC20Vesting is IERC20Vesting {
         require(isScheduleValid(terms), "No vesting data for receiver.");
         delete vestingTerms[receiver];
 
-        // transfer tokens that are not claimed yet
-        if (terms.amount > terms.claimed) {
-            token.transfer(wallet, terms.amount - terms.claimed);
+        uint256 claimableTokens = _claimable(terms);
+        uint256 revokedTokens = terms.amount - terms.claimed - claimableTokens;
+        assert(terms.amount == (terms.claimed + claimableTokens + revokedTokens));
+
+        // Transfer claimable
+        if (claimableTokens != 0) {
+            token.transfer(receiver, claimableTokens);
+        }
+
+        // Transfer back unclaimed tokens
+        if (revokedTokens != 0) {
+            token.transfer(wallet, revokedTokens);
         }
 
         emit VestingRemoved(receiver);

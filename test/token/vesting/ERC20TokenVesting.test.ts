@@ -203,8 +203,8 @@ describe("ERC20 Vesting", async () => {
 
       expect(await vesting.claimable(user)).to.equal(0);
 
-      expect(await token.balanceOf(user)).to.equal(0);
-      expect(await token.balanceOf(owner)).to.equal(300);
+      expect(await token.balanceOf(user)).to.equal(30);
+      expect(await token.balanceOf(owner)).to.equal(270);
     });
 
     it("Expected state after stopVesting called after vesting period expires and all tokens claimed", async () => {
