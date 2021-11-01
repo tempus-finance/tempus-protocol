@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { addressOf, Signer } from "../../utils/ContractBase";
-import { blockTimestamp, expectRevert, increaseTime } from "../../utils/Utils";
+import { blockTimestamp, expectRevert, increaseTime, setEvmTime } from "../../utils/Utils";
 import { ERC20OwnerMintable } from "../../utils/ERC20OwnerMintable";
 import { ERC20Vesting, VestingTerms } from "../../utils/ERC20Vesting";
 
@@ -181,7 +181,7 @@ describe("ERC20 Vesting", async () => {
       expect(await token.balanceOf(owner)).to.equal(210);
     });
 
-    it("Expected state after stopVesting", async () => {
+    it("Expected state after stopVesting (after period)", async () => {
       const startTime = await blockTimestamp();
       const period = DAY * 30;
       await vesting.startVesting(
@@ -189,6 +189,7 @@ describe("ERC20 Vesting", async () => {
         user,
         {startTime: startTime, period: period, amount: 30, claimed: 0}
       );
+      await setEvmTime(startTime + period);
       expect(await vesting.stopVesting(owner, user)).to.emit(
         vesting.contract, 
         "VestingRemoved"
@@ -202,6 +203,7 @@ describe("ERC20 Vesting", async () => {
 
       expect(await vesting.claimable(user)).to.equal(0);
 
+      expect(await token.balanceOf(user)).to.equal(0);
       expect(await token.balanceOf(owner)).to.equal(300);
     });
 
@@ -226,6 +228,8 @@ describe("ERC20 Vesting", async () => {
       expect(terms.claimed).to.equal(0);
 
       expect(await vesting.claimable(user)).to.equal(0);
+
+      expect(await token.balanceOf(user)).to.equal(30);
       expect(await token.balanceOf(owner)).to.equal(270);
     });
 
