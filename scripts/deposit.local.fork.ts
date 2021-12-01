@@ -22,7 +22,7 @@ class DepositLocalForked {
     tokenMap.set('cDai', new ERC20("ERC20", 8, (await ethers.getContract('cToken_Dai'))));
     tokenMap.set('stETH', new ERC20("ERC20", 18, (await ethers.getContract('Lido'))));
     tokenMap.set('DAI', new ERC20("ERC20", 18, (await ethers.getContract('Dai'))));
-  
+
     this.vault = await ethers.getContractAt('Vault', depositConfig.addresses.vault);
     
     const tempusControllerContract = await ethers.getContractAt('TempusController', depositConfig.addresses.tempusController);
@@ -53,13 +53,13 @@ class DepositLocalForked {
   }
 
   private async depositIntoPool(poolType: PoolType, ybt: ERC20, bt: ERC20, depositBacking: boolean, poolDepositConfig: DeployedPoolInfo) {
-    const principalShareToken = await ethers.getContractAt('PrincipalShare', poolDepositConfig.principalShare);
-    const yieldShareToken = await ethers.getContractAt('YieldShare', poolDepositConfig.yieldShare);
-    const poolSharePrincipal = new PoolShare('PoolShare', principalShareToken);
-    const poolShareYield = new PoolShare('PoolShare', yieldShareToken);
+    const principalShareToken = await ethers.getContractAt('PrincipalShare', poolDepositConfig.principalShareAddress);
+    const yieldShareToken = await ethers.getContractAt('YieldShare', poolDepositConfig.yieldShareAddress);
+    const poolSharePrincipal = new PoolShare('PoolShare', bt.decimals, principalShareToken);
+    const poolShareYield = new PoolShare('PoolShare', bt.decimals, yieldShareToken);
 
     const tempusPoolContract = await ethers.getContractAt('TempusPool', poolDepositConfig.address);
-    const tempusPool = new TempusPool(poolType, tempusPoolContract, this.controller, bt, ybt, poolSharePrincipal, poolShareYield, 18);
+    const tempusPool = new TempusPool(poolType, this.owner, tempusPoolContract, this.controller, bt, ybt, poolSharePrincipal, poolShareYield, 18);
 
     const tempusPoolAMMContract = await ethers.getContractAt('TempusAMM', poolDepositConfig.amm);
     const tempusPoolAMM = new TempusAMM(tempusPoolAMMContract, this.vault, tempusPool);

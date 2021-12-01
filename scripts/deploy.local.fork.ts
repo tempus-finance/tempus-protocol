@@ -11,15 +11,28 @@ import { toWei } from '../test/utils/Decimal';
 
 export interface DeployedPoolInfo {
   address: string;
-  principalShare: string;
-  yieldShare: string;
+  principalShareAddress: string;
+  yieldShareAddress: string;
   amm: string;
   backingToken: string;
   yieldBearingToken: string;
+  backingTokenAddress: string;
+  yieldBearingTokenAddress: string;
   protocol: PoolType;
   estimatedYield: number;
   spotPrice: string;
   maxLeftoverShares: string;
+  decimalsForUI: number;
+  maturityDate: number;
+  startDate: number;
+  poolId: string;
+  tokenPrecision: {
+    backingToken: number;
+    yieldBearingToken: number;
+    principals: number;
+    yields: number;
+    lpTokens: number;
+  }
 }
 
 interface DepositConfigData {
@@ -40,6 +53,23 @@ interface CookiePoolInfo {
   backingToken: string;
   spotPrice: string;
   maxLeftoverShares: string;
+  poolId: string;
+  protocol: string;
+  startDate: number;
+  maturityDate: number;
+  principalsAddress: string;
+  yieldsAddress: string;
+  yieldBearingToken: string;
+  yieldBearingTokenAddress: string;
+  backingTokenAddress: string;
+  decimalsForUI: number;
+  tokenPrecision: {
+    backingToken: number;
+    yieldBearingToken: number;
+    principals: number;
+    yields: number;
+    lpTokens: number;
+  }
 }
 
 interface CookieConfigData {
@@ -48,6 +78,8 @@ interface CookieConfigData {
   tempusControllerContract: string;
   vaultContract: string;
   networkUrl: string;
+  lidoOracle: string;
+  networkName: 'localhost';
 }
 
 interface DeployPoolParams {
@@ -64,11 +96,20 @@ interface DeployPoolParams {
   lpSymbol: string;
   spotPrice: string;
   maxLeftoverShares: string;
-  deploy: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployCompound;
+  decimalsForUI: number;
+  tokenPrecision: {
+    backingToken: number;
+    yieldBearingToken: number;
+    principals: number;
+    yields: number;
+    lpTokens: number;
+  }
+  deploy: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployLido;
 }
 
 class DeployLocalForked {
   private readonly VAULT_ADDRESS = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+  private readonly LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb';
   private readonly HOLDERS = {
     DAI: '0xE78388b4CE79068e89Bf8aA7f218eF6b9AB0e9d0',
     aDAI: '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
@@ -101,92 +142,6 @@ class DeployLocalForked {
     this.controller = await TempusController.deploy(this.owner);
     this.stats = await ContractBase.deployContract("Stats");
 
-    console.log('Deploying Aave Pool - aDAI - 1 year duration...');
-    await this.deployPool({
-      poolType: PoolType.Aave,
-      owner: this.owner,
-      backingToken: 'DAI',
-      bt: Dai,
-      ybt: aDaiToken,
-      maturity: maturityTimeOneYear,
-      yieldEstimate: 0.1,
-      ybtName: 'aDai Aave Token',
-      ybtSymbol: 'aDai',
-      lpName: 'Tempus Aave LP Token',
-      lpSymbol: 'LPaDAI',
-      spotPrice: '10000',
-      maxLeftoverShares: '1',
-      deploy: TempusPool.deployAave
-    });
-
-    console.log('Deploying Aave Pool - aDAI - 1 month duration...');
-    await this.deployPool({
-      poolType: PoolType.Aave,
-      owner: this.owner,
-      backingToken: 'DAI',
-      bt: Dai,
-      ybt: aDaiToken,
-      maturity: maturityTimeOneMonth,
-      yieldEstimate: 0.01,
-      ybtName: 'aDai Aave Token',
-      ybtSymbol: 'aDai',
-      lpName: 'Tempus Aave LP Token - 1',
-      lpSymbol: 'LPaDAI - 1',
-      spotPrice: '10000',
-      maxLeftoverShares: '1',
-      deploy: TempusPool.deployAave
-    });
-
-    /*console.log('Deploying Compound Pool - cDAI - 1 year duration...');
-    await this.deployPool({
-      poolType: PoolType.Compound,
-      owner: this.owner,
-      backingToken: 'DAI',
-      bt: Dai,
-      ybt: cDaiToken,
-      maturity: maturityTimeOneYear,
-      yieldEstimate: 0.13,
-      ybtName: 'cDai Compound Token',
-      ybtSymbol: 'cDai',
-      lpName: 'Tempus Compound LP Token',
-      lpSymbol: 'LPcDAI',
-      deploy: TempusPool.deployCompound
-    });
-
-    console.log('Deploying Compound Pool - cDAI - 1 month duration...');
-    await this.deployPool({
-      poolType: PoolType.Compound,
-      owner: this.owner,
-      backingToken: 'DAI',
-      bt: Dai,
-      ybt: cDaiToken,
-      maturity: maturityTimeOneMonth,
-      yieldEstimate: 0.011,
-      ybtName: 'cDai Compound Token',
-      ybtSymbol: 'cDai',
-      lpName: 'Tempus Compound LP Token - 1',
-      lpSymbol: 'LPcDAI - 1',
-      deploy: TempusPool.deployCompound
-    });*/
-
-    console.log('Deploying Lido Pool - stETH - 1 year duration...');
-    await this.deployPool({
-      poolType: PoolType.Lido,
-      owner: this.owner,
-      backingToken: 'ETH',
-      bt: Weth,
-      ybt: stETHToken,
-      maturity: maturityTimeOneYear,
-      yieldEstimate: 0.1,
-      ybtName: 'Lido stETH',
-      ybtSymbol: 'stETH',
-      lpName: 'Tempus Lido LP Token',
-      lpSymbol: 'LPstETH',
-      spotPrice: '2',
-      maxLeftoverShares: '0.00001',
-      deploy: TempusPool.deployLido
-    });
-
     console.log('Deploying Lido Pool - stETH - 1 month duration...');
     await this.deployPool({
       poolType: PoolType.Lido,
@@ -202,6 +157,14 @@ class DeployLocalForked {
       lpSymbol: 'LPstETH - 1',
       spotPrice: '2',
       maxLeftoverShares: '0.00001',
+      decimalsForUI: 4,
+      tokenPrecision: {
+        backingToken: 18,
+        yieldBearingToken: 18,
+        principals: 18,
+        yields: 18,
+        lpTokens: 18,
+      },
       deploy: TempusPool.deployLido
     });
 
@@ -239,17 +202,27 @@ class DeployLocalForked {
       MONTH,
       this.owner.address
     );
+
+    await this.controller.register(this.owner, tempusAMM.address);
+
     this.deployedTempusPoolsInfo.push({
       address: pool.address,
-      principalShare: pool.principalShare.address,
-      yieldShare: pool.yieldShare.address,
+      principalShareAddress: pool.principalShare.address,
+      yieldShareAddress: pool.yieldShare.address,
       amm: tempusAMM.address,
       backingToken: params.backingToken,
+      backingTokenAddress: '0x0000000000000000000000000000000000000000',
+      yieldBearingTokenAddress: params.ybt.address,
       protocol: params.poolType,
       yieldBearingToken: params.ybtSymbol,
       estimatedYield: params.yieldEstimate,
       spotPrice: params.spotPrice,
-      maxLeftoverShares: params.maxLeftoverShares
+      maxLeftoverShares: params.maxLeftoverShares,
+      decimalsForUI: params.decimalsForUI,
+      maturityDate: params.maturity,
+      startDate: await pool.startTime() as number,
+      poolId: await tempusAMM.getPoolId(),
+      tokenPrecision: params.tokenPrecision,
     });
   }
 
@@ -262,15 +235,23 @@ class DeployLocalForked {
         tempusPools: this.deployedTempusPoolsInfo.map((poolInfo) => {
           return {
             address: poolInfo.address,
-            principalShare: poolInfo.principalShare,
-            yieldShare: poolInfo.yieldShare,
+            principalShareAddress: poolInfo.principalShareAddress,
+            yieldShare: poolInfo.yieldShareAddress,
             amm: poolInfo.amm,
             backingToken: poolInfo.backingToken,
             protocol: poolInfo.protocol,
             yieldBearingToken: poolInfo.yieldBearingToken,
             estimatedYield: poolInfo.estimatedYield,
             spotPrice: poolInfo.spotPrice,
-            maxLeftoverShares: poolInfo.maxLeftoverShares
+            maxLeftoverShares: poolInfo.maxLeftoverShares,
+            backingTokenAddress: poolInfo.backingTokenAddress,
+            yieldBearingTokenAddress: poolInfo.yieldBearingTokenAddress,
+            decimalsForUI: poolInfo.decimalsForUI,
+            maturityDate: poolInfo.maturityDate,
+            startDate: poolInfo.startDate,
+            poolId: poolInfo.poolId,
+            yieldShareAddress: poolInfo.yieldShareAddress,
+            tokenPrecision: poolInfo.tokenPrecision
           }
         })
       },
@@ -300,13 +281,26 @@ class DeployLocalForked {
           ammAddress: deployedPoolInfo.amm,
           backingToken: deployedPoolInfo.backingToken,
           spotPrice: deployedPoolInfo.spotPrice,
-          maxLeftoverShares: deployedPoolInfo.maxLeftoverShares
+          maxLeftoverShares: deployedPoolInfo.maxLeftoverShares,
+          backingTokenAddress: deployedPoolInfo.backingTokenAddress,
+          yieldBearingTokenAddress: deployedPoolInfo.yieldBearingTokenAddress,
+          decimalsForUI: deployedPoolInfo.decimalsForUI,
+          maturityDate: deployedPoolInfo.maturityDate * 1000, // Scale seconds to milliseconds
+          startDate: deployedPoolInfo.startDate * 1000, // Scale seconds to milliseconds
+          poolId: deployedPoolInfo.poolId,
+          principalsAddress: deployedPoolInfo.principalShareAddress,
+          protocol: deployedPoolInfo.protocol.toLowerCase(),
+          yieldBearingToken: deployedPoolInfo.yieldBearingToken,
+          yieldsAddress: deployedPoolInfo.yieldShareAddress,
+          tokenPrecision: deployedPoolInfo.tokenPrecision
         }
       }),
       networkUrl: local ? 'http://127.0.0.1:8545' : 'https://network.tempus.finance',
       statisticsContract: this.stats.address,
       vaultContract: this.VAULT_ADDRESS,
-      tempusControllerContract: this.controller.address
+      tempusControllerContract: this.controller.address,
+      lidoOracle: this.LIDO_ORACLE_ADDRESS,
+      networkName: 'localhost',
     }
 
     const cookieValue = encodeURIComponent(JSON.stringify(cookieConfig));
