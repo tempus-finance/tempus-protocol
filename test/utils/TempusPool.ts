@@ -1,5 +1,5 @@
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { NumberOrString, toWei, parseDecimal, formatDecimal } from "./Decimal";
+import { NumberOrString, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { IERC20 } from "./IERC20";
@@ -219,8 +219,7 @@ export class TempusPool extends ContractBase {
           depositPercent:      yieldToken.toBigNum(0.5), // fees are stored in YBT
           earlyRedeemPercent:  yieldToken.toBigNum(1.0),
           matureRedeemPercent: yieldToken.toBigNum(0.5)
-        },
-        "0x00000" /* hardcoded referral code */
+        }
       );
     } else if (type === PoolType.Lido) {
       exchangeRatePrec = 18; // Lido is always 1e18 thanks to ETH
@@ -374,7 +373,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns The version of the pool
    */
-  async version(): Promise<NumberOrString> {
+  async version(): Promise<{ major: number; minor: number; patch: number }> {
     return await this.contract.version();
   }
 
@@ -396,6 +395,26 @@ export class TempusPool extends ContractBase {
   async maturityTime(): Promise<NumberOrString> {
     let maturity:BigNumber = await this.contract.maturityTime();
     return maturity.toNumber();
+  }
+
+  /**
+   * @returns The exceptional halt time of the pool
+   * @note This returns null in case it is not set (i.e. has the special value of `type(uin256).max`)
+   */
+  async exceptionalHaltTime(): Promise<NumberOrString | null> {
+    let exceptionalHaltTime:BigNumber = await this.contract.exceptionalHaltTime();
+    if (exceptionalHaltTime.toHexString() === MAX_UINT256) {
+      return null;
+    }
+    return exceptionalHaltTime.toNumber();
+  }
+
+  /**
+   * @returns The maximum allowed duration of negative yield periods (in seconds)
+   */
+  async maximumNegativeYieldDuration(): Promise<NumberOrString> {
+    let maximumNegativeYieldDuration:BigNumber = await this.contract.maximumNegativeYieldDuration();
+    return maximumNegativeYieldDuration.toNumber();
   }
 
   /**

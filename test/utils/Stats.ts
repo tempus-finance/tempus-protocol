@@ -13,6 +13,13 @@ export class Stats extends ContractBase {
   }
 
   /**
+   * @returns The version of the Stats contract
+   */
+   async version(): Promise<{ major: number; minor: number; patch: number }> {
+    return await this.contract.version();
+  }
+
+  /**
    * @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
    * @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
    * @return Amount of Principals (TPS) and Yields (TYS), scaled as 1e18 decimals.

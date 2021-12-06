@@ -12,6 +12,7 @@ import "./token/YieldShare.sol";
 import "./math/Fixed256xVar.sol";
 import "./utils/Ownable.sol";
 import "./utils/UntrustedERC20.sol";
+import "./utils/Versioned.sol";
 
 /// @dev helper struct to store name and symbol for the token
 struct TokenData {
@@ -21,18 +22,19 @@ struct TokenData {
 
 /// @author The tempus.finance team
 /// @title Implementation of Tempus Pool
-abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
+abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned {
     using SafeERC20 for IERC20;
     using UntrustedERC20 for IERC20;
     using Fixed256xVar for uint256;
 
-    uint256 public constant override version = 1;
+    uint256 public constant override maximumNegativeYieldDuration = 7 days;
 
     address public immutable override yieldBearingToken;
     address public immutable override backingToken;
 
     uint256 public immutable override startTime;
     uint256 public immutable override maturityTime;
+    uint256 public override exceptionalHaltTime = type(uint256).max;
 
     uint256 public immutable override initialInterestRate;
     uint256 public override maturityInterestRate;
@@ -53,6 +55,9 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
     uint256 public immutable override maxEarlyRedeemFee;
     uint256 public immutable override maxMatureRedeemFee;
     uint256 public override totalFees;
+
+    /// Timestamp when the negative yield period was entered.
+    uint256 private negativeYieldStartTime;
 
     /// Constructs Pool with underlying token, start and maturity date
     /// @param _yieldBearingToken Yield Bearing Token, such as cDAI or aUSDC
@@ -77,7 +82,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
         TokenData memory principalsData,
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
-    ) {
+    ) Versioned(1, 0, 0) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
         require(ctrl != address(0), "controller can not be zero");
         require(initInterestRate > 0, "initInterestRate can not be zero");
@@ -116,7 +121,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
         returns (uint256 backingTokenAmount);
 
     function matured() public view override returns (bool) {
-        return block.timestamp >= maturityTime;
+        return (block.timestamp >= maturityTime) || (block.timestamp >= exceptionalHaltTime);
     }
 
     function getFeesConfig() external view override returns (FeesConfig memory) {
@@ -185,7 +190,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
             uint256 rate
         )
     {
-        rate = updateInterestRate();
+        rate = updateAndValidateInterestRate();
 
         require(!matured(), "Maturity reached.");
         require(rate >= initialInterestRate, "Negative yield!");
@@ -271,7 +276,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
         require(IERC20(address(principalShare)).balanceOf(from) >= principalAmount, "Insufficient principals.");
         require(IERC20(address(yieldShare)).balanceOf(from) >= yieldAmount, "Insufficient yields.");
 
-        uint256 currentRate = updateInterestRate();
+        uint256 currentRate = updateAndValidateInterestRate();
 
         if (matured()) {
             finalize();
@@ -445,6 +450,33 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
         uint256 currentRate = currentInterestRate();
         (uint256 yieldTokens, uint256 backingTokens, , ) = getRedemptionAmounts(principals, yields, currentRate);
         return toBackingToken ? backingTokens : yieldTokens;
+    }
+
+    /// @dev This updates the underlying pool's interest rate, and also updates the internal
+    ///      tracking of negative interest periods.
+    function updateAndValidateInterestRate() internal returns (uint256 rate) {
+        rate = updateInterestRate();
+
+        // Short circuit. No need for the below after maturity.
+        if (matured()) {
+            return rate;
+        }
+
+        if (rate < initialInterestRate) {
+            if (negativeYieldStartTime == 0) {
+                // Entering a negative yield period.
+                negativeYieldStartTime = block.timestamp;
+            } else {
+                // Already in a negative yield period, exceeding the duration.
+                if ((negativeYieldStartTime + maximumNegativeYieldDuration) <= block.timestamp) {
+                    exceptionalHaltTime = block.timestamp;
+                    assert(matured());
+                }
+            }
+        } else {
+            // Reset period.
+            negativeYieldStartTime = 0;
+        }
     }
 
     /// @dev This updates the underlying pool's interest rate

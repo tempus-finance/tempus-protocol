@@ -16,7 +16,10 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
 
   it("Version is correct", async () =>
   {
-    expect(await pool.version()).to.equal(1);
+    const { major, minor, patch } = await pool.version();
+    expect(major).to.equal(1);
+    expect(minor).to.equal(0);
+    expect(patch).to.equal(0);
   });
 
   it("Underlying protocol name is correct", async () => 
@@ -31,9 +34,11 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
     expect(await pool.maturityTime()).to.equal(testPool.maturityTime);
   });
 
-  it("Maturity should not be set", async () =>
+  it("Maturity and halting should not be set", async () =>
   {
     expect(await pool.matured()).to.equal(false);
+    expect(await pool.exceptionalHaltTime()).to.equal(null); // Didn't occur yet.
+    expect(await pool.maximumNegativeYieldDuration()).to.equal(7 * 24 * 60 * 60);
   });
 
   it("Interest Rates should be set", async () =>

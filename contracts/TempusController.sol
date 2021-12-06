@@ -12,10 +12,11 @@ import "./math/Fixed256xVar.sol";
 import "./utils/AMMBalancesHelper.sol";
 import "./utils/UntrustedERC20.sol";
 import "./utils/Ownable.sol";
+import "./utils/Versioned.sol";
 
 /// @dev TempusController singleton with a transferrable ownership and re-entrancy guards
 ///      Owner is automatically set to the deployer of this contract
-contract TempusController is ReentrancyGuard, Ownable {
+contract TempusController is ReentrancyGuard, Ownable, Versioned {
     using Fixed256xVar for uint256;
     using SafeERC20 for IERC20;
     using UntrustedERC20 for IERC20;
@@ -68,6 +69,8 @@ contract TempusController is ReentrancyGuard, Ownable {
         uint256 fee,
         bool isEarlyRedeem
     );
+
+    constructor() Versioned(1, 0, 0) {}
 
     /// @dev Registers a POOL or an AMM as valid or invalid to use with this Controller
     /// @param authorizedContract Contract which will be allowed to be used inside this Controller

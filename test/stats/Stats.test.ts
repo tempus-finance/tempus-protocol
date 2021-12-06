@@ -32,6 +32,14 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
     stats = await Stats.create();
   });
 
+  it("Version is correct", async () =>
+  {
+    const { major, minor, patch } = await stats.version();
+    expect(major).to.equal(1);
+    expect(minor).to.equal(0);
+    expect(patch).to.equal(0);
+  });
+  
   it("Estimated Minted Shares returns expected values", async () =>
   {
     expect(await stats.estimatedMintedShares(testPool, 10, /*BT*/false)).to.equal(10, "1x shares minting YBT with rate 1.0");

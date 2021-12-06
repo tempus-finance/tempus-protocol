@@ -16,7 +16,6 @@ contract AaveTempusPool is TempusPool {
 
     ILendingPool internal immutable aavePool;
     bytes32 public constant override protocolName = "Aave";
-    uint16 private immutable referrer;
     uint private immutable exchangeRateToBackingPrecision;
 
     constructor(
@@ -26,8 +25,7 @@ contract AaveTempusPool is TempusPool {
         uint256 estYield,
         TokenData memory principalsData,
         TokenData memory yieldsData,
-        FeesConfig memory maxFeeSetup,
-        uint16 referrerCode
+        FeesConfig memory maxFeeSetup
     )
         TempusPool(
             address(token),
@@ -43,7 +41,6 @@ contract AaveTempusPool is TempusPool {
         )
     {
         aavePool = token.POOL();
-        referrer = referrerCode;
 
         uint8 underlyingDecimals = IERC20Metadata(token.UNDERLYING_ASSET_ADDRESS()).decimals();
         require(underlyingDecimals <= 18, "underlying decimals must be <= 18");
@@ -57,7 +54,12 @@ contract AaveTempusPool is TempusPool {
 
         // Deposit to AAVE
         IERC20(backingToken).safeIncreaseAllowance(address(aavePool), amount);
-        aavePool.deposit(address(backingToken), amount, address(this), referrer);
+        aavePool.deposit(
+            address(backingToken),
+            amount,
+            address(this),
+            0 /*referralCode*/
+        );
 
         return amount; // With Aave, the of YBT minted equals to the amount of deposited BT
     }

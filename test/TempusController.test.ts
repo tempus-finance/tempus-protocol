@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Signer } from "./utils/ContractBase";
+import { addressOf, Signer } from "./utils/ContractBase";
 import { TempusAMM, TempusAMMJoinKind } from "./utils/TempusAMM";
 import { expectRevert } from "./utils/Utils";
 import { PoolType, TempusPool } from "./utils/TempusPool";
@@ -50,6 +50,21 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     expect(+await pool.yieldShare.balanceOf(controller.address)).to.be.lessThan(2e-18, "No funds should remain in controller");
   }
 
+  describe("deploy", async () => {
+    it("Version is correct", async () =>
+    {
+      const { major, minor, patch } = await controller.version();
+      expect(major).to.equal(1);
+      expect(minor).to.equal(0);
+      expect(patch).to.equal(0);
+    });
+
+    it("Owner is correct", async () =>
+    {
+      expect(await controller.owner()).to.equal(addressOf(owner));
+    });
+  });
+  
   describe("depositAndProvideLiquidity", () =>
   {
     it("unauthorized contracts are not allowed", async () =>

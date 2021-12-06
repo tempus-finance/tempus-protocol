@@ -176,6 +176,11 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setTimeDaysAfterPoolStart(15);
     await pool.setInterestRate(0.1);
     await redeemAndCheckYBT(user, { redeem: { tps: 70, tys: 70 }, balanceAfter: { tps: 0, tys: 0 }, ybtAfter: { pegged: 20, unpegged: 200 } });
+
+    // Check that the pool HAS matured/halted yet.
+    expect(await pool.tempus.matured()).to.equal(true);
+    // TODO: extract expected timestamp from the helpers above
+    expect(await pool.tempus.exceptionalHaltTime()).to.not.equal(null);
   });
 
   it.includeIntegration("Should work before maturity with equal shares, with fluctuating yield", async () =>
@@ -192,8 +197,8 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await redeemAndCheckYBT(user, { redeem: { tps: 10, tys: 10 }, balanceAfter: { tps: 90, tys: 90 }, ybtAfter: { pegged: 99, unpegged: 110 } });
 
     await pool.setTimeDaysAfterPoolStart(5);
-    await pool.setInterestRate(1);
-    await redeemAndCheckYBT(user, { redeem: { tps: 10, tys: 10 }, balanceAfter: { tps: 80, tys: 80 }, ybtAfter: { pegged: 120, unpegged: 120 } });
+    await pool.setInterestRate(1.1);
+    await redeemAndCheckYBT(user, { redeem: { tps: 10, tys: 10 }, balanceAfter: { tps: 80, tys: 80 }, ybtAfter: { pegged: 132, unpegged: 120 } });
 
     await pool.setTimeDaysAfterPoolStart(8);
     await pool.setInterestRate(0.6);
@@ -206,6 +211,10 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setTimeDaysAfterPoolStart(14);
     await pool.setInterestRate(1);
     await redeemAndCheckYBT(user, { redeem: { tps: 60, tys: 60 }, balanceAfter: { tps: 0, tys: 0 }, ybtAfter: { pegged: 200, unpegged: 200 } });
+
+    // Check that the pool HAS NOT matured/halted yet.
+    expect(await pool.tempus.matured()).to.equal(false);
+    expect(await pool.tempus.exceptionalHaltTime()).to.equal(null);
   });
 
   it.includeIntegration("Should work after maturity with negative yield", async () =>
