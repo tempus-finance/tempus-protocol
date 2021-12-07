@@ -80,7 +80,7 @@ describe('TempusPool <> Lido', function () {
     
     const yieldShareBalanceSigner1 = await tempusPool.yieldShare.balanceOf(signer1);
 
-    await tempusPool.controller.redeemToYieldBearing(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1)
+    await tempusPool.controller.redeemToYieldBearing(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1, signer1.address)
     
     const btBalancePostSigner1 = await tempusPool.yieldBearing.balanceOf(signer1);
     const btBalancePostSigner2 = await tempusPool.yieldBearing.balanceOf(signer2);

@@ -124,7 +124,7 @@ describe('TempusPool <> Compound <> DAI', function () {
 
     await evmSetAutomine(false);
     
-    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1);
+    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1, signer1.address);
     await cDai.connect(signer2).redeem((await cDai.contract.balanceOf(signer2.address)));
     await evmMine();
     await evmSetAutomine(true);

@@ -87,7 +87,7 @@ describe('TempusPool <> Yearn', function () {
 
     await evmSetAutomine(false);
     
-    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1)
+    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1, signer1.address)
     await yvDaiVault.connect(signer2).withdraw(ethers.constants.MaxUint256, signer2.address); // deposit directly to Yearn
     await evmMine();
     await evmSetAutomine(true);

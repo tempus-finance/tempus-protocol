@@ -85,7 +85,7 @@ describe('TempusPool <> Aave', function () {
 
     await evmSetAutomine(false);
     
-    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1)
+    await tempusPool.controller.redeemToBacking(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1, signer1.address)
     await aaveLendingPool.connect(signer2).withdraw(dai.address, ethers.constants.MaxUint256, signer2.address); // deposit directly to Aave
     await evmMine();
     await evmSetAutomine(true);

@@ -91,27 +91,29 @@ export class TempusController extends ContractBase {
 
   /**
    * Reedem shares from the Tempus Pool to Backing Tokens
-   * @param user User who is depositing
+   * @param user User who is redeeming
    * @param pool The Tempus Pool from which shares will be redeemed
    * @param principalAmount How many principal shares to redeem
    * @param yieldAmount How many yield shares to redeem
+   * @param recipient The recipient address (can be user)
    */
-  async redeemToBacking(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString): Promise<Transaction> {
+  async redeemToBacking(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress): Promise<Transaction> {
     return this.connect(user).redeemToBacking(
-      pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(user)
+      pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
   }
 
   /**
    * Reedem shares from the Tempus Pool to Yield Bearing Tokens
-   * @param user User who is depositing
+   * @param user User who is redeeming
    * @param pool The Tempus Pool from which shares will be redeemed
    * @param principalAmount How many principal shares to redeem
    * @param yieldAmount How many yield shares to redeem
+   * @param recipient The recipient address (can be user)
    */
-  async redeemToYieldBearing(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString): Promise<Transaction> {
+  async redeemToYieldBearing(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress): Promise<Transaction> {
     return this.connect(user).redeemToYieldBearing(
-      pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(user)
+      pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
   }
 

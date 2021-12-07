@@ -50,6 +50,21 @@ describeForEachPool("TempusPool Deposit", (pool:PoolTestFixture) =>
     (await pool.expectDepositBT(owner, 0)).to.not.be.equal('success');
   });
 
+  it("Should revert on bad recipient (address 0) with BT", async () =>
+  {
+    await pool.createDefault();
+    const [owner] = pool.signers;
+    await pool.asset.approve(owner, pool.tempus.controller.address, 100);
+    (await pool.expectDepositBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+  });
+
+  it("Should revert on bad recipient (address 0) with YBT", async () =>
+  {
+    await pool.createDefault();
+    const [owner] = pool.signers;
+    (await pool.expectDepositYBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+  });
+
   it("Should revert on random failure from backing pool", async () =>
   {
     await pool.createDefault();
