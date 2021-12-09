@@ -40,16 +40,19 @@ abstract contract CTokenMock is ERC20, CTokenInterface {
      * @return (uint, uint) An error code (0=success, otherwise a failure,
                see ErrorReporter.sol), and the actual mint amount in BackingToken decimals
      */
-    function mintInternal(uint mintAmount) internal returns (uint, uint) {
+    function mintInternal(uint256 mintAmount) internal returns (uint, uint) {
         // mintFresh emits the actual Mint event if successful and logs on errors, so we don't need to
         return mintFresh(msg.sender, mintAmount);
     }
 
-    function mintFresh(address minter, uint mintAmount) internal returns (uint errorCode, uint actualMintAmount) {
-        uint err = comptroller.mintAllowed(address(this), minter, mintAmount);
+    function mintFresh(address minter, uint256 mintAmount)
+        internal
+        returns (uint256 errorCode, uint256 actualMintAmount)
+    {
+        uint256 err = comptroller.mintAllowed(address(this), minter, mintAmount);
         require(err == 0, "mint is not allowed");
 
-        uint exchangeRate = exchangeRateStored(); // exchangeRate has variable decimal precision
+        uint256 exchangeRate = exchangeRateStored(); // exchangeRate has variable decimal precision
 
         /*
          *  We call `doTransferIn` for the minter and the mintAmount.
@@ -62,7 +65,7 @@ abstract contract CTokenMock is ERC20, CTokenInterface {
         actualMintAmount = doTransferIn(minter, mintAmount); // 18 decimal precision
 
         // exchange rate precision: 18 - 8 + Underlying Token Decimals
-        uint mintTokens = (actualMintAmount * 1e18) / exchangeRate; // (18 + 18) - 28 = 8 decimal precision
+        uint256 mintTokens = (actualMintAmount * 1e18) / exchangeRate; // (18 + 18) - 28 = 8 decimal precision
         _mint(minter, mintTokens);
         errorCode = 0;
     }
@@ -72,5 +75,5 @@ abstract contract CTokenMock is ERC20, CTokenInterface {
      *      transferred to the protocol, in case of a fee.
      *  This may revert due to insufficient balance or insufficient allowance.
      */
-    function doTransferIn(address from, uint amount) internal virtual returns (uint);
+    function doTransferIn(address from, uint256 amount) internal virtual returns (uint);
 }

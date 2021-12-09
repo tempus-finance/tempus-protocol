@@ -17,9 +17,9 @@ interface ICToken is IERC20, IERC20Metadata {
 
     /// Calculates and returns the current exchange rate.
     /// The decimal precision depends on the formula: 18 - 8 + Underlying Token Decimals
-    function exchangeRateCurrent() external returns (uint);
+    function exchangeRateCurrent() external returns (uint256);
 
     /// Calculates and returns the last stored rate.
     /// The decimal precision depends on the formula: 18 - 8 + Underlying Token Decimals
-    function exchangeRateStored() external view returns (uint);
+    function exchangeRateStored() external view returns (uint256);
 }

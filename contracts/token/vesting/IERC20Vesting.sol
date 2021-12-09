@@ -73,5 +73,5 @@ interface IERC20Vesting {
     /// @dev Calculates the maximum amount of vested tokens that can be claimed for particular address
     /// @param receiver Address of token receiver
     /// @return Number of vested tokens one can claim
-    function claimable(address receiver) external view returns (uint);
+    function claimable(address receiver) external view returns (uint256);
 }

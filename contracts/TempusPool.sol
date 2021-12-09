@@ -418,7 +418,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     /// pricePerYield = currentYield * (estimatedYield - 1) / (estimatedYield)
     /// Return value decimal precision in backing token precision
     function pricePerYieldShare(uint256 currYield, uint256 estYield) private view returns (uint256) {
-        uint one = exchangeRateONE;
+        uint256 one = exchangeRateONE;
         // in case we have estimate for negative yield
         if (estYield < one) {
             return uint256(0);
@@ -520,10 +520,20 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     /// @return Stored Interest Rate, decimal precision depends on specific TempusPool implementation
     function currentInterestRate() public view virtual override returns (uint256);
 
-    function numYieldTokensPerAsset(uint backingTokens, uint interestRate) public view virtual override returns (uint);
+    function numYieldTokensPerAsset(uint256 backingTokens, uint256 interestRate)
+        public
+        view
+        virtual
+        override
+        returns (uint256);
 
-    function numAssetsPerYieldToken(uint yieldTokens, uint interestRate) public view virtual override returns (uint);
+    function numAssetsPerYieldToken(uint256 yieldTokens, uint256 interestRate)
+        public
+        view
+        virtual
+        override
+        returns (uint256);
 
     /// @return Converts an interest rate decimal into a Principal/Yield Share decimal
-    function interestRateToSharePrice(uint interestRate) internal view virtual returns (uint);
+    function interestRateToSharePrice(uint256 interestRate) internal view virtual returns (uint256);
 }

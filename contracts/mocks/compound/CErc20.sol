@@ -24,22 +24,22 @@ contract CErc20 is CTokenMock, CErc20Interface {
     /// @notice Sender supplies assets into the market and receives cTokens in exchange
     /// @dev Accrues interest whether or not the operation succeeds, unless reverted
     /// @param mintAmount The amount of the underlying asset to supply
-    /// @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
-    function mint(uint mintAmount) external override returns (uint) {
+    /// @return uint256 0=success, otherwise a failure (see ErrorReporter.sol for details)
+    function mint(uint256 mintAmount) external override returns (uint) {
         ComptrollerMock mock = ComptrollerMock(address(comptroller));
         if (mock.mockFailNextDepositOrRedeem()) {
             mock.setFailNextDepositOrRedeem(false);
             return 1;
         }
-        (uint err, ) = mintInternal(mintAmount);
+        (uint256 err, ) = mintInternal(mintAmount);
         return err;
     }
 
     /// @notice Sender redeems cTokens in exchange for the underlying asset
     /// @dev Accrues interest whether or not the operation succeeds, unless reverted
     /// @param redeemTokens The number of cTokens to redeem into underlying
-    /// @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
-    function redeem(uint redeemTokens) external override returns (uint) {
+    /// @return uint256 0=success, otherwise a failure (see ErrorReporter.sol for details)
+    function redeem(uint256 redeemTokens) external override returns (uint) {
         ComptrollerMock mock = ComptrollerMock(address(comptroller));
         if (mock.mockFailNextDepositOrRedeem()) {
             mock.setFailNextDepositOrRedeem(false);
@@ -59,7 +59,7 @@ contract CErc20 is CTokenMock, CErc20Interface {
         return 0; // success
     }
 
-    function doTransferIn(address from, uint amount) internal override returns (uint) {
+    function doTransferIn(address from, uint256 amount) internal override returns (uint) {
         IERC20 backingToken = IERC20(underlying);
         backingToken.safeTransferFrom(from, address(this), amount);
         return amount;

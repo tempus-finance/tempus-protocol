@@ -21,15 +21,15 @@ library Debug {
     /// @param value The decimal value with precision defined by @param one
     /// @param one The base 1.0 value expressed in target decimal precision, eg 1e18
     function ftoa(uint256 value, uint256 one) internal pure returns (string memory) {
-        uint decimals = 0;
-        for (uint x = one / 10; x > 0; x = x / 10) {
+        uint256 decimals = 0;
+        for (uint256 x = one / 10; x > 0; x = x / 10) {
             ++decimals;
         }
 
         bytes memory buffer = new bytes(78); // uint256 has max 78 digits
-        uint len = 0;
-        for (uint i = 0; i < decimals; ++i) {
-            uint digit = value % 10;
+        uint256 len = 0;
+        for (uint256 i = 0; i < decimals; ++i) {
+            uint256 digit = value % 10;
             value = value / 10;
             buffer[len++] = bytes1(uint8(48 + digit));
         }
@@ -39,7 +39,7 @@ library Debug {
             buffer[len++] = bytes1(uint8(48)); // "0"
         } else {
             while (value != 0) {
-                uint digit = value % 10;
+                uint256 digit = value % 10;
                 value = value / 10;
                 buffer[len++] = bytes1(uint8(48 + digit));
             }
@@ -47,7 +47,7 @@ library Debug {
 
         // reverse the string
         bytes memory s = new bytes(len);
-        for (uint j = 0; j < len; j++) {
+        for (uint256 j = 0; j < len; j++) {
             s[j] = buffer[len - j - 1];
         }
         return string(s);

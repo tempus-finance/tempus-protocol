@@ -8,19 +8,19 @@ import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 
 contract ComptrollerMock is ComptrollerStorage, ComptrollerInterface {
-    uint public exchangeRate; // current exchange rate as 1**(18 - 8 + Underlying Token Decimals)
+    uint256 public exchangeRate; // current exchange rate as 1**(18 - 8 + Underlying Token Decimals)
 
     // used for mocks, it will force-fail the next deposit or redeem
     bool public mockFailNextDepositOrRedeem;
 
     /// @param initialExchangeRate Initial mocked exchange rate, the official default is 0.02
     ///                            with decimal precision calculated as 18 - 8 + Underlying Token Decimals
-    constructor(uint initialExchangeRate) {
+    constructor(uint256 initialExchangeRate) {
         exchangeRate = initialExchangeRate;
     }
 
     /// @notice MOCK ONLY
-    function setExchangeRate(uint rate) public {
+    function setExchangeRate(uint256 rate) public {
         exchangeRate = rate;
     }
 
@@ -33,9 +33,9 @@ contract ComptrollerMock is ComptrollerStorage, ComptrollerInterface {
     /// @param cTokens The list of addresses of the cToken markets to be enabled
     /// @return Success indicator for whether each corresponding market was entered
     function enterMarkets(address[] calldata cTokens) external override returns (uint[] memory) {
-        uint len = cTokens.length;
+        uint256 len = cTokens.length;
         uint[] memory results = new uint[](len);
-        for (uint i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; i++) {
             results[i] = uint(addToMarketInternal(CTokenMock(cTokens[i]), msg.sender));
         }
         return results;
@@ -69,9 +69,9 @@ contract ComptrollerMock is ComptrollerStorage, ComptrollerInterface {
         /* Delete cToken from the account’s list of assets */
         // load into memory for faster iteration
         CTokenMock[] memory userAssetList = accountAssets[msg.sender];
-        uint len = userAssetList.length;
-        uint assetIndex = len;
-        for (uint i = 0; i < len; i++) {
+        uint256 len = userAssetList.length;
+        uint256 assetIndex = len;
+        for (uint256 i = 0; i < len; i++) {
             if (userAssetList[i] == cToken) {
                 assetIndex = i;
                 break;
@@ -87,7 +87,7 @@ contract ComptrollerMock is ComptrollerStorage, ComptrollerInterface {
     function mintAllowed(
         address cToken,
         address minter,
-        uint /*mintAmount*/
+        uint256 /*mintAmount*/
     ) external view override returns (uint) {
         if (!isParticipant(cToken, minter)) {
             return 1; // error!

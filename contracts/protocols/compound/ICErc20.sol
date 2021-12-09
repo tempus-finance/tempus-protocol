@@ -14,7 +14,7 @@ interface ICErc20 is ICToken {
     /// underlying tokens supplied, divided by the current Exchange Rate.
     /// @param mintAmount The amount of the asset to be supplied, in units of the underlying asset.
     /// @return 0 on success, otherwise an Error code
-    function mint(uint mintAmount) external returns (uint);
+    function mint(uint256 mintAmount) external returns (uint256);
 
     /// The redeem function converts a specified quantity of cTokens into the underlying asset, and returns
     /// them to the user. The amount of underlying tokens received is equal to the quantity of cTokens redeemed,
@@ -22,5 +22,5 @@ interface ICErc20 is ICToken {
     /// and the market's available liquidity.
     /// @param redeemTokens The number of cTokens to be redeemed.
     /// @return 0 on success, otherwise an Error code
-    function redeem(uint redeemTokens) external returns (uint);
+    function redeem(uint256 redeemTokens) external returns (uint256);
 }
