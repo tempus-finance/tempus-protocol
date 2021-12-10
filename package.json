@@ -79,7 +79,7 @@
     "mythx-amm": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/amm/TempusAMM.sol",
     "mythx-pool": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/TempusController.sol contracts/pools/AaveTempusPool.sol contracts/pools/CompoundTempusPool.sol contracts/pools/LidoTempusPool.sol contracts/pools/RariTempusPool.sol contracts/pools/YearnTempusPool.sol",
     "mythx-misc": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/stats/Stats.sol contracts/token/TempusToken.sol contracts/token/vesting/ERC20Vesting.sol contracts/PositionManager.sol contracts/otc/TempusOTC.sol",
-    "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither .",
+    "slither": "slither .",
     "echidna-test:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --format text",
     "echidna-test:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --format text",
     "echidna-test-assertion:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --test-mode assertion --format text",
