@@ -52,7 +52,12 @@ contract MstableTempusPool is TempusPool {
         assert(msg.value == 0);
 
         IERC20(backingToken).safeIncreaseAllowance(address(savingsContract), amount);
-        return savingsContract.depositSavings(amount);
+
+        uint256 preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+        savingsContract.depositSavings(amount);
+        uint256 postDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+
+        return (postDepositBalance - preDepositBalance);
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
@@ -60,8 +65,11 @@ contract MstableTempusPool is TempusPool {
         override
         returns (uint256 backingTokenAmount)
     {
-        backingTokenAmount = savingsContract.redeemCredits(yieldBearingTokensAmount);
-        return IERC20(backingToken).untrustedTransfer(recipient, backingTokenAmount);
+        uint256 preDepositBalance = IERC20(backingToken).balanceOf(address(this));
+        savingsContract.redeemCredits(yieldBearingTokensAmount);
+        uint256 postDepositBalance = IERC20(backingToken).balanceOf(address(this));
+
+        return IERC20(backingToken).untrustedTransfer(recipient, postDepositBalance - preDepositBalance);
     }
 
     /// @return Updated current Interest Rate with the same precision as the BackingToken
