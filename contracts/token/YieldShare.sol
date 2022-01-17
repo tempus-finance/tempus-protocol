@@ -14,11 +14,13 @@ contract YieldShare is PoolShare {
 
     // solhint-disable-previous-line no-empty-blocks
 
-    function getPricePerFullShare() external override returns (uint256 yieldsRate) {
-        (, yieldsRate) = pool.pricePerShare();
+    function getPricePerFullShare() external override returns (uint256) {
+        (, uint256 yieldsRate) = pool.pricePerShare();
+        return yieldsRate;
     }
 
-    function getPricePerFullShareStored() external view override returns (uint256 yieldsRate) {
-        (, yieldsRate) = pool.pricePerShareStored();
+    function getPricePerFullShareStored() external view override returns (uint256) {
+        (, uint256 yieldsRate) = pool.pricePerShareStored();
+        return yieldsRate;
     }
 }
