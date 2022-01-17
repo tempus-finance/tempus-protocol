@@ -651,7 +651,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _getTokenRates() private returns (uint256[] memory) {
         uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
         rates[0] = _token0.getPricePerFullShare();
-        rates[1] = _token1.getPricePerFullShare();
+        // We already did updateInterestRate, so we can use stored values
+        rates[1] = _token1.getPricePerFullShareStored();
         return rates;
     }
 
