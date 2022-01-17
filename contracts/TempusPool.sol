@@ -434,26 +434,6 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return interestRateToSharePrice(principalPrice);
     }
 
-    function pricePerYieldShare() external override returns (uint256) {
-        uint256 yield = currentYield(updateInterestRate());
-        return pricePerYieldShare(yield, estimatedYield(yield));
-    }
-
-    function pricePerYieldShareStored() external view override returns (uint256) {
-        uint256 yield = currentYield(currentInterestRate());
-        return pricePerYieldShare(yield, estimatedYield(yield));
-    }
-
-    function pricePerPrincipalShare() external override returns (uint256) {
-        uint256 yield = currentYield(updateInterestRate());
-        return pricePerPrincipalShare(yield, estimatedYield(yield));
-    }
-
-    function pricePerPrincipalShareStored() external view override returns (uint256) {
-        uint256 yield = currentYield(currentInterestRate());
-        return pricePerPrincipalShare(yield, estimatedYield(yield));
-    }
-
     function getPricePerShare(uint256 interestRate) private view returns (uint256 principalsRate, uint256 yieldsRate) {
         uint256 curYield = currentYield(interestRate);
         uint256 estYield = estimatedYield(curYield);

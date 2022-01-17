@@ -24,16 +24,13 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         PoolShare yieldShare = PoolShare(address(pool.yieldShare()));
 
         uint256 backingTokenOne = pool.backingTokenONE();
-
-        uint256 pricePerPrincipalShare = pool.pricePerPrincipalShareStored();
-        uint256 pricePerYieldShare = pool.pricePerYieldShareStored();
-
+        (uint256 principalsRate, uint256 yieldsRate) = pool.pricePerShareStored();
         return
             calculateTvlInBackingTokens(
                 IERC20(address(principalShare)).totalSupply(),
                 IERC20(address(yieldShare)).totalSupply(),
-                pricePerPrincipalShare,
-                pricePerYieldShare,
+                principalsRate,
+                yieldsRate,
                 backingTokenOne
             );
     }
