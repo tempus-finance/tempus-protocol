@@ -294,14 +294,15 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        (IPoolShare tokenIn, IPoolShare tokenOut) = indexIn == 0 ? (_token0, _token1) : (_token1, _token0);
+        uint256[] memory rates = _getTokenRates();
+        uint256 tokenInRate = rates[indexIn];
+        uint256 tokenOutRate = rates[indexOut];
 
-        balances.mul(_getTokenRates(), _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedSwapAmount = (swapRequest.amount * tokenIn.getPricePerFullShare()) /
-            _TEMPUS_SHARE_PRECISION;
+        balances.mul(rates, _TEMPUS_SHARE_PRECISION);
+        uint256 rateAdjustedSwapAmount = (swapRequest.amount * tokenInRate) / _TEMPUS_SHARE_PRECISION;
 
         uint256 amountOut = StableMath._calcOutGivenIn(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
-        return (amountOut * _TEMPUS_SHARE_PRECISION) / tokenOut.getPricePerFullShare();
+        return (amountOut * _TEMPUS_SHARE_PRECISION) / tokenOutRate;
     }
 
     function _onSwapGivenOut(
@@ -407,7 +408,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
 
         // Update current balances by subtracting the protocol fee amounts
         balances.sub(dueProtocolFeeAmounts);
-        (uint256 bptAmountOut, uint256[] memory amountsIn) = _doJoin(balances, scalingFactors, userData);
+        (uint256 bptAmountOut, uint256[] memory amountsIn) = _doJoin(balances, scalingFactors, tokenRates, userData);
 
         // Update the invariant with the balances the Pool will have after the join, in order to compute the
         // protocol swap fee amounts due in future joins and exits.
@@ -422,12 +423,13 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _doJoin(
         uint256[] memory balances,
         uint256[] memory scalingFactors,
+        uint256[] memory tokenRates,
         bytes memory userData
     ) private returns (uint256 bptAmountOut, uint256[] memory amountsIn) {
         JoinKind kind = userData.joinKind();
 
         if (kind == JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
-            return _joinExactTokensInForBPTOut(balances, scalingFactors, userData);
+            return _joinExactTokensInForBPTOut(balances, scalingFactors, tokenRates, userData);
         } else {
             _revert(Errors.UNHANDLED_JOIN_KIND);
         }
@@ -436,13 +438,14 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _joinExactTokensInForBPTOut(
         uint256[] memory balances,
         uint256[] memory scalingFactors,
+        uint256[] memory tokenRates,
         bytes memory userData
-    ) private returns (uint256, uint256[] memory) {
+    ) private view returns (uint256, uint256[] memory) {
         (uint256[] memory amountsIn, uint256 minBPTAmountOut) = userData.exactTokensInForBptOut();
         InputHelpers.ensureInputLengthMatch(_TOTAL_TOKENS, amountsIn.length);
 
         _upscaleArray(amountsIn, scalingFactors);
-        amountsIn.mul(_getTokenRates(), _TEMPUS_SHARE_PRECISION);
+        amountsIn.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
 
@@ -500,7 +503,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
             dueProtocolFeeAmounts = new uint256[](_TOTAL_TOKENS);
         }
 
-        (bptAmountIn, amountsOut) = _doExit(balances, scalingFactors, userData);
+        (bptAmountIn, amountsOut) = _doExit(balances, scalingFactors, tokenRates, userData);
 
         // Update the invariant with the balances the Pool will have after the exit, in order to compute the
         // protocol swap fee amounts due in future joins and exits.
@@ -513,6 +516,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _doExit(
         uint256[] memory balances,
         uint256[] memory scalingFactors,
+        uint256[] memory tokenRates,
         bytes memory userData
     ) private returns (uint256, uint256[] memory) {
         ExitKind kind = userData.exitKind();
@@ -520,7 +524,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         if (kind == ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
             return _exitExactBPTInForTokensOut(balances, userData);
         } else if (kind == ExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT) {
-            return _exitBPTInForExactTokensOut(balances, scalingFactors, userData);
+            return _exitBPTInForExactTokensOut(balances, scalingFactors, tokenRates, userData);
         } else {
             revert("Unhandled exit kind.");
         }
@@ -546,15 +550,16 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _exitBPTInForExactTokensOut(
         uint256[] memory balances,
         uint256[] memory scalingFactors,
+        uint256[] memory tokenRates,
         bytes memory userData
-    ) private whenNotPaused returns (uint256, uint256[] memory) {
+    ) private view whenNotPaused returns (uint256, uint256[] memory) {
         // This exit function is disabled if the contract is paused.
 
         (uint256[] memory amountsOut, uint256 maxBPTAmountIn) = userData.bptInForExactTokensOut();
         InputHelpers.ensureInputLengthMatch(amountsOut.length, _TOTAL_TOKENS);
         _upscaleArray(amountsOut, scalingFactors);
 
-        amountsOut.mul(_getTokenRates(), _TEMPUS_SHARE_PRECISION);
+        amountsOut.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
         uint256 bptAmountIn = StableMath._calcBptInGivenExactTokensOut(
