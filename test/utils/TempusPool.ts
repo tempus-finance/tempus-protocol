@@ -540,11 +540,19 @@ export class TempusPool extends ContractBase {
   }
 
   async pricePerPrincipalShare(): Promise<NumberOrString> {
-    return this.principalShare.fromBigNum(await this.contract.pricePerPrincipalShareStored());
+    return await this.pricePerShare()[0];
   }
 
   async pricePerYieldShare(): Promise<NumberOrString> {
-    return this.yieldShare.fromBigNum(await this.contract.pricePerYieldShareStored());
+    return await this.pricePerShare()[1];
+  }
+
+  async pricePerShare(): Promise<[NumberOrString, NumberOrString]> {
+    const rates = await this.contract.pricePerShareStored();
+    return [
+      this.principalShare.fromBigNum(rates[0]),
+      this.yieldShare.fromBigNum(rates[1])
+    ];
   }
 
 

@@ -362,18 +362,6 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return effectiveRate(interestRate).divfV(initialInterestRate, exchangeRateONE);
     }
 
-    function currentYield() private returns (uint256) {
-        return currentYield(updateInterestRate());
-    }
-
-    function currentYieldStored() private view returns (uint256) {
-        return currentYield(currentInterestRate());
-    }
-
-    function estimatedYieldStored() private view returns (uint256) {
-        return estimatedYield(currentYieldStored());
-    }
-
     /// @dev Calculates estimated yield at maturity
     /// @notice Includes principal, so in case of 5% yield it returns 1.05
     /// @param yieldCurrent Current yield - since beginning of the pool
@@ -418,23 +406,37 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     function pricePerYieldShare() external override returns (uint256) {
-        uint256 yield = currentYield();
+        uint256 yield = currentYield(updateInterestRate());
         return pricePerYieldShare(yield, estimatedYield(yield));
     }
 
     function pricePerYieldShareStored() external view override returns (uint256) {
-        uint256 yield = currentYieldStored();
+        uint256 yield = currentYield(currentInterestRate());
         return pricePerYieldShare(yield, estimatedYield(yield));
     }
 
     function pricePerPrincipalShare() external override returns (uint256) {
-        uint256 yield = currentYield();
+        uint256 yield = currentYield(updateInterestRate());
         return pricePerPrincipalShare(yield, estimatedYield(yield));
     }
 
     function pricePerPrincipalShareStored() external view override returns (uint256) {
-        uint256 yield = currentYieldStored();
+        uint256 yield = currentYield(currentInterestRate());
         return pricePerPrincipalShare(yield, estimatedYield(yield));
+    }
+
+    function pricePerShare() external override returns (uint256 yieldsRate, uint256 principalsRate) {
+        uint256 curYield = currentYield(updateInterestRate());
+        uint256 estYield = estimatedYield(curYield);
+        yieldsRate = pricePerYieldShare(curYield, estYield);
+        principalsRate = pricePerPrincipalShare(curYield, estYield);
+    }
+
+    function pricePerShareStored() external view override returns (uint256 yieldsRate, uint256 principalsRate) {
+        uint256 curYield = currentYield(currentInterestRate());
+        uint256 estYield = estimatedYield(curYield);
+        yieldsRate = pricePerYieldShare(curYield, estYield);
+        principalsRate = pricePerPrincipalShare(curYield, estYield);
     }
 
     function numSharesToMint(uint256 depositedBT, uint256 currentRate) private view returns (uint256) {
