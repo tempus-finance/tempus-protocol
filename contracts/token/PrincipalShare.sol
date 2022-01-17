@@ -15,12 +15,12 @@ contract PrincipalShare is PoolShare {
     // solhint-disable-previous-line no-empty-blocks
 
     function getPricePerFullShare() external override returns (uint256) {
-        (uint256 principalsRate,) = pool.pricePerShare();
+        (uint256 principalsRate, ) = pool.pricePerShare();
         return principalsRate;
     }
 
     function getPricePerFullShareStored() external view override returns (uint256) {
-        (uint256 principalsRate,) = pool.pricePerShareStored();
+        (uint256 principalsRate, ) = pool.pricePerShareStored();
         return principalsRate;
     }
 }

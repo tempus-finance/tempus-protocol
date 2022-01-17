@@ -411,34 +411,25 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return yieldCurrent + timeLeft.mulfV(initialEstimatedYield, exchangeRateONE);
     }
 
-    /// pricePerYield = currentYield * (estimatedYield - 1) / (estimatedYield)
-    /// Return value decimal precision in backing token precision
-    function pricePerYieldShare(uint256 currYield, uint256 estYield) private view returns (uint256) {
-        uint256 one = exchangeRateONE;
-        // in case we have estimate for negative yield
-        if (estYield < one) {
-            return uint256(0);
-        }
-        uint256 yieldPrice = (estYield - one).mulfV(currYield, one).divfV(estYield, one);
-        return interestRateToSharePrice(yieldPrice);
-    }
-
-    /// pricePerPrincipal = currentYield / estimatedYield
-    /// Return value decimal precision in backing token precision
-    function pricePerPrincipalShare(uint256 currYield, uint256 estYield) private view returns (uint256) {
-        // in case we have estimate for negative yield
-        if (estYield < exchangeRateONE) {
-            return interestRateToSharePrice(currYield);
-        }
-        uint256 principalPrice = currYield.divfV(estYield, exchangeRateONE);
-        return interestRateToSharePrice(principalPrice);
-    }
-
+    /// @dev Calculates Principals and Yields exchange rate
+    /// principalsRate = currentYield / estimatedYield
+    /// yieldsRate = currentYield * (estimatedYield - 1) / (estimatedYield)
+    /// @return principalsRate Principals to BackingToken rate expressed in Backing Token decimal precision
+    /// @return yieldsRate Yields to BackingToken rate expressed in Backing Token decimal precision
     function getPricePerShare(uint256 interestRate) private view returns (uint256 principalsRate, uint256 yieldsRate) {
         uint256 curYield = currentYield(interestRate);
         uint256 estYield = estimatedYield(curYield);
-        principalsRate = pricePerPrincipalShare(curYield, estYield);
-        yieldsRate = pricePerYieldShare(curYield, estYield);
+        // in case we have estimate for negative yield
+        if (estYield < exchangeRateONE) {
+            principalsRate = interestRateToSharePrice(curYield);
+            yieldsRate = 0;
+        } else {
+            uint256 one = exchangeRateONE;
+            uint256 principalPrice = curYield.divfV(estYield, one);
+            uint256 yieldPrice = (estYield - one).mulfV(curYield, one).divfV(estYield, one);
+            principalsRate = interestRateToSharePrice(principalPrice);
+            yieldsRate = interestRateToSharePrice(yieldPrice);
+        }
     }
 
     function pricePerShare() external override returns (uint256 principalsRate, uint256 yieldsRate) {
