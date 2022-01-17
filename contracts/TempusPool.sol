@@ -423,7 +423,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     function pricePerYieldShareStored() external view override returns (uint256) {
-        return pricePerYieldShare(currentYieldStored(), estimatedYieldStored());
+        uint256 yield = currentYieldStored();
+        return pricePerYieldShare(yield, estimatedYield(yield));
     }
 
     function pricePerPrincipalShare() external override returns (uint256) {
@@ -432,7 +433,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     function pricePerPrincipalShareStored() external view override returns (uint256) {
-        return pricePerPrincipalShare(currentYieldStored(), estimatedYieldStored());
+        uint256 yield = currentYieldStored();
+        return pricePerPrincipalShare(yield, estimatedYield(yield));
     }
 
     function numSharesToMint(uint256 depositedBT, uint256 currentRate) private view returns (uint256) {
