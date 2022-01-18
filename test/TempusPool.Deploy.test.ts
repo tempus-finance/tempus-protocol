@@ -14,11 +14,11 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
     pool = await testPool.createDefault();
   });
 
-  it("Version is correct", async () =>
+  it("Pool Version is correct", async () =>
   {
     const { major, minor, patch } = await pool.version();
     expect(major).to.equal(1);
-    expect(minor).to.equal(0);
+    expect(minor).to.equal(1);
     expect(patch).to.equal(0);
   });
 

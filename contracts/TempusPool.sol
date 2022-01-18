@@ -82,7 +82,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         TokenData memory principalsData,
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
-    ) Versioned(1, 0, 0) {
+    ) Versioned(1, 1, 0) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
         require(ctrl != address(0), "controller can not be zero");
         require(initInterestRate > 0, "initInterestRate can not be zero");
