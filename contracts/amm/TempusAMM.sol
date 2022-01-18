@@ -664,8 +664,9 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _getTokenRates() private returns (uint256[] memory) {
         (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerShare();
         uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = principalsRate;
-        rates[1] = yieldsRate;
+        (rates[0], rates[1]) = address(_token0) == address(_principals)
+            ? (principalsRate, yieldsRate)
+            : (yieldsRate, principalsRate);
         return rates;
     }
 
@@ -674,8 +675,9 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function _getTokenRatesStored() private view returns (uint256[] memory) {
         (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerShareStored();
         uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = principalsRate;
-        rates[1] = yieldsRate;
+        (rates[0], rates[1]) = address(_token0) == address(_principals)
+            ? (principalsRate, yieldsRate)
+            : (yieldsRate, principalsRate);
         return rates;
     }
 
