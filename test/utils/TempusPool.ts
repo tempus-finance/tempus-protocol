@@ -548,6 +548,7 @@ export class TempusPool extends ContractBase {
   }
 
   async pricePerShare(): Promise<[NumberOrString, NumberOrString]> {
+    //await this.contract.pricePerShare(); // TX: update the price per share
     const rates = await this.contract.pricePerShareStored();
     return [
       this.principalShare.fromBigNum(rates[0]),
@@ -555,6 +556,10 @@ export class TempusPool extends ContractBase {
     ];
   }
 
+  async pricePerShareNum(): Promise<[number, number]> {
+    const rates = await this.pricePerShare();
+    return [+rates[0],+rates[1]];
+  }
 
   /**
    * @returns Total accumulated fees
