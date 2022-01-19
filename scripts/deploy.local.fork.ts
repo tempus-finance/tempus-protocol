@@ -24,6 +24,7 @@ export interface DeployedPoolInfo {
   spotPrice: string;
   maxLeftoverShares: string;
   showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   maturityDate: number;
   startDate: number;
@@ -56,6 +57,7 @@ interface CookiePoolInfo {
   spotPrice: string;
   maxLeftoverShares: string;
   showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   poolId: string;
   protocol: string;
   startDate: number;
@@ -100,6 +102,7 @@ interface DeployPoolParams {
   spotPrice: string;
   maxLeftoverShares: string;
   showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   tokenPrecision: {
     backingToken: number;
@@ -169,6 +172,7 @@ class DeployLocalForked {
       spotPrice: '1',
       maxLeftoverShares: '0.00001',
       showEstimatesInBackingToken: false,
+      protocolDisplayName: 'Lido',
       decimalsForUI: 4,
       tokenPrecision: {
         backingToken: 18,
@@ -196,6 +200,7 @@ class DeployLocalForked {
       spotPrice: '2500',
       maxLeftoverShares: '0.1',
       showEstimatesInBackingToken: true,
+      protocolDisplayName: 'Rari Capital',
       decimalsForUI: 2,
       tokenPrecision: {
         backingToken: 6,
@@ -223,6 +228,7 @@ class DeployLocalForked {
       spotPrice: '2500',
       maxLeftoverShares: '0.1',
       showEstimatesInBackingToken: true,
+      protocolDisplayName: 'Yearn',
       decimalsForUI: 2,
       tokenPrecision: {
         backingToken: 18,
@@ -302,6 +308,7 @@ class DeployLocalForked {
       spotPrice: params.spotPrice,
       maxLeftoverShares: params.maxLeftoverShares,
       showEstimatesInBackingToken: params.showEstimatesInBackingToken,
+      protocolDisplayName: params.protocolDisplayName,
       decimalsForUI: params.decimalsForUI,
       maturityDate: params.maturity,
       startDate: await pool.startTime() as number,
@@ -329,6 +336,7 @@ class DeployLocalForked {
             spotPrice: poolInfo.spotPrice,
             maxLeftoverShares: poolInfo.maxLeftoverShares,
             showEstimatesInBackingToken: poolInfo.showEstimatesInBackingToken,
+            protocolDisplayName: poolInfo.protocolDisplayName,
             backingTokenAddress: poolInfo.backingTokenAddress,
             yieldBearingTokenAddress: poolInfo.yieldBearingTokenAddress,
             decimalsForUI: poolInfo.decimalsForUI,
@@ -368,6 +376,7 @@ class DeployLocalForked {
           spotPrice: deployedPoolInfo.spotPrice,
           maxLeftoverShares: deployedPoolInfo.maxLeftoverShares,
           showEstimatesInBackingToken: deployedPoolInfo.showEstimatesInBackingToken,
+          protocolDisplayName: deployedPoolInfo.protocolDisplayName,
           backingTokenAddress: deployedPoolInfo.backingTokenAddress,
           yieldBearingTokenAddress: deployedPoolInfo.yieldBearingTokenAddress,
           decimalsForUI: deployedPoolInfo.decimalsForUI,
