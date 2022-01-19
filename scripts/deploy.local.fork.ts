@@ -105,7 +105,8 @@ interface DeployPoolParams {
     yields: number;
     lpTokens: number;
   }
-  deploy: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployLido;
+  deploy?: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployLido;
+  deployRari?: typeof TempusPool.deployRari;
 }
 
 class DeployLocalForked {
@@ -115,7 +116,9 @@ class DeployLocalForked {
     DAI: '0xE78388b4CE79068e89Bf8aA7f218eF6b9AB0e9d0',
     aDAI: '0x3ddfa8ec3052539b6c9549f12cea2c295cff5296',
     cDAI: '0x9b4772e59385ec732bccb06018e318b7b3477459',
-    stETH: '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022'
+    stETH: '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022',
+    USDC: '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503',
+    rsptUSDC: '0x741AA7CFB2c7bF2A1E7D4dA2e3Df6a56cA4131F3'
   }
 
   private controller: TempusController;
@@ -130,6 +133,8 @@ class DeployLocalForked {
     const eth = new ERC20Ether();
     const Dai = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('Dai')));
     const Weth = new ERC20("ERC20", 18, (await ethers.getContract("Weth")));
+    const Usdc = new ERC20('ERC20FixedSupply', 6, (await ethers.getContract('Usdc')));
+    const rsptUsdcYieldToken = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('rsptUSDC')));
 
     const aDaiToken = new ERC20("ERC20", 18, (await ethers.getContract('aToken_Dai')));
     const cDaiToken = new ERC20("ERC20", 8, (await ethers.getContract('cToken_Dai')));
@@ -144,20 +149,20 @@ class DeployLocalForked {
     this.controller = await TempusController.deploy(this.owner);
     this.stats = await ContractBase.deployContract("Stats");
 
-    console.log('Deploying Lido Pool - stETH - 1 month duration...');
+    console.log('Deploying Lido Pool - stETH - 1 year duration...');
     await this.deployPool({
       poolType: PoolType.Lido,
       owner: this.owner,
       backingToken: 'ETH',
       bt: eth,
       ybt: stETHToken,
-      maturity: maturityTimeOneMonth,
-      yieldEstimate: 0.01,
+      maturity: maturityTimeOneYear,
+      yieldEstimate: 0.05,
       ybtName: 'Lido stETH',
       ybtSymbol: 'stETH',
       lpName: 'Tempus Lido LP Token - 1',
       lpSymbol: 'LPstETH - 1',
-      spotPrice: '2',
+      spotPrice: '1',
       maxLeftoverShares: '0.00001',
       decimalsForUI: 4,
       tokenPrecision: {
@@ -168,6 +173,32 @@ class DeployLocalForked {
         lpTokens: 18,
       },
       deploy: TempusPool.deployLido
+    });
+
+    console.log('Deploying Rari Pool - USDC - 1 year duration...');
+    await this.deployPool({
+      poolType: PoolType.Rari,
+      owner: this.owner,
+      backingToken: 'USDC',
+      bt: Usdc,
+      ybt: rsptUsdcYieldToken,
+      maturity: maturityTimeOneYear,
+      yieldEstimate: 0.1,
+      ybtName: 'USDC Rari Stable Pool Token',
+      ybtSymbol: 'RSPT',
+      lpName: 'Tempus Rari LP Token',
+      lpSymbol: 'LP-RSPT',
+      spotPrice: '2500',
+      maxLeftoverShares: '0.1',
+      decimalsForUI: 2,
+      tokenPrecision: {
+        backingToken: 6,
+        yieldBearingToken: 18,
+        principals: 6,
+        yields: 6,
+        lpTokens: 18,
+      },
+      deployRari: TempusPool.deployRari
     });
 
     console.log('Exporting deposit config...');
@@ -181,15 +212,32 @@ class DeployLocalForked {
   }
 
   private async deployPool(params: DeployPoolParams) {
-    const pool = await params.deploy(
-      params.owner,
-      params.bt,
-      params.ybt,
-      this.controller,
-      params.maturity,
-      params.yieldEstimate,
-      generateTempusSharesNames(params.ybtName, params.ybtSymbol, params.maturity)
-    );
+    let pool: TempusPool;
+    if (params.deployRari) {
+      const rariFundManager = await ethers.getContract("rariUsdcFundManager");
+
+      pool = await params.deployRari(
+        params.owner,
+        params.bt as any,
+        params.ybt,
+        rariFundManager.address,
+        this.controller,
+        params.maturity,
+        params.yieldEstimate,
+        generateTempusSharesNames(params.ybtName, params.ybtSymbol, params.maturity)
+      );
+    }
+    else {
+      pool = await params.deploy(
+        params.owner,
+        params.bt,
+        params.ybt,
+        this.controller,
+        params.maturity,
+        params.yieldEstimate,
+        generateTempusSharesNames(params.ybtName, params.ybtSymbol, params.maturity)
+      );
+    }
 
     let tempusAMM = await ContractBase.deployContract(
       "TempusAMM",
