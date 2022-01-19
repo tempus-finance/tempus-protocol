@@ -52,7 +52,11 @@ contract YearnTempusPool is TempusPool {
         // Deposit to Yearn Vault
         IERC20(backingToken).safeIncreaseAllowance(address(yearnVault), amount);
 
-        return yearnVault.deposit(amount);
+        uint256 preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+        yearnVault.deposit(amount);
+        uint256 postDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+
+        return (postDepositBalance - preDepositBalance);
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
