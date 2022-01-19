@@ -31,7 +31,7 @@ export function generateTempusSharesNames(ybtName:string, ybtSymbol:string, matu
   const date:Date = new Date(maturityTime * 1000);
   
   const year:number = date.getFullYear();
-  const month:number = date.getMonth();
+  const month:number = date.getMonth() + 1; /// Count starts from 0 for some reason (January = 0)
   const day:number = date.getDate();
 
   const nameSuffix:string = "-" + day + "-" + month + "-" + year;
@@ -48,7 +48,7 @@ export function generateTempusAMMLPNameAndSymbol(ybtName:string, ybtSymbol:strin
   const date:Date = new Date(maturityTime * 1000);
   
   const year:number = date.getFullYear();
-  const month:number = date.getMonth();
+  const month:number = date.getMonth() + 1; /// Count starts from 0 for some reason (January = 0)
   const day:number = date.getDate();
 
   const nameSuffix:string = "-" + day + "-" + month + "-" + year;
