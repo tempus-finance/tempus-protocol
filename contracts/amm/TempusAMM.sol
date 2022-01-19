@@ -111,13 +111,15 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
             name,
             symbol,
             _mapTempusSharesToIERC20(pool),
-            new address[](2),
+            new address[](_TOTAL_TOKENS),
             swapFeePercentage,
             pauseWindowDuration,
             bufferPeriodDuration,
             owner
         )
     {
+        assert(_TOTAL_TOKENS == 2);
+
         _require(amplificationStart >= _MIN_AMP, Errors.MIN_AMP);
         _require(amplificationStart <= _MAX_AMP, Errors.MAX_AMP);
 
@@ -647,22 +649,20 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     /// @dev Creates 2 element array of token rates(pricePerFullshare)
-    /// @return Array of token rates
-    function _getTokenRates() private returns (uint256[] memory) {
-        uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
+    /// @return rates Array of token rates
+    function _getTokenRates() private returns (uint256[] memory rates) {
+        rates = new uint256[](_TOTAL_TOKENS);
         rates[0] = _token0.getPricePerFullShare();
         // We already did updateInterestRate, so we can use stored values
         rates[1] = _token1.getPricePerFullShareStored();
-        return rates;
     }
 
     /// @dev Creates 2 element array of token rates(pricePerFullShareStored)
-    /// @return Array of stored token rates
-    function _getTokenRatesStored() private view returns (uint256[] memory) {
-        uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
+    /// @return rates Array of stored token rates
+    function _getTokenRatesStored() private view returns (uint256[] memory rates) {
+        rates = new uint256[](_TOTAL_TOKENS);
         rates[0] = _token0.getPricePerFullShareStored();
         rates[1] = _token1.getPricePerFullShareStored();
-        return rates;
     }
 
     function getRate() external view override returns (uint256) {
@@ -787,17 +787,10 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         }
     }
 
-    function _scalingFactors() internal view virtual override returns (uint256[] memory) {
-        uint256 totalTokens = _TOTAL_TOKENS;
-        uint256[] memory scalingFactors = new uint256[](totalTokens);
-
-        // prettier-ignore
-        {
-            if (totalTokens > 0) { scalingFactors[0] = _scalingFactor0; } else { return scalingFactors; }
-            if (totalTokens > 1) { scalingFactors[1] = _scalingFactor1; } else { return scalingFactors; }
-        }
-
-        return scalingFactors;
+    function _scalingFactors() internal view virtual override returns (uint256[] memory scalingFactors) {
+        scalingFactors = new uint256[](_TOTAL_TOKENS);
+        scalingFactors[0] = _scalingFactor0;
+        scalingFactors[1] = _scalingFactor1;
     }
 
     function _setAmplificationData(uint256 value) private {
@@ -855,7 +848,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     function _mapTempusSharesToIERC20(ITempusPool pool) private view returns (IERC20[] memory) {
-        IERC20[] memory tokens = new IERC20[](2);
+        IERC20[] memory tokens = new IERC20[](_TOTAL_TOKENS);
         IPoolShare yieldShare = pool.yieldShare();
         IPoolShare principalShare = pool.principalShare();
         (tokens[0], tokens[1]) = (yieldShare < principalShare)
