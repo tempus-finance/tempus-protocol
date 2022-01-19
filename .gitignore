@@ -11,3 +11,4 @@ typechain/*
 .vscode/*
 mythxOutput.json
 deposit.local.config.ts
+.history
