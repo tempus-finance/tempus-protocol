@@ -123,6 +123,10 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
 
         IPoolShare yieldShare = pool.yieldShare();
         IPoolShare principalShare = pool.principalShare();
+        //        require(
+        //            uint160(address(yieldShare)) < uint160(address(principalShare)),
+        //            "Yields address must be lower than Principals."
+        //        );
 
         require(
             ERC20(address(principalShare)).decimals() == ERC20(address(yieldShare)).decimals(),

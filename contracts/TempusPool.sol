@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
 
 import "./ITempusPool.sol";
 import "./token/PrincipalShare.sol";
@@ -106,7 +107,46 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         uint8 backingDecimals = _backingToken != address(0) ? IERC20Metadata(_backingToken).decimals() : 18;
         backingTokenONE = 10**backingDecimals;
         principalShare = new PrincipalShare(this, principalsData.name, principalsData.symbol, backingDecimals);
-        yieldShare = new YieldShare(this, yieldsData.name, yieldsData.symbol, backingDecimals);
+        //        yieldShare = new YieldShare(this, yieldsData.name, yieldsData.symbol, backingDecimals);
+        yieldShare = deployYieldShare(
+            this,
+            yieldsData.name,
+            yieldsData.symbol,
+            backingDecimals,
+            uint160(address(principalShare))
+        );
+    }
+
+    function deployYieldShare(
+        ITempusPool _pool,
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        uint160 _maxAddress
+    ) private returns (IPoolShare) {
+        bytes memory bytecode = bytes.concat(
+            type(YieldShare).creationCode,
+            abi.encode(address(_pool), _name, _symbol, _decimals)
+        );
+        bytes32 bytecodeHash = keccak256(bytecode);
+
+        address ret;
+        for (uint256 i = 0; i < 128; i++) {
+            ret = Create2.computeAddress(bytes32(i), bytecodeHash);
+            if (uint160(ret) >= _maxAddress) {
+                // Address too high.
+                continue;
+            }
+
+            ret = Create2.deploy(0, bytes32(i), bytecode);
+            if (ret != address(0)) {
+                // Returning 0 is a failure condition of CREATE2.
+                break;
+            }
+        }
+        require(uint160(ret) < _maxAddress, "Couldn't find suitable address");
+
+        return IPoolShare(ret);
     }
 
     modifier onlyController() {
