@@ -178,7 +178,7 @@ export class TempusPool extends ContractBase {
    */
    static async deployYearn(
      owner:Signer,
-     asset:ERC20,
+     asset:IERC20,
      yieldToken:ERC20,
      controller: TempusController,
      maturityTime:number,

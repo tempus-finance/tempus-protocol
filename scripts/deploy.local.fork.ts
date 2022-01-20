@@ -23,6 +23,8 @@ export interface DeployedPoolInfo {
   estimatedYield: number;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   maturityDate: number;
   startDate: number;
@@ -54,6 +56,8 @@ interface CookiePoolInfo {
   backingToken: string;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   poolId: string;
   protocol: string;
   startDate: number;
@@ -97,6 +101,8 @@ interface DeployPoolParams {
   lpSymbol: string;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   tokenPrecision: {
     backingToken: number;
@@ -105,7 +111,7 @@ interface DeployPoolParams {
     yields: number;
     lpTokens: number;
   }
-  deploy?: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployLido;
+  deploy?: typeof TempusPool.deployAave | typeof TempusPool.deployCompound | typeof TempusPool.deployLido | typeof TempusPool.deployYearn;
   deployRari?: typeof TempusPool.deployRari;
 }
 
@@ -135,6 +141,7 @@ class DeployLocalForked {
     const Weth = new ERC20("ERC20", 18, (await ethers.getContract("Weth")));
     const Usdc = new ERC20('ERC20FixedSupply', 6, (await ethers.getContract('Usdc')));
     const rsptUsdcYieldToken = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('rsptUSDC')));
+    const yvDaiYieldToken = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('yvDAI')));
 
     const aDaiToken = new ERC20("ERC20", 18, (await ethers.getContract('aToken_Dai')));
     const cDaiToken = new ERC20("ERC20", 8, (await ethers.getContract('cToken_Dai')));
@@ -164,6 +171,8 @@ class DeployLocalForked {
       lpSymbol: 'LPstETH - 1',
       spotPrice: '1',
       maxLeftoverShares: '0.00001',
+      showEstimatesInBackingToken: false,
+      protocolDisplayName: 'Lido',
       decimalsForUI: 4,
       tokenPrecision: {
         backingToken: 18,
@@ -190,6 +199,8 @@ class DeployLocalForked {
       lpSymbol: 'LP-RSPT',
       spotPrice: '2500',
       maxLeftoverShares: '0.1',
+      showEstimatesInBackingToken: true,
+      protocolDisplayName: 'Rari Capital',
       decimalsForUI: 2,
       tokenPrecision: {
         backingToken: 6,
@@ -199,6 +210,34 @@ class DeployLocalForked {
         lpTokens: 18,
       },
       deployRari: TempusPool.deployRari
+    });
+
+    console.log('Deploying Yearn Pool - DAI - 1 year duration...');
+    await this.deployPool({
+      poolType: PoolType.Yearn,
+      owner: this.owner,
+      backingToken: 'DAI',
+      bt: Dai,
+      ybt: yvDaiYieldToken,
+      maturity: maturityTimeOneYear,
+      yieldEstimate: 0.07,
+      ybtName: 'yvDai Yearn Token',
+      ybtSymbol: 'yvDAI',
+      lpName: 'Tempus Yearn LP Token',
+      lpSymbol: 'LP-yvDAI',
+      spotPrice: '2500',
+      maxLeftoverShares: '0.1',
+      showEstimatesInBackingToken: true,
+      protocolDisplayName: 'Yearn',
+      decimalsForUI: 2,
+      tokenPrecision: {
+        backingToken: 18,
+        yieldBearingToken: 18,
+        principals: 18,
+        yields: 18,
+        lpTokens: 18,
+      },
+      deploy: TempusPool.deployYearn
     });
 
     console.log('Exporting deposit config...');
@@ -268,6 +307,8 @@ class DeployLocalForked {
       estimatedYield: params.yieldEstimate,
       spotPrice: params.spotPrice,
       maxLeftoverShares: params.maxLeftoverShares,
+      showEstimatesInBackingToken: params.showEstimatesInBackingToken,
+      protocolDisplayName: params.protocolDisplayName,
       decimalsForUI: params.decimalsForUI,
       maturityDate: params.maturity,
       startDate: await pool.startTime() as number,
@@ -294,6 +335,8 @@ class DeployLocalForked {
             estimatedYield: poolInfo.estimatedYield,
             spotPrice: poolInfo.spotPrice,
             maxLeftoverShares: poolInfo.maxLeftoverShares,
+            showEstimatesInBackingToken: poolInfo.showEstimatesInBackingToken,
+            protocolDisplayName: poolInfo.protocolDisplayName,
             backingTokenAddress: poolInfo.backingTokenAddress,
             yieldBearingTokenAddress: poolInfo.yieldBearingTokenAddress,
             decimalsForUI: poolInfo.decimalsForUI,
@@ -332,6 +375,8 @@ class DeployLocalForked {
           backingToken: deployedPoolInfo.backingToken,
           spotPrice: deployedPoolInfo.spotPrice,
           maxLeftoverShares: deployedPoolInfo.maxLeftoverShares,
+          showEstimatesInBackingToken: deployedPoolInfo.showEstimatesInBackingToken,
+          protocolDisplayName: deployedPoolInfo.protocolDisplayName,
           backingTokenAddress: deployedPoolInfo.backingTokenAddress,
           yieldBearingTokenAddress: deployedPoolInfo.yieldBearingTokenAddress,
           decimalsForUI: deployedPoolInfo.decimalsForUI,
