@@ -50,17 +50,22 @@ contract CompoundTempusPool is TempusPool {
         require(token.comptroller().enterMarkets(markets)[0] == 0, "enterMarkets failed");
     }
 
-    function depositToUnderlying(uint256 backingAmount) internal override returns (uint256) {
+    function depositToUnderlying(uint256 amountBT)
+        internal
+        override
+        assertTransferBT(amountBT)
+        returns (uint256 mintedYBT)
+    {
         // ETH deposits are not accepted, because it is rejected in the controller
         assert(msg.value == 0);
 
-        uint preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+        uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Compound
-        IERC20(backingToken).safeIncreaseAllowance(yieldBearingToken, backingAmount);
-        require(ICErc20(yieldBearingToken).mint(backingAmount) == 0, "CErc20 mint failed");
+        IERC20(backingToken).safeIncreaseAllowance(yieldBearingToken, amountBT);
+        require(ICErc20(yieldBearingToken).mint(amountBT) == 0, "CErc20 mint failed");
 
-        return IERC20(yieldBearingToken).balanceOf(address(this)) - preDepositBalance;
+        mintedYBT = balanceOfYBT() - ybtBefore;
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)

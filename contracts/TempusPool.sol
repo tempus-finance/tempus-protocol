@@ -114,7 +114,28 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         _;
     }
 
-    function depositToUnderlying(uint256 backingAmount) internal virtual returns (uint256 mintedYieldTokenAmount);
+    /// @dev Deposits backing tokens into the underlying protocol
+    /// @param amountBT Amount of BackingTokens to deposit
+    /// @return mintedYBT Amount of minted Yield Bearing Tokens
+    function depositToUnderlying(uint256 amountBT) internal virtual returns (uint256 mintedYBT);
+
+    /// @dev Utility for checking YBT balance of this contract
+    function balanceOfYBT() internal view returns (uint256) {
+        return IERC20(yieldBearingToken).balanceOf(address(this));
+    }
+
+    /// @dev Utility for checking BT balance of this contract
+    function balanceOfBT() internal view returns (uint256) {
+        return IERC20(backingToken).balanceOf(address(this));
+    }
+
+    /// @dev Asserts all of the Backing Tokens are transferred during this operation
+    modifier assertTransferBT(uint256 amountBT) {
+        uint256 btBefore = balanceOfBT();
+        _;
+        uint256 remainingBT = amountBT - (btBefore - balanceOfBT());
+        assert(remainingBT == 0);
+    }
 
     function withdrawFromUnderlyingProtocol(uint256 amount, address recipient)
         internal

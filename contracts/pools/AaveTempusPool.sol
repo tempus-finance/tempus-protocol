@@ -49,20 +49,27 @@ contract AaveTempusPool is TempusPool {
         }
     }
 
-    function depositToUnderlying(uint256 amount) internal override returns (uint256) {
+    function depositToUnderlying(uint256 amountBT)
+        internal
+        override
+        assertTransferBT(amountBT)
+        returns (uint256 mintedYBT)
+    {
         // ETH deposits are not accepted, because it is rejected in the controller
         assert(msg.value == 0);
 
+        uint256 ybtBefore = balanceOfYBT();
+
         // Deposit to AAVE
-        IERC20(backingToken).safeIncreaseAllowance(address(aavePool), amount);
+        IERC20(backingToken).safeIncreaseAllowance(address(aavePool), amountBT);
         aavePool.deposit(
             address(backingToken),
-            amount,
+            amountBT,
             address(this),
             0 /*referralCode*/
         );
 
-        return amount; // With Aave, the of YBT minted equals to the amount of deposited BT
+        mintedYBT = balanceOfYBT() - ybtBefore;
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
