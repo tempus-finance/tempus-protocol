@@ -17,18 +17,10 @@ class DepositLocalForked {
     tokenMap.set('USDC', new ERC20('ERC20FixedSupply', 6, (await ethers.getContract('Usdc'))));
     tokenMap.set('rsptUSDC', new ERC20('ERC20FixedSupply', 18, (await ethers.getContract('rsptUSDC'))));
 
-    await this.sendTransaction(100000000, depositConfig.holders.DAI, this.owner.address, tokenMap.get('DAI'));
-    console.log('Sent 100000000 DAI to owner address');
-    await this.sendTransaction(10000, depositConfig.holders.aDAI, this.owner.address, tokenMap.get('aDai'));
-    console.log('Sent 10000 aDAI to owner address');
-    await this.sendTransaction(10000, depositConfig.holders.cDAI, this.owner.address, tokenMap.get('cDai'));
-    console.log('Sent 10000 cDAI to owner address');
-    await this.sendTransaction(250000, depositConfig.holders.stETH, this.owner.address, tokenMap.get('stETH'));
-    console.log('Sent 250000 stETH to owner address');
+    await this.sendTransaction(100000, depositConfig.holders.DAI, this.owner.address, tokenMap.get('DAI'));
+    console.log('Sent 100000 DAI to owner address');
     await this.sendTransaction(100000, depositConfig.holders.USDC, this.owner.address, tokenMap.get('USDC'));
     console.log('Sent 100000 USDC to owner address');
-    await this.sendTransaction(100000, depositConfig.holders.rsptUSDC, this.owner.address, tokenMap.get('rsptUSDC'));
-    console.log('Sent 100000 RSPT USDC to owner address');
   }
 
   private async sendTransaction(amount: number, from: string, to: string, token: ERC20) {
