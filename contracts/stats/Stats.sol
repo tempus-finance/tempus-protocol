@@ -3,7 +3,6 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./ITokenPairPriceFeed.sol";
 import "./ChainlinkTokenPairPriceFeed/ChainlinkTokenPairPriceFeed.sol";
 import "../ITempusPool.sol";
 import "../math/Fixed256xVar.sol";
@@ -12,11 +11,11 @@ import "../amm/interfaces/ITempusAMM.sol";
 import "../utils/AMMBalancesHelper.sol";
 import "../utils/Versioned.sol";
 
-contract Stats is ITokenPairPriceFeed, ChainlinkTokenPairPriceFeed, Versioned {
+contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     using Fixed256xVar for uint256;
     using AMMBalancesHelper for uint256[];
 
-    constructor() Versioned(1, 0, 0) {}
+    constructor() Versioned(2, 0, 0) {}
 
     /// @param pool The TempusPool to fetch its TVL (total value locked)
     /// @return total value locked of a TempusPool (denominated in BackingTokens)
@@ -40,12 +39,16 @@ contract Stats is ITokenPairPriceFeed, ChainlinkTokenPairPriceFeed, Versioned {
     }
 
     /// @param pool The TempusPool to fetch its TVL (total value locked)
-    /// @param rateConversionData ENS nameHash of the ENS name of a Chainlink price aggregator (e.g. - the ENS nameHash of 'eth-usd.data.eth')
+    /// @param chainlinkAggregatorNode the address of a Chainlink price aggregator (e.g. -the address of the 'eth-usd' pair)
     /// @return total value locked of a TempusPool (denominated in the rate of the provided token pair)
-    function totalValueLockedAtGivenRate(ITempusPool pool, bytes32 rateConversionData) external view returns (uint256) {
+    function totalValueLockedAtGivenRate(ITempusPool pool, address chainlinkAggregatorNode)
+        external
+        view
+        returns (uint256)
+    {
         uint256 tvlInBackingTokens = totalValueLockedInBackingTokens(pool);
 
-        (uint256 rate, uint256 rateDenominator) = getRate(rateConversionData);
+        (uint256 rate, uint256 rateDenominator) = getRate(chainlinkAggregatorNode);
         return (tvlInBackingTokens * rate) / rateDenominator;
     }
 
