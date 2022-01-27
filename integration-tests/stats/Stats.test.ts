@@ -61,7 +61,10 @@ describe('Stats <> Chainlink', function () {
     // arrange
     const { signers: { aWethHolder }, contracts: { aWeth, controller, tempusPool, stats }} = await setup();
     const depositAmount: number = 1234.56789;
-    const chainlinkAggregatorEnsHash = NameHash.hash("eth-usd.data.eth");
+    
+    // https://docs.chain.link/docs/ethereum-addresses/
+    const chainlinkAggregatorNode = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"; 
+
     const currentBlockDate = new Date(1000 * (await ethers.provider.getBlock(FORKED_BLOCK_NUMBER)).timestamp);
     const ethPriceQuote = await EthPriceQuoteProvider.getDailyQuote(currentBlockDate);
     
@@ -70,7 +73,7 @@ describe('Stats <> Chainlink', function () {
     await controller.depositYieldBearing(aWethHolder, tempusPool, depositAmount, aWethHolder);
     
     // assert
-    const totalValueLockedInUSD :BigNumber = await stats.totalValueLockedAtGivenRate(tempusPool.address, chainlinkAggregatorEnsHash);
+    const totalValueLockedInUSD :BigNumber = await stats.totalValueLockedAtGivenRate(tempusPool.address, chainlinkAggregatorNode);
     const minExpectedTotalValueLockedInUSD = Number(toWei(depositAmount).mul(toWei(ethPriceQuote.low)).div(toWei(1)));
     const maxExpectedTotalValueLockedInUSD = Number(toWei(depositAmount).mul(toWei(ethPriceQuote.high)).div(toWei(1)));
 
