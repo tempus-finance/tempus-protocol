@@ -70,18 +70,22 @@ contract RariTempusPool is TempusPool {
         updateInterestRate();
     }
 
-    function depositToUnderlying(uint256 amount) internal override returns (uint256) {
+    function depositToUnderlying(uint256 amountBT)
+        internal
+        override
+        assertTransferBT(amountBT)
+        returns (uint256 mintedYBT)
+    {
         // ETH deposits are not accepted, because it is rejected in the controller
         assert(msg.value == 0);
 
+        uint256 ybtBefore = balanceOfYBT();
+
         // Deposit to Rari Pool
-        IERC20(backingToken).safeIncreaseAllowance(address(rariFundManager), amount);
+        IERC20(backingToken).safeIncreaseAllowance(address(rariFundManager), amountBT);
+        rariFundManager.deposit(IERC20Metadata(backingToken).symbol(), amountBT);
 
-        uint256 preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
-        rariFundManager.deposit(IERC20Metadata(backingToken).symbol(), amount);
-        uint256 postDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
-
-        return (postDepositBalance - preDepositBalance);
+        mintedYBT = balanceOfYBT() - ybtBefore;
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)

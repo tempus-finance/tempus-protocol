@@ -36,15 +36,14 @@ contract LidoTempusPool is TempusPool {
         referrer = referrerAddress;
     }
 
-    function depositToUnderlying(uint256 amount) internal override returns (uint256) {
+    function depositToUnderlying(uint256 amountBT) internal override returns (uint256 mintedYBT) {
         // Enforced by the controller
-        assert(msg.value == amount);
+        assert(msg.value == amountBT);
 
-        uint256 preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
+        uint256 ybtBefore = balanceOfYBT();
         lido.submit{value: msg.value}(referrer);
 
-        uint256 mintedTokens = IERC20(yieldBearingToken).balanceOf(address(this)) - preDepositBalance;
-        return mintedTokens;
+        mintedYBT = balanceOfYBT() - ybtBefore;
     }
 
     function withdrawFromUnderlyingProtocol(uint256, address) internal pure override returns (uint256) {

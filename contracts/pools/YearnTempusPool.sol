@@ -45,18 +45,22 @@ contract YearnTempusPool is TempusPool {
         yearnVault = vault;
     }
 
-    function depositToUnderlying(uint256 amount) internal override returns (uint256) {
+    function depositToUnderlying(uint256 amountBT)
+        internal
+        override
+        assertTransferBT(amountBT)
+        returns (uint256 mintedYBT)
+    {
         // ETH deposits are not accepted, because it is rejected in the controller
         assert(msg.value == 0);
 
+        uint256 ybtBefore = balanceOfYBT();
+
         // Deposit to Yearn Vault
-        IERC20(backingToken).safeIncreaseAllowance(address(yearnVault), amount);
+        IERC20(backingToken).safeIncreaseAllowance(address(yearnVault), amountBT);
+        yearnVault.deposit(amountBT);
 
-        uint256 preDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
-        yearnVault.deposit(amount);
-        uint256 postDepositBalance = IERC20(yieldBearingToken).balanceOf(address(this));
-
-        return (postDepositBalance - preDepositBalance);
+        mintedYBT = balanceOfYBT() - ybtBefore;
     }
 
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
