@@ -315,6 +315,27 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       expect(postBalanceUser2).to.be.within(preBalanceUser2 - 1, preBalanceUser2 + 1);
     });
 
+    it("Complete exit before maturity with equal shares", async () => 
+    {
+      await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
+      
+      const preBalanceOwner = +await testPool.ybt.balanceOf(owner);
+      await testPool.controller.depositYieldBearing(owner, testPool.tempus, 100);
+
+      await controller.exitAmmGivenLpAndRedeem(
+        testPool, 
+        owner, 
+        0,
+        await testPool.principals.balanceOf(owner),
+        await testPool.yields.balanceOf(owner), 
+        false
+      );
+
+      const postBalanceOwner = +await testPool.ybt.balanceOf(owner);
+
+      expect(postBalanceOwner).to.be.within(preBalanceOwner - 1, preBalanceOwner + 1);
+    });
+
     it("Should successfully swap Yields --> Principals w/ 3% Maximum Slippage", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
