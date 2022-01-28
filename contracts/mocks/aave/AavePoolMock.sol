@@ -61,7 +61,7 @@ contract AavePoolMock is ILendingPool {
     ///   is a different wallet
     function deposit(
         address asset,
-        uint amount,
+        uint256 amount,
         address onBehalfOf,
         uint16 /*referralCode*/
     ) public override {
@@ -77,7 +77,7 @@ contract AavePoolMock is ILendingPool {
         require(assetToken.transferFrom(msg.sender, assetOwner, amount), "transfer failed");
 
         // liquidity index controls how many additional tokens are minted
-        uint amountScaled = (amount).rayDiv(liquidityIndex);
+        uint256 amountScaled = (amount).rayDiv(liquidityIndex);
         yieldToken.mint(onBehalfOf, amountScaled);
     }
 

@@ -9,5 +9,5 @@ interface IComptroller {
     /// @param cTokens The list of addresses of the cToken markets to be enabled
     /// @return For each market, returns an error code indicating whether or not it was entered.
     ///         Each is 0 on success, otherwise an Error code.
-    function enterMarkets(address[] calldata cTokens) external returns (uint[] memory);
+    function enterMarkets(address[] calldata cTokens) external returns (uint256[] memory);
 }

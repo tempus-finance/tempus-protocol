@@ -131,16 +131,16 @@ contract RariTempusPool is TempusPool {
         return lastCalculatedInterestRate;
     }
 
-    function numAssetsPerYieldToken(uint yieldTokens, uint rate) public view override returns (uint) {
+    function numAssetsPerYieldToken(uint256 yieldTokens, uint256 rate) public view override returns (uint) {
         return yieldTokens.mulfV(rate, exchangeRateONE) / exchangeRateToBackingPrecision;
     }
 
-    function numYieldTokensPerAsset(uint backingTokens, uint rate) public view override returns (uint) {
+    function numYieldTokensPerAsset(uint256 backingTokens, uint256 rate) public view override returns (uint) {
         return backingTokens.divfV(rate, exchangeRateONE) * exchangeRateToBackingPrecision;
     }
 
     /// @dev The rate precision is always 18
-    function interestRateToSharePrice(uint interestRate) internal view override returns (uint) {
+    function interestRateToSharePrice(uint256 interestRate) internal view override returns (uint) {
         return interestRate / exchangeRateToBackingPrecision;
     }
 

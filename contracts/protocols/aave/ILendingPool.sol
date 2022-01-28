@@ -12,7 +12,7 @@ interface ILendingPool {
     ///   is a different wallet
     function deposit(
         address asset,
-        uint amount,
+        uint256 amount,
         address onBehalfOf,
         uint16 /*referralCode*/
     ) external;

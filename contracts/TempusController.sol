@@ -450,13 +450,13 @@ contract TempusController is ReentrancyGuard, Ownable, Versioned {
         IERC20 yieldBearingToken = IERC20(targetPool.yieldBearingToken());
 
         // Transfer funds from msg.sender to targetPool
-        uint transferredYBT = yieldBearingToken.untrustedTransferFrom(
+        uint256 transferredYBT = yieldBearingToken.untrustedTransferFrom(
             msg.sender,
             address(targetPool),
             yieldTokenAmount
         );
 
-        (uint mintedShares, uint depositedBT, uint fee, uint rate) = targetPool.onDepositYieldBearing(
+        (uint256 mintedShares, uint256 depositedBT, uint256 fee, uint256 rate) = targetPool.onDepositYieldBearing(
             transferredYBT,
             recipient
         );
@@ -530,9 +530,14 @@ contract TempusController is ReentrancyGuard, Ownable, Versioned {
     ) private {
         require((principals > 0) || (yields > 0), "principalAmount and yieldAmount cannot both be 0");
 
-        (uint redeemedYBT, uint fee, uint interestRate) = targetPool.redeem(sender, principals, yields, recipient);
+        (uint256 redeemedYBT, uint256 fee, uint256 interestRate) = targetPool.redeem(
+            sender,
+            principals,
+            yields,
+            recipient
+        );
 
-        uint redeemedBT = targetPool.numAssetsPerYieldToken(redeemedYBT, targetPool.currentInterestRate());
+        uint256 redeemedBT = targetPool.numAssetsPerYieldToken(redeemedYBT, targetPool.currentInterestRate());
         bool earlyRedeem = !targetPool.matured();
         emit Redeemed(
             address(targetPool),
@@ -557,7 +562,7 @@ contract TempusController is ReentrancyGuard, Ownable, Versioned {
     ) private {
         require((principals > 0) || (yields > 0), "principalAmount and yieldAmount cannot both be 0");
 
-        (uint redeemedYBT, uint redeemedBT, uint fee, uint rate) = targetPool.redeemToBacking(
+        (uint256 redeemedYBT, uint256 redeemedBT, uint256 fee, uint256 rate) = targetPool.redeemToBacking(
             sender,
             principals,
             yields,

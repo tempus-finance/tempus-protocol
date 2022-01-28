@@ -12,6 +12,6 @@ abstract contract ComptrollerInterface {
     function mintAllowed(
         address cToken,
         address minter,
-        uint mintAmount
+        uint256 mintAmount
     ) external virtual returns (uint);
 }

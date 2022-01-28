@@ -64,7 +64,7 @@ contract YearnVaultMock is ERC20, IYearnVaultV2 {
 
         require(asset.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
-        uint amountScaled = (amount).divfV(pricePerShare, pricePerShareDenominator);
+        uint256 amountScaled = (amount).divfV(pricePerShare, pricePerShareDenominator);
         _mint(msg.sender, amountScaled);
 
         return amountScaled;

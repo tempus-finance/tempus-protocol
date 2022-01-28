@@ -81,16 +81,16 @@ contract YearnTempusPool is TempusPool {
         return yearnVault.pricePerShare();
     }
 
-    function numAssetsPerYieldToken(uint yieldTokens, uint rate) public view override returns (uint) {
+    function numAssetsPerYieldToken(uint256 yieldTokens, uint256 rate) public view override returns (uint256) {
         return yieldTokens.mulfV(rate, exchangeRateONE);
     }
 
-    function numYieldTokensPerAsset(uint backingTokens, uint rate) public view override returns (uint) {
+    function numYieldTokensPerAsset(uint256 backingTokens, uint256 rate) public view override returns (uint256) {
         return backingTokens.divfV(rate, exchangeRateONE);
     }
 
     /// @dev The rate precision always matches the BackingToken's precision
-    function interestRateToSharePrice(uint interestRate) internal pure override returns (uint) {
+    function interestRateToSharePrice(uint256 interestRate) internal pure override returns (uint256) {
         return interestRate;
     }
 }
