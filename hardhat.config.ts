@@ -1,5 +1,6 @@
 import { task } from 'hardhat/config';
 import 'solidity-coverage';
+import 'solidity-docgen';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 import 'hardhat-abi-exporter';
@@ -127,5 +128,8 @@ module.exports = {
   },
   mocha: {
     timeout: 120000
+  },
+  docgen: {
+    
   }
 };
