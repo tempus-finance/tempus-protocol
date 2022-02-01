@@ -23,6 +23,7 @@ contract TempusVaultStrategy is Ownable, Versioned {
     function register() external {
         require(!registered);
         // TODO check that msg.sender conforms to TempusVault interface (ERC-165)
+        registered = true;
         vault = TempusVault(msg.sender);
     }
 
