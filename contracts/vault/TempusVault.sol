@@ -20,16 +20,35 @@ contract TempusVaultStrategy is Ownable, Versioned {
 
     function constructor() Versioned(1, 0, 0) {}
 
-    function register() external {
+    modifier isRegistered() {
         require(!registered);
+        _;
+    }
+
+    function register() external isRegistered {
         // TODO check that msg.sender conforms to TempusVault interface (ERC-165)
         registered = true;
         vault = TempusVault(msg.sender);
     }
 
-    function deposit(address recipient, uint256 amount) external {}
+    function deposit(address recipient, uint256 amount) external isRegistered {
+        // TODO: implement
+        assert(false);
+    }
 
-    function withdraw(address recipient, uint256 amount) external {}
+    function withdraw(address recipient, uint256 amount) external isRegistered {
+        // TODO: implement
+        assert(false);
+    }
+
+    /// This can be used to withdraw assets if for some reason the strategy
+    /// had to be replaced without exiting properly.
+    function safetyWithdraw() external isRegistered {
+        require(vault.strategy() != address(this)); // TODO error code/message
+
+        // TODO: implement withdrawal of all assets here
+        assert(false);
+    }
 }
 
 /// A Tempus Vault is tied to a single yield bearing token, but supports
