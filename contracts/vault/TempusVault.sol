@@ -41,9 +41,6 @@ contract TempusVault is Ownable, Versioned {
 
     TempusVaultStrategy public strategy;
 
-    /// Registry for valid pools and AMM's to avoid fake address injection
-    mapping(address => bool) private registry;
-
     constructor(IERC20 _yieldToken, TempusVaultStrategy _strategy) Versioned(1, 0, 0) {
         yieldToken = _yieldToken;
         registerStrategy(_strategy);
@@ -63,19 +60,6 @@ contract TempusVault is Ownable, Versioned {
         strategy.register();
 
         strategy = _strategy;
-    }
-
-    /// @dev Registers a POOL or an AMM as valid or invalid to use with this Controller
-    /// @param authorizedContract Contract which will be allowed to be used inside this Controller
-    /// @param isValid If true, contract is valid to be used, if false, it's not allowed anymore
-    function register(address authorizedContract, bool isValid) public onlyOwner {
-        registry[authorizedContract] = isValid;
-    }
-
-    /// @dev Validates that the provided contract is registered to be used with this Controller
-    /// @param authorizedContract Contract address to check
-    function requireRegistered(address authorizedContract) private view {
-        require(registry[authorizedContract], "Unauthorized contract address");
     }
 
     function deposit(uint256 amount) external {
