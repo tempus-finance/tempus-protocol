@@ -48,7 +48,7 @@ contract TempusVault is Ownable, Versioned {
     }
 
     /// Replace the current strategy with a new modul. Checks version conformance.
-    function registerStrategy(TempusVaultStrategy _strategy) public onlyOwner {
+    function replaceStrategy(TempusVaultStrategy _strategy) public onlyOwner {
         // Check compatibility.
         Version memory version = _strategy.version();
         // TODO create a helper in Versioned for this
