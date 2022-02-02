@@ -91,6 +91,9 @@ contract RariTempusPool is TempusPool {
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
         internal
         override
+        /// exchangeRateToBackingPrecision is used because with Rari there is some dust left due to rounding errors.
+        /// The maximum dust amount is expected to be smaller than exchangeRateToBackingPrecision
+        assertTransferYBT(yieldBearingTokensAmount, exchangeRateToBackingPrecision) 
         returns (uint256 backingTokenAmount)
     {
         uint256 rftTotalSupply = IERC20(yieldBearingToken).totalSupply();

@@ -137,6 +137,14 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         assert(remainingBT == 0);
     }
 
+     /// @dev Asserts all of the Yield Bearing Tokens are transferred during this operation (allowing some dust)
+    modifier assertTransferYBT(uint256 amountYBT, uint256 maxRemainingYBT) {
+        uint256 ybtBefore = balanceOfYBT();
+        _;
+        uint256 remainingYBT = amountYBT - (ybtBefore - balanceOfYBT());
+        assert(remainingYBT <= maxRemainingYBT);
+    }
+
     function withdrawFromUnderlyingProtocol(uint256 amount, address recipient)
         internal
         virtual
