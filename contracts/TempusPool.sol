@@ -82,7 +82,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         TokenData memory principalsData,
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
-    ) Versioned(1, 1, 0) {
+    ) Versioned(2, 0, 0) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
         require(ctrl != address(0), "controller can not be zero");
         require(initInterestRate > 0, "initInterestRate can not be zero");
@@ -422,12 +422,11 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     function getPricePerShare(uint256 interestRate) private view returns (uint256 principalsRate, uint256 yieldsRate) {
         uint256 curYield = currentYield(interestRate);
         uint256 estYield = estimatedYield(curYield);
+        uint256 one = exchangeRateONE;
         // in case we have estimate for negative yield
-        if (estYield < exchangeRateONE) {
+        if (estYield < one) {
             principalsRate = interestRateToSharePrice(curYield);
-            yieldsRate = 0;
         } else {
-            uint256 one = exchangeRateONE;
             uint256 principalPrice = curYield.divfV(estYield, one);
             uint256 yieldPrice = (estYield - one).mulfV(curYield, one).divfV(estYield, one);
             principalsRate = interestRateToSharePrice(principalPrice);
@@ -495,15 +494,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return (false, true);
     }
 
-    /// @dev This updates the underlying pool's interest rate
-    ///      It is done first thing before deposit/redeem to avoid arbitrage
-    ///      It is available to call publically to periodically update interest rates in cases of low volume
-    /// @return Updated current Interest Rate, decimal precision depends on specific TempusPool implementation
     function updateInterestRate() public virtual override returns (uint256);
 
-    /// @dev This returns the stored Interest Rate of the YBT (Yield Bearing Token) pool
-    ///      it is safe to call this after updateInterestRate() was called
-    /// @return Stored Interest Rate, decimal precision depends on specific TempusPool implementation
     function currentInterestRate() public view virtual override returns (uint256);
 
     function numYieldTokensPerAsset(uint256 backingTokens, uint256 interestRate)
