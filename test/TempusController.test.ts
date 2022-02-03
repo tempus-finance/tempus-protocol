@@ -520,9 +520,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
   });
 
   async function calculateCurrentYieldsRate(): Promise<string> {
-    const pricePerYield = await testPool.yields.getPricePerFullShareStored();
-    const pricePerPrincipal = await testPool.principals.getPricePerFullShareStored();
-    
-    return new Decimal(pricePerYield.toString()).div(pricePerPrincipal.toString()).toFixed(testPool.principals.decimals); /// TODO: move Decimal.js usage to a separate math helper
+    const [principalsRate, yieldsRate] = await testPool.tempus.pricePerShares();
+    return new Decimal(yieldsRate.toString()).div(principalsRate.toString()).toFixed(testPool.principals.decimals); /// TODO: move Decimal.js usage to a separate math helper
   }
 });

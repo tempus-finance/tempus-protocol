@@ -82,7 +82,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         TokenData memory principalsData,
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
-    ) Versioned(1, 0, 0) {
+    ) Versioned(1, 1, 0) {
         require(maturity > block.timestamp, "maturityTime is after startTime");
         require(ctrl != address(0), "controller can not be zero");
         require(initInterestRate > 0, "initInterestRate can not be zero");
@@ -394,18 +394,6 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return effectiveRate(interestRate).divfV(initialInterestRate, exchangeRateONE);
     }
 
-    function currentYield() private returns (uint256) {
-        return currentYield(updateInterestRate());
-    }
-
-    function currentYieldStored() private view returns (uint256) {
-        return currentYield(currentInterestRate());
-    }
-
-    function estimatedYieldStored() private view returns (uint256) {
-        return estimatedYield(currentYieldStored());
-    }
-
     /// @dev Calculates estimated yield at maturity
     /// @notice Includes principal, so in case of 5% yield it returns 1.05
     /// @param yieldCurrent Current yield - since beginning of the pool
@@ -426,47 +414,33 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         return yieldCurrent + timeLeft.mulfV(initialEstimatedYield, exchangeRateONE);
     }
 
-    /// pricePerYield = currentYield * (estimatedYield - 1) / (estimatedYield)
-    /// Return value decimal precision in backing token precision
-    function pricePerYieldShare(uint256 currYield, uint256 estYield) private view returns (uint256) {
-        uint256 one = exchangeRateONE;
-        // in case we have estimate for negative yield
-        if (estYield < one) {
-            return uint256(0);
-        }
-        uint256 yieldPrice = (estYield - one).mulfV(currYield, one).divfV(estYield, one);
-        return interestRateToSharePrice(yieldPrice);
-    }
-
-    /// pricePerPrincipal = currentYield / estimatedYield
-    /// Return value decimal precision in backing token precision
-    function pricePerPrincipalShare(uint256 currYield, uint256 estYield) private view returns (uint256) {
+    /// @dev Calculates Principals and Yields exchange rate
+    /// principalsRate = currentYield / estimatedYield
+    /// yieldsRate = currentYield * (estimatedYield - 1) / (estimatedYield)
+    /// @return principalsRate Principals to BackingToken rate expressed in Backing Token decimal precision
+    /// @return yieldsRate Yields to BackingToken rate expressed in Backing Token decimal precision
+    function getPricePerShare(uint256 interestRate) private view returns (uint256 principalsRate, uint256 yieldsRate) {
+        uint256 curYield = currentYield(interestRate);
+        uint256 estYield = estimatedYield(curYield);
         // in case we have estimate for negative yield
         if (estYield < exchangeRateONE) {
-            return interestRateToSharePrice(currYield);
+            principalsRate = interestRateToSharePrice(curYield);
+            yieldsRate = 0;
+        } else {
+            uint256 one = exchangeRateONE;
+            uint256 principalPrice = curYield.divfV(estYield, one);
+            uint256 yieldPrice = (estYield - one).mulfV(curYield, one).divfV(estYield, one);
+            principalsRate = interestRateToSharePrice(principalPrice);
+            yieldsRate = interestRateToSharePrice(yieldPrice);
         }
-        uint256 principalPrice = currYield.divfV(estYield, exchangeRateONE);
-        return interestRateToSharePrice(principalPrice);
     }
 
-    function pricePerYieldShare() external override returns (uint256) {
-        uint256 yield = currentYield();
-        return pricePerYieldShare(yield, estimatedYield(yield));
+    function pricePerShares() external override returns (uint256 principalsRate, uint256 yieldsRate) {
+        return getPricePerShare(updateInterestRate());
     }
 
-    function pricePerYieldShareStored() external view override returns (uint256) {
-        uint256 yield = currentYieldStored();
-        return pricePerYieldShare(yield, estimatedYield(yield));
-    }
-
-    function pricePerPrincipalShare() external override returns (uint256) {
-        uint256 yield = currentYield();
-        return pricePerPrincipalShare(yield, estimatedYield(yield));
-    }
-
-    function pricePerPrincipalShareStored() external view override returns (uint256) {
-        uint256 yield = currentYieldStored();
-        return pricePerPrincipalShare(yield, estimatedYield(yield));
+    function pricePerSharesStored() external view override returns (uint256 principalsRate, uint256 yieldsRate) {
+        return getPricePerShare(currentInterestRate());
     }
 
     function numSharesToMint(uint256 depositedBT, uint256 currentRate) private view returns (uint256) {

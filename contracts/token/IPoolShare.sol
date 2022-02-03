@@ -17,11 +17,11 @@ interface IPoolShare {
     function pool() external view returns (ITempusPool);
 
     /// @dev Price per single share expressed in Backing Tokens of the underlying pool.
-    ///      This is for the purpose of TempusAMM api support.
     ///      Example: exchanging Tempus Yield Share to DAI
-    /// @return 1e18 decimal conversion rate per share
+    /// @return Rate of One Share conversion rate to Backing Tokens, in Backing Token decimal precision
     function getPricePerFullShare() external returns (uint256);
 
-    /// @return 1e18 decimal stored conversion rate per share
+    /// Calculated with stored interest rate
+    /// @return Rate of One Share conversion rate to Backing Tokens, in Backing Token decimal precision
     function getPricePerFullShareStored() external view returns (uint256);
 }

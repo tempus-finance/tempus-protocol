@@ -540,13 +540,26 @@ export class TempusPool extends ContractBase {
   }
 
   async pricePerPrincipalShare(): Promise<NumberOrString> {
-    return this.principalShare.fromBigNum(await this.contract.pricePerPrincipalShareStored());
+    return await this.pricePerShares()[0];
   }
 
   async pricePerYieldShare(): Promise<NumberOrString> {
-    return this.yieldShare.fromBigNum(await this.contract.pricePerYieldShareStored());
+    return await this.pricePerShares()[1];
   }
 
+  async pricePerShares(): Promise<[NumberOrString, NumberOrString]> {
+    //await this.contract.pricePerShares(); // TX: update the price per share
+    const rates = await this.contract.pricePerSharesStored();
+    return [
+      this.principalShare.fromBigNum(rates[0]),
+      this.yieldShare.fromBigNum(rates[1])
+    ];
+  }
+
+  async pricePerShareNum(): Promise<[number, number]> {
+    const rates = await this.pricePerShares();
+    return [+rates[0],+rates[1]];
+  }
 
   /**
    * @returns Total accumulated fees

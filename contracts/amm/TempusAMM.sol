@@ -62,6 +62,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
 
     IPoolShare internal immutable _token0;
     IPoolShare internal immutable _token1;
+    IPoolShare internal immutable _principals;
+    IPoolShare internal immutable _yields;
 
     // All token balances are normalized to behave as if the token had 18 decimals. We assume a token's decimals will
     // not change throughout its lifetime, and store the corresponding scaling factor for each at construction time.
@@ -123,8 +125,10 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _require(amplificationStart >= _MIN_AMP, Errors.MIN_AMP);
         _require(amplificationStart <= _MAX_AMP, Errors.MAX_AMP);
 
-        IPoolShare yieldShare = pool.yieldShare();
         IPoolShare principalShare = pool.principalShare();
+        IPoolShare yieldShare = pool.yieldShare();
+        _principals = principalShare;
+        _yields = yieldShare;
 
         require(
             ERC20(address(principalShare)).decimals() == ERC20(address(yieldShare)).decimals(),
@@ -158,20 +162,29 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     function getExpectedReturnGivenIn(uint256 amount, bool yieldShareIn) public view returns (uint256) {
+        (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerSharesStored();
+        return _getExpectedReturnGivenIn(amount, principalsRate, yieldsRate, yieldShareIn);
+    }
+
+    function _getExpectedReturnGivenIn(
+        uint256 amount,
+        uint256 principalsRate,
+        uint256 yieldsRate,
+        bool yieldShareIn
+    ) private view returns (uint256) {
         (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        (IPoolShare tokenIn, IPoolShare tokenOut) = yieldShareIn
-            ? (tempusPool.yieldShare(), tempusPool.principalShare())
-            : (tempusPool.principalShare(), tempusPool.yieldShare());
+
+        IPoolShare tokenIn = yieldShareIn ? _yields : _principals;
         (uint256 indexIn, uint256 indexOut) = address(tokenIn) == address(_token0) ? (0, 1) : (1, 0);
+        (uint256 rateIn, uint256 rateOut) = yieldShareIn ? (yieldsRate, principalsRate) : (principalsRate, yieldsRate);
 
         amount = _subtractSwapFeeAmount(amount);
         balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedSwapAmount = (amount * tokenIn.getPricePerFullShareStored()) / _TEMPUS_SHARE_PRECISION;
+        uint256 rateAdjustedSwapAmount = (amount * rateIn) / _TEMPUS_SHARE_PRECISION;
 
         uint256 amountOut = StableMath._calcOutGivenIn(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
-        amountOut = (amountOut * _TEMPUS_SHARE_PRECISION) / tokenOut.getPricePerFullShareStored();
-
+        amountOut = (amountOut * _TEMPUS_SHARE_PRECISION) / rateOut;
         return amountOut;
     }
 
@@ -184,16 +197,14 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         (difference, yieldsIn) = (principals > yields) ? (principals - yields, false) : (yields - principals, true);
 
         if (difference > threshold) {
-            uint256 principalsRate = tempusPool.principalShare().getPricePerFullShareStored();
-            uint256 yieldsRate = tempusPool.yieldShare().getPricePerFullShareStored();
-
+            (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerSharesStored();
             uint256 rate = yieldsIn
                 ? (principalsRate * _TEMPUS_SHARE_PRECISION) / yieldsRate
                 : (yieldsRate * _TEMPUS_SHARE_PRECISION) / principalsRate;
             for (uint256 i = 0; i < 32; i++) {
                 // if we have accurate rate this should hold
                 amountIn = (difference * _TEMPUS_SHARE_PRECISION) / (rate + _TEMPUS_SHARE_PRECISION);
-                uint256 amountOut = getExpectedReturnGivenIn(amountIn, yieldsIn);
+                uint256 amountOut = _getExpectedReturnGivenIn(amountIn, principalsRate, yieldsRate, yieldsIn);
                 uint256 newPrincipals = yieldsIn ? (principals + amountOut) : (principals - amountIn);
                 uint256 newYields = yieldsIn ? (yields - amountIn) : (yields + amountOut);
                 uint256 newDifference = (newPrincipals > newYields)
@@ -648,21 +659,26 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _updateLastInvariant(StableMath._calculateInvariant(currentAmp, balances, true), currentAmp);
     }
 
-    /// @dev Creates 2 element array of token rates(pricePerFullshare)
-    /// @return rates Array of token rates
-    function _getTokenRates() private returns (uint256[] memory rates) {
-        rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = _token0.getPricePerFullShare();
-        // We already did updateInterestRate, so we can use stored values
-        rates[1] = _token1.getPricePerFullShareStored();
+    /// @dev Creates 2 element array of token rates(pricePerShare)
+    /// @return Array of token rates
+    function _getTokenRates() private returns (uint256[] memory) {
+        (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerShares();
+        uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
+        (rates[0], rates[1]) = address(_token0) == address(_principals)
+            ? (principalsRate, yieldsRate)
+            : (yieldsRate, principalsRate);
+        return rates;
     }
 
-    /// @dev Creates 2 element array of token rates(pricePerFullShareStored)
-    /// @return rates Array of stored token rates
-    function _getTokenRatesStored() private view returns (uint256[] memory rates) {
-        rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = _token0.getPricePerFullShareStored();
-        rates[1] = _token1.getPricePerFullShareStored();
+    /// @dev Creates 2 element array of token rates(pricePerSharesStored)
+    /// @return Array of stored token rates
+    function _getTokenRatesStored() private view returns (uint256[] memory) {
+        (uint256 principalsRate, uint256 yieldsRate) = tempusPool.pricePerSharesStored();
+        uint256[] memory rates = new uint256[](_TOTAL_TOKENS);
+        (rates[0], rates[1]) = address(_token0) == address(_principals)
+            ? (principalsRate, yieldsRate)
+            : (yieldsRate, principalsRate);
+        return rates;
     }
 
     function getRate() external view override returns (uint256) {

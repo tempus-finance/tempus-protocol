@@ -222,19 +222,15 @@ interface ITempusPool is ITempusFees, IVersioned {
     ///         decimal precision depends on specific TempusPool implementation
     function maturityInterestRate() external view returns (uint256);
 
-    /// @return Rate of one Tempus Yield Share expressed in Asset Tokens
-    function pricePerYieldShare() external returns (uint256);
+    /// @dev Gets both Principals and Yields exchange rate, using updateInterestRate()
+    /// @return principalsRate Rate of one Tempus Principal Share expressed in Asset Tokens.
+    /// @return yieldsRate Rate of one Tempus Yield Share expressed in Asset Tokens.
+    function pricePerShares() external returns (uint256 principalsRate, uint256 yieldsRate);
 
-    /// @return Rate of one Tempus Principal Share expressed in Asset Tokens
-    function pricePerPrincipalShare() external returns (uint256);
-
-    /// Calculated with stored interest rates
-    /// @return Rate of one Tempus Yield Share expressed in Asset Tokens,
-    function pricePerYieldShareStored() external view returns (uint256);
-
-    /// Calculated with stored interest rates
-    /// @return Rate of one Tempus Principal Share expressed in Asset Tokens
-    function pricePerPrincipalShareStored() external view returns (uint256);
+    /// @dev Gets both Principals and Yields exchange rate, calculated with stored interest rate.
+    /// @return principalsRate Rate of one Tempus Principal Share expressed in Asset Tokens.
+    /// @return yieldsRate Rate of one Tempus Yield Share expressed in Asset Tokens.
+    function pricePerSharesStored() external view returns (uint256 principalsRate, uint256 yieldsRate);
 
     /// @dev This returns actual Backing Token amount for amount of YBT (Yield Bearing Tokens)
     ///      For example, in case of Aave and Lido the result is 1:1,
