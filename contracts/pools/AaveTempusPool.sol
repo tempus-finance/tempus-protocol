@@ -86,7 +86,7 @@ contract AaveTempusPool is TempusPool {
     }
 
     /// @return Updated current Interest Rate as an 1e18 decimal
-    function updateInterestRate() internal view override returns (uint256) {
+    function updateInterestRate() public view override returns (uint256) {
         // convert from RAY 1e27 to WAD 1e18 decimal
         return aavePool.getReserveNormalizedIncome(backingToken) / 1e9;
     }
