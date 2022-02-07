@@ -142,7 +142,9 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         uint256 ybtBefore = balanceOfYBT();
         _;
         uint256 transferredAmount = (ybtBefore - balanceOfYBT());
-        uint256 untransferredAmount = (transferredAmount > amountYBT) ? (transferredAmount - amountYBT) : (amountYBT - transferredAmount);
+        uint256 untransferredAmount = (transferredAmount > amountYBT)
+            ? (transferredAmount - amountYBT)
+            : (amountYBT - transferredAmount);
         assert(untransferredAmount <= errorThreshold);
     }
 
