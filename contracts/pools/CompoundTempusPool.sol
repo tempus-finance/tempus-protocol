@@ -71,7 +71,7 @@ contract CompoundTempusPool is TempusPool {
     function withdrawFromUnderlyingProtocol(uint256 yieldBearingTokensAmount, address recipient)
         internal
         override
-        assertTransferYBT(yieldBearingTokensAmount, 0)
+        assertTransferYBT(yieldBearingTokensAmount, 1)
         returns (uint256 backingTokenAmount)
     {
         // tempus pool owns YBT
