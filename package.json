@@ -66,6 +66,7 @@
     "deploy-ci": "npx hardhat run scripts/deploy.local.ts",
     "deploy:controller": "npx hardhat run scripts/deploy.controller.ts",
     "deploy:stats": "npx hardhat run scripts/deploy.stats.ts",
+    "deploy:vault": "npx hardhat run scripts/deploy.vault.ts",
     "deploy:pool:lido": "npx hardhat run scripts/deploy.pool.lido.ts",
     "verify:pool:lido": "npx hardhat run scripts/verify.pool.lido.ts",
     "increase-time": "npx hardhat run scripts/increaseTime.local.ts --network localhost",
