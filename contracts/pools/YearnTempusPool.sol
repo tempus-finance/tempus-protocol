@@ -73,7 +73,7 @@ contract YearnTempusPool is TempusPool {
     }
 
     /// @return Updated current Interest Rate with the same precision as the BackingToken
-    function updateInterestRate() internal view override returns (uint256) {
+    function updateInterestRate() public view override returns (uint256) {
         return yearnVault.pricePerShare();
     }
 

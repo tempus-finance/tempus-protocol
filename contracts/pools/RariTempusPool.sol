@@ -117,7 +117,7 @@ contract RariTempusPool is TempusPool {
     }
 
     /// @return Updated current Interest Rate with the same precision as the BackingToken
-    function updateInterestRate() internal override returns (uint256) {
+    function updateInterestRate() public override returns (uint256) {
         lastCalculatedInterestRate = calculateInterestRate(
             rariFundManager,
             yieldBearingToken,
