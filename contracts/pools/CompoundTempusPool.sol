@@ -85,7 +85,7 @@ contract CompoundTempusPool is TempusPool {
 
     /// @return Updated current Interest Rate in 10**(18 - 8 + Underlying Token Decimals) decimal precision
     ///         This varying rate enables simple conversion from Compound cToken to backing token precision
-    function updateInterestRate() internal override returns (uint256) {
+    function updateInterestRate() public override returns (uint256) {
         // NOTE: exchangeRateCurrent() will accrue interest and gets the latest Interest Rate
         //       The default exchange rate for Compound is 0.02 and grows
         //       cTokens are minted as (backingAmount / rate), so 1 DAI = 50 cDAI with 0.02 rate

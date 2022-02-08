@@ -522,9 +522,10 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     /// @dev This updates the underlying pool's interest rate
-    ///      It should be done first thing before deposit/redeem to avoid arbitrage
+    ///      It is done first thing before deposit/redeem to avoid arbitrage
+    ///      It is available to call publically to periodically update interest rates in cases of low volume
     /// @return Updated current Interest Rate, decimal precision depends on specific TempusPool implementation
-    function updateInterestRate() internal virtual returns (uint256);
+    function updateInterestRate() public virtual override returns (uint256);
 
     /// @dev This returns the stored Interest Rate of the YBT (Yield Bearing Token) pool
     ///      it is safe to call this after updateInterestRate() was called
