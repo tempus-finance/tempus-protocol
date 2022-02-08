@@ -101,6 +101,9 @@ module.exports = {
     goerli: {
       url: 'https://rpc.goerli.mudit.blog/'
     },
+    fantom: {
+      url: 'https://rpc.ftm.tools/'
+    },
     mainnet: {
       url: process.env.ETH_NODE_URI_MAINNET ?? 'https://main-light.eth.linkpool.io'
     }
