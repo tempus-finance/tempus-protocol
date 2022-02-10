@@ -444,7 +444,7 @@ export abstract class PoolTestFixture {
         // always report the instantiation of new fixtures,
         // because this is a major test bottleneck
         const elapsed = Date.now() - startTime;
-        console.log('    createFixture %s %sms', sig, elapsed);
+        //console.log('    createFixture %s %sms', sig, elapsed);
         return {
           signers: { owner:owner, user:user, user2:user2 },
           contracts: { pool:pool, tempus:tempus, amm: amm },

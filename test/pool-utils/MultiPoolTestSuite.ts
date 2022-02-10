@@ -26,16 +26,22 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
       continue;
     }
 
+    if (!tokens[type]) {
+      console.log("No tokens defined for %s", type)
+      continue;
+    }
+
     for (let pair of tokens[type]) {
       let asset:TokenInfo = pair[0];
       let yieldToken:TokenInfo = pair[1];
 
-      if (onlyToken && onlyToken !== yieldToken.symbol) {
+      if (onlyToken && onlyToken !== asset.symbol) {
         continue;
       }
 
       const describeTestBody = () =>
       {
+        /*
         // HACK: manually measure time, since new yarn hardhat+mocha stopped reporting them
         let startTime:number;
         beforeEach(() => {
@@ -50,6 +56,7 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
           // move to previous line, column 100 and set color
           console.log('\x1b[F\x1b[100C\x1b[%sm%sms\x1b[0m', color, elapsedMs);
         });
+        */
   
         let pool:PoolTestFixture;
         switch (type) {
@@ -57,7 +64,7 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
           case PoolType.Lido:     pool = new LidoTestPool(asset, yieldToken, integration); break;
           case PoolType.Compound: pool = new CompoundTestPool(asset, yieldToken, integration); break;
           case PoolType.Yearn:    pool = new YearnTestPool(asset, yieldToken, integration); break;
-          case PoolType.Rari:    pool = new RariTestPool(asset, yieldToken, integration); break;
+          case PoolType.Rari:     pool = new RariTestPool(asset, yieldToken, integration); break;
         }
         fn(pool);
       };
