@@ -424,8 +424,6 @@ export abstract class PoolTestFixture {
       const names = generateTempusSharesNames(ybtName, ybtSymbol, maturityTime);
       f = new FixtureState(maturityTime, names, deployments.createFixture(async () =>
       {
-        const startTime = Date.now();
-
         await deployments.fixture(undefined, { keepExistingDeployments: true, });
         // Note: for fixtures, all contracts must be initialized inside this callback
         const [owner,user,user2] = await this.getSigners();
@@ -441,10 +439,6 @@ export abstract class PoolTestFixture {
         // new AMM instance and register the AMM with the controller
         const amm = await TempusAMM.create(owner, controller, p.ammAmplifyStart, p.ammAmplifyEnd, p.ammSwapFee, tempus);
 
-        // always report the instantiation of new fixtures,
-        // because this is a major test bottleneck
-        const elapsed = Date.now() - startTime;
-        //console.log('    createFixture %s %sms', sig, elapsed);
         return {
           signers: { owner:owner, user:user, user2:user2 },
           contracts: { pool:pool, tempus:tempus, amm: amm },

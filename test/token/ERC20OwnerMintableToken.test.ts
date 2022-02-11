@@ -3,8 +3,9 @@ import { expect } from "chai";
 import { Signer } from "../utils/ContractBase";
 import { expectRevert } from "../utils/Utils";
 import { ERC20OwnerMintable } from "../utils/ERC20OwnerMintable";
+import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
-describe("Owner Mintable Token", async () => {
+describeNonPool("Owner Mintable Token", async () => {
   let owner:Signer, user:Signer;
   let token:ERC20OwnerMintable;
 

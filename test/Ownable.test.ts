@@ -4,8 +4,9 @@ import { ContractBase, Signer } from "./utils/ContractBase";
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { expectRevert } from "./utils/Utils";
+import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
-describe("Ownable", async () => {
+describeNonPool("Ownable", async () => {
   let ownable: Contract;
   let owner:Signer, user:Signer, user2:Signer;
 

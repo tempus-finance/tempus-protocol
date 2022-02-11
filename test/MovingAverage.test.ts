@@ -3,8 +3,9 @@ import { ContractBase } from "./utils/ContractBase";
 import { expect } from "chai";
 import { NumberOrString, toWei } from "./utils/Decimal";
 import { increaseTime } from "./utils/Utils";
+import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
-describe("MovingAverage", async () => {
+describeNonPool("MovingAverage", async () => {
   enum MAType {
     EMA = 0,
     DEMA = 1,

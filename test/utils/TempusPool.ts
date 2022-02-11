@@ -7,6 +7,7 @@ import { PoolShare, ShareKind } from "./PoolShare";
 import { TempusController } from "./TempusController";
 
 export enum PoolType {
+  None = "None",
   Aave = "Aave",
   Lido = "Lido",
   Compound = "Compound",
