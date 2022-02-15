@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { NumberOrString } from "./Decimal";
-import { ContractBase, SignerOrAddress, Signer, addressOf } from "./ContractBase";
+import { ContractBase, SignerOrAddress, Signer, AbstractSigner, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 
 /**
@@ -41,13 +41,34 @@ export class ERC20 extends ContractBase implements IERC20 {
 
   /**
    * Attaches to any contract address and attempts to convert it to ERC20
+   * Uses default provider
    * @param contractName Name of the solidity contract
    * @param contractAddress Address of the contract
    * @param decimals Contract decimals
    */
   static async attach(contractName:string, contractAddress:string, decimals:number): Promise<ERC20> {
     const contract = await this.attachContract(contractName, contractAddress);
-    return new ERC20(contractName, decimals, contract);
+    const erc20 = new ERC20(contractName, decimals, contract);
+    if (decimals == 0) {
+      erc20.decimals = Number(await erc20.contract.decimals()).valueOf();
+    }
+    return erc20;
+  }
+
+  /**
+   * Attaches to any contract address from a provided Signer and attempts to convert it to ERC20
+   * @param contractName Name of the solidity contract
+   * @param contractAddress Address of the contract
+   * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
+   */
+  static async attachWithSigner(contractName:string, contractAddress:string, signer:AbstractSigner): Promise<ERC20> {
+    if (!signer) {
+      throw new Error("attachWithSigner: `signer` must not be null");
+    }
+    const contract = await this.attachContractWithSigner(contractName, contractAddress, signer);
+    const erc20 = new ERC20(contractName, /*decimals*/0, contract);
+    erc20.decimals = Number(await erc20.contract.connect(signer).decimals()).valueOf();
+    return erc20;
   }
 
   /** @return ERC20 name of this contract */
