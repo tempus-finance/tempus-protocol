@@ -97,6 +97,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         ITempusPool pool,
         uint256 amplificationStartValue,
         uint256 amplificationEndValue,
+        uint256 amplificationEndTime,
         uint256 swapFeePercentage,
         uint256 pauseWindowDuration,
         uint256 bufferPeriodDuration,
@@ -148,7 +149,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
 
         if (amplificationStartValue != amplificationEndValue) {
             _require(amplificationStartValue < amplificationEndValue, Errors.MIN_AMP);
-            _startAmplificationParameterUpdate(amplificationEndValue, pool.maturityTime());
+            _startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
 
