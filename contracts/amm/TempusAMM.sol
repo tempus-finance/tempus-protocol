@@ -95,8 +95,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         string memory name,
         string memory symbol,
         ITempusPool pool,
-        uint256 amplificationStart,
-        uint256 amplificationEnd,
+        uint256 amplificationStartValue,
+        uint256 amplificationEndValue,
         uint256 swapFeePercentage,
         uint256 pauseWindowDuration,
         uint256 bufferPeriodDuration,
@@ -120,8 +120,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     {
         assert(_TOTAL_TOKENS == 2);
 
-        _require(amplificationStart >= _MIN_AMP, Errors.MIN_AMP);
-        _require(amplificationStart <= _MAX_AMP, Errors.MAX_AMP);
+        _require(amplificationStartValue >= _MIN_AMP, Errors.MIN_AMP);
+        _require(amplificationStartValue <= _MAX_AMP, Errors.MAX_AMP);
 
         IPoolShare yieldShare = pool.yieldShare();
         IPoolShare principalShare = pool.principalShare();
@@ -143,12 +143,12 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _scalingFactor0 = _computeScalingFactor(IERC20(address(token0)));
         _scalingFactor1 = _computeScalingFactor(IERC20(address(token1)));
 
-        uint256 initialAmp = Math.mul(amplificationStart, _AMP_PRECISION);
+        uint256 initialAmp = Math.mul(amplificationStartValue, _AMP_PRECISION);
         _setAmplificationData(initialAmp);
 
-        if (amplificationStart != amplificationEnd) {
-            _require(amplificationStart < amplificationEnd, Errors.MIN_AMP);
-            _startAmplificationParameterUpdate(amplificationEnd, pool.maturityTime());
+        if (amplificationStartValue != amplificationEndValue) {
+            _require(amplificationStartValue < amplificationEndValue, Errors.MIN_AMP);
+            _startAmplificationParameterUpdate(amplificationEndValue, pool.maturityTime());
         }
     }
 
