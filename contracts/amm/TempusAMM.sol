@@ -94,7 +94,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         IVault vault,
         string memory name,
         string memory symbol,
-        ITempusPool pool,
+        IPoolShare token0,
+        IPoolShare token1,
         uint256 amplificationStartValue,
         uint256 amplificationEndValue,
         uint256 amplificationEndTime,
@@ -124,20 +125,14 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _require(amplificationStartValue >= _MIN_AMP, Errors.MIN_AMP);
         _require(amplificationStartValue <= _MAX_AMP, Errors.MAX_AMP);
 
-        IPoolShare yieldShare = pool.yieldShare();
-        IPoolShare principalShare = pool.principalShare();
-
         require(
-            ERC20(address(principalShare)).decimals() == ERC20(address(yieldShare)).decimals(),
-            "Principals and Yields need same precision."
+            ERC20(address(token0)).decimals() == ERC20(address(token1)).decimals(),
+            "Both tokens need same precision."
         );
-        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(principalShare)).decimals();
+        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(token0)).decimals();
 
         // Immutable variables cannot be initialized inside an if statement, so we must do conditional assignments
-        (IPoolShare token0, IPoolShare token1) = yieldShare < principalShare
-            ? (yieldShare, principalShare)
-            : (principalShare, yieldShare);
-        (_token0, _token1) = (token0, token1);
+        (_token0, _token1) = token0 < token1 ? (token0, token1) : (token1, token0);
 
         tempusPool = pool;
 
@@ -158,12 +153,17 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         lastInvariantAmp = _lastInvariantAmp;
     }
 
-    function getExpectedReturnGivenIn(uint256 amount, bool yieldShareIn) public view returns (uint256) {
+    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view returns (uint256) {
         (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        (IPoolShare tokenIn, IPoolShare tokenOut) = yieldShareIn
-            ? (tempusPool.yieldShare(), tempusPool.principalShare())
-            : (tempusPool.principalShare(), tempusPool.yieldShare());
+        IPoolShare tokenOut;
+        if (tokenIn == token0) {
+            tokenOut = token1;
+        } else if (tokenIn == token1) {
+            tokenOut = token0;
+        } else {
+            revert("Invalid tokenIn specified");
+        }
         (uint256 indexIn, uint256 indexOut) = address(tokenIn) == address(_token0) ? (0, 1) : (1, 0);
 
         amount = _subtractSwapFeeAmount(amount);
