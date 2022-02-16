@@ -49,9 +49,9 @@
   },
   "scripts": {
     "build": "npx hardhat compile",
-    "test": "cross-env yarn build && npx mocha --require hardhat/register --timeout 10000 --recursive --parallel --extension ts",
-    "test:integration:lido": "cross-env yarn build && cross-env INTEGRATION=1 ONLY_POOL=Lido ETH_NODE_URI_MAINNET=https://eth-mainnet.alchemyapi.io/v2/yInmJCdHvCzXe4qAxfPMDFgrbYIGsUhJ HARDHAT_FORK=mainnet HARDHAT_FORK_NUMBER=13533408 npx mocha --require hardhat/register --timeout 120000 --recursive --parallel --extension ts",
-    "test:integration": "cross-env yarn build && ETH_NODE_URI_MAINNET=https://eth-mainnet.alchemyapi.io/v2/yInmJCdHvCzXe4qAxfPMDFgrbYIGsUhJ HARDHAT_FORK=mainnet HARDHAT_FORK_NUMBER=13281002 npx mocha --timeout 120000 --require hardhat/register --recursive --parallel --extension ts integration-tests",
+    "test": "yarn build && bash run_tests.sh",
+    "test:integration:lido": "yarn build && bash run_tests.sh integration-suite Lido",
+    "test:integration": "yarn build && bash run_tests.sh integration-tests",
     "coverage": "npx hardhat coverage --testfiles \"test/**/*.ts\"",
     "coverage:integration": "cross-env HARDHAT_FORK=mainnet HARDHAT_FORK_NUMBER=13281002 npx hardhat coverage --testfiles \"integration-tests/**/*.ts\"",
     "solhint": "solhint \"contracts/**/*.sol\"",

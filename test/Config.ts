@@ -90,9 +90,9 @@ export function isIntegrationTestsEnabled(): boolean {
 
 // Either specific PoolType string, or undefined
 export function getOnlyRunPool(): string {
-  const env = process.env["ONLY_TOKEN"];
+  const env = process.env["ONLY_POOL"];
   if (env) return env;
-  return process.env["ONLY_POOL"] || ONLY_RUN_POOL;
+  return ONLY_RUN_POOL;
 }
 
 // Either specific Yield Token string eg aUSDC, or undefined

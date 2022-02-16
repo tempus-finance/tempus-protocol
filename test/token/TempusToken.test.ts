@@ -4,10 +4,9 @@ import { blockTimestamp, expectRevert, increaseTime } from "../utils/Utils";
 import { Signer } from "../utils/ContractBase";
 import { TempusToken } from "../utils/TempusToken";
 import { DAY } from "../utils/TempusAMM";
-import { BigNumber } from "@ethersproject/bignumber";
-import { NumberOrString } from "test/utils/Decimal";
+import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
-describe("Tempus Token", async () => {
+describeNonPool("Tempus Token", async () => {
   let owner:Signer, user1:Signer, user2:Signer;
   let token:TempusToken;
   let deploymentTime:number;

@@ -5,8 +5,9 @@ import { blockTimestamp, expectRevert, increaseTime, setEvmTime } from "../../ut
 import { ERC20 } from "../../utils/ERC20";
 import { ERC20OwnerMintable } from "../../utils/ERC20OwnerMintable";
 import { ERC20Vesting, VestingTerms } from "../../utils/ERC20Vesting";
+import { describeNonPool } from "../../pool-utils/MultiPoolTestSuite";
 
-describe("ERC20 Vesting", async () => {
+describeNonPool("ERC20 Vesting", async () => {
   let owner:Signer, user:Signer, user2:Signer;
   let token:ERC20OwnerMintable;
   let vesting:ERC20Vesting;
