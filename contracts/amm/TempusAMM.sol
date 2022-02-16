@@ -211,16 +211,15 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     // NOTE: Return value in AMM decimals precision (1e18)
-    function getExpectedBPTInGivenTokensOut(uint256 principalsStaked, uint256 yieldsStaked)
+    function getExpectedBPTInGivenTokensOut(uint256 token0Staked, uint256 token1Staked)
         external
         view
         returns (uint256 lpTokens)
     {
         (IERC20[] memory ammTokens, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         uint256[] memory amountsOut = new uint256[](2);
-        (amountsOut[0], amountsOut[1]) = (address(ammTokens[0]) == address(tempusPool.principalShare()))
-            ? (principalsStaked, yieldsStaked)
-            : (yieldsStaked, principalsStaked);
+        amountsOut[0] = token0Staked;
+        amountsOut[1] = token1Staked;
 
         uint256[] memory scalingFactors = _scalingFactors();
         _upscaleArray(amountsOut, scalingFactors);
