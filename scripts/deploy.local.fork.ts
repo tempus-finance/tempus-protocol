@@ -6,7 +6,7 @@ import { ERC20 } from '../test/utils/ERC20';
 import { generateTempusSharesNames, PoolType, TempusPool } from '../test/utils/TempusPool';
 import { ContractBase, Signer } from '../test/utils/ContractBase';
 import { TempusController } from '../test/utils/TempusController';
-import { DAY, MONTH } from '../test/utils/TempusAMM';
+import { DAY, MONTH, AMP_PRECISION } from '../test/utils/TempusAMM';
 import { toWei } from '../test/utils/Decimal';
 import { ERC20Ether } from '../test/utils/ERC20Ether';
 
@@ -284,8 +284,8 @@ class DeployLocalForked {
       params.lpName,
       params.lpSymbol,
       pool.address,
-      /*amplifyStart*/5,
-      /*amplifyEnd*/95,
+      /*amplifyStart*/5 * AMP_PRECISION,
+      /*amplifyEnd*/95 * AMP_PRECISION,
       toWei(0.002),
       3 * MONTH,
       MONTH,

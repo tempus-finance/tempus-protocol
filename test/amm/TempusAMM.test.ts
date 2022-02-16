@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { NumberOrString } from "../utils/Decimal";
 import { Signer } from "../utils/ContractBase";
-import { PoolType, TempusPool } from "../utils/TempusPool";
+import { TempusPool } from "../utils/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime } from "../utils/Utils";
 import { TempusAMM, TempusAMMJoinKind } from "../utils/TempusAMM";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
@@ -185,6 +185,20 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     ampInv = await testFixture.amm.getLastInvariant();
     expect(ampInv.invariant).to.be.within(181, 182);
     expect(ampInv.amplification).to.equal(5000);
+  });
+
+  it("checks amplification moving over time (after little more then a half time of pool passed)", async () =>
+  {
+    const amplifyStartValue = 5.123;
+    const amplifyEndValue = 95.35;
+    await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:amplifyStartValue, amplifyEnd:amplifyEndValue, oneAmpUpdate: (ONE_MONTH / 90)});
+
+    // move little more then a half time of pool duration
+    await testFixture.setTimeRelativeToPoolStart(0.515);
+
+    const amplificationParams = await testFixture.amm.getAmplificationParam();
+    expect(+amplificationParams.value).to.be.greaterThan((amplifyStartValue + amplifyEndValue) * +amplificationParams.precision / 2);
+    expect(amplificationParams.isUpdating).to.be.true;
   });
 
   it("checks invariant increases over time with adding liquidity", async () =>
@@ -432,5 +446,35 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await checkSwap(owner, {amplification: 15, swapAmountIn: 1, swapAmountOut: 5.146813326588359, principalIn: true});
     await checkSwap(owner, {amplification: 40, swapAmountIn: 1, swapAmountOut: 4.994925254153118, principalIn: true});
     await checkSwap(owner, {amplification: 85, swapAmountIn: 1, swapAmountOut: 4.946851638290887, principalIn: true});
+  });
+
+  it("test swaps principal in with balances aligned with Interest Rate with decimal amplification update", async () =>
+  {
+    // creating 300 year pool, so that estimated yield is more valued than current one (in order to not update underlying protocols behaviour)
+    await createPools({yieldEst:0.1, duration:ONE_YEAR*300, amplifyStart:1, amplifyEnd:95, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
+
+    // basic swap with Interest Rate aligned to balances with increasing amplification
+    await checkSwap(owner, {amplification: 5.5, swapAmountIn: 1, swapAmountOut: 9.800039358937214, principalIn: true});
+    await checkSwap(owner, {amplification: 95, swapAmountIn: 1, swapAmountOut: 9.808507816594444, principalIn: true});
+    // swap big percentage of tokens 
+    // let's start updating amp backwards
+    await tempusAMM.startAmplificationUpdate(5.455, ONE_AMP_UPDATE_TIME);
+    await checkSwap(owner, {amplification: 95, swapAmountIn: 5000, swapAmountOut: 48717.68223490758, principalIn: true});
+    await checkSwap(owner, {amplification: 5.5, swapAmountIn: 5000, swapAmountOut: 29656.395311170872, principalIn: true});
+  });
+
+  it("test swaps yield in with balances aligned with Interest Rate with decimal amplification update", async () =>
+  {
+    // creating 300 year pool, so that estimated yield is more valued than current one (in order to not update underlying protocols behaviour)
+    await createPools({yieldEst:0.1, duration:ONE_YEAR*300, amplifyStart:1, amplifyEnd:95, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
+
+    // basic swap with Interest Rate aligned to balances with increasing amplification
+    await checkSwap(owner, {amplification: 5.5, swapAmountIn: 10, swapAmountOut: 0.9799839923694128, principalIn: false});
+    await checkSwap(owner, {amplification: 95, swapAmountIn: 10, swapAmountOut: 0.9791888166812937, principalIn: false});
+    // swap big percentage of tokens 
+    // let's start updating amp backwards
+    await tempusAMM.startAmplificationUpdate(5.455, ONE_AMP_UPDATE_TIME);
+    await checkSwap(owner, {amplification: 95, swapAmountIn: 5000, swapAmountOut: 489.3436560729869, principalIn: false});
+    await checkSwap(owner, {amplification: 5.5, swapAmountIn: 5000, swapAmountOut: 477.32926892162294, principalIn: false});
   });
 });

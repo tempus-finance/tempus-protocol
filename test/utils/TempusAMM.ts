@@ -18,6 +18,8 @@ export const DAY = HOUR * 24;
 export const WEEK = DAY * 7;
 export const MONTH = DAY * 30;
 
+export const AMP_PRECISION = 1e3;
+
 export enum TempusAMMExitKind {
   EXACT_BPT_IN_FOR_TOKENS_OUT = 0,
   BPT_IN_FOR_EXACT_TOKENS_OUT,
@@ -51,8 +53,8 @@ export class TempusAMM extends ContractBase {
   static async create(
     owner: Signer,
     controller: TempusController,
-    amplificationStart: number,
-    amplificationEnd: number,
+    rawAmplificationStart: number,
+    rawAmplificationEnd: number,
     swapFeePercentage: number, 
     tempusPool: TempusPool
   ): Promise<TempusAMM> {
@@ -69,8 +71,8 @@ export class TempusAMM extends ContractBase {
       "Tempus LP token", 
       "LP", 
       tempusPool.address,
-      amplificationStart,
-      amplificationEnd,
+      +rawAmplificationStart * AMP_PRECISION,
+      +rawAmplificationEnd * AMP_PRECISION,
       toWei(swapFeePercentage),
       3 * MONTH, 
       MONTH, 
@@ -228,20 +230,26 @@ export class TempusAMM extends ContractBase {
     await this.vault.connect(from).swap(singleSwap, fundManagement, minimumReturn, deadline);
   }
 
-  async startAmplificationUpdate(ampTarget: number, oneAmpUpdateTime: number): Promise<Transaction> {
-    this.targetAmp = ampTarget;
+  async startAmplificationUpdate(rawTargetAmp: number, oneAmpUpdateTime: number): Promise<Transaction> {
+    const ampParam = await this.getAmplificationParam();
+
+    this.targetAmp = Math.trunc(+rawTargetAmp * +ampParam.precision);
     this.oneAmpUpdateTime = oneAmpUpdateTime;
     this.startedAmpUpdateTime = await blockTimestamp();
-    const ampParam = await this.getAmplificationParam();
-    this.startAmp = +ampParam.value / +ampParam.precision;
+    this.startAmp = +ampParam.value;
 
-    const ampDiff = (ampTarget > this.startAmp) ? (ampTarget - this.startAmp) : (this.startAmp - ampTarget);
-    const endTime = this.startedAmpUpdateTime + ampDiff * oneAmpUpdateTime;
-    return this.contract.startAmplificationParameterUpdate(ampTarget, endTime);
+    const ampDiff = (this.targetAmp  > this.startAmp) ? (this.targetAmp  - this.startAmp) : (this.startAmp - this.targetAmp );
+ 
+    const endTime = this.startedAmpUpdateTime + Math.trunc(ampDiff / +ampParam.precision) * oneAmpUpdateTime;
+
+    return this.contract.startAmplificationParameterUpdate(this.targetAmp , endTime);
   }
 
-  async forwardToAmplification(ampValue: number): Promise<void> {
+  async forwardToAmplification(rawAmpValue: number): Promise<void> {
     let targetTimestamp: number;
+    const ampParam = await this.getAmplificationParam();
+    const ampValue = Math.trunc(+rawAmpValue * +ampParam.precision);
+
     if (this.startAmp == ampValue) {
       targetTimestamp = 0;
     }
@@ -249,12 +257,12 @@ export class TempusAMM extends ContractBase {
       if (ampValue > this.targetAmp || ampValue < this.startAmp) { 
         throw console.error("Wrong amplification update!"); 
       }
-      targetTimestamp = this.startedAmpUpdateTime + (ampValue - this.startAmp) * this.oneAmpUpdateTime;
+      targetTimestamp = this.startedAmpUpdateTime + (ampValue - this.startAmp) / +ampParam.precision * this.oneAmpUpdateTime;
     } else {
       if (ampValue < this.targetAmp || ampValue > this.startAmp) { 
         throw console.error("Wrong amplification update!"); 
       }
-      targetTimestamp = this.startedAmpUpdateTime + (this.startAmp - ampValue) * this.oneAmpUpdateTime;
+      targetTimestamp = this.startedAmpUpdateTime + (this.startAmp - ampValue) / +ampParam.precision * this.oneAmpUpdateTime;
     }
 
     if (targetTimestamp > 0) {

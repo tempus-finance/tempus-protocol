@@ -48,6 +48,10 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     uint256 private immutable _TEMPUS_SHARE_PRECISION;
     uint256 private constant _TOTAL_TOKENS = 2;
 
+    // Tempus custom MIN_AMPLIFICATION and MAX_AMPLIFICATION constant
+    uint256 private constant _MIN_AMPLIFICATION = 1000; // Math.mul(_MIN_AMP, _AMP_PRECISION);
+    uint256 private constant _MAX_AMPLIFICATION = 5000000; //Math.mul(_MAX_AMP, _AMP_PRECISION);
+
     struct AmplificationData {
         uint64 startValue;
         uint64 endValue;
@@ -120,8 +124,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     {
         assert(_TOTAL_TOKENS == 2);
 
-        _require(amplificationStart >= _MIN_AMP, Errors.MIN_AMP);
-        _require(amplificationStart <= _MAX_AMP, Errors.MAX_AMP);
+        _require(amplificationStart >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
+        _require(amplificationStart <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
 
         IPoolShare yieldShare = pool.yieldShare();
         IPoolShare principalShare = pool.principalShare();
@@ -143,8 +147,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _scalingFactor0 = _computeScalingFactor(IERC20(address(token0)));
         _scalingFactor1 = _computeScalingFactor(IERC20(address(token1)));
 
-        uint256 initialAmp = Math.mul(amplificationStart, _AMP_PRECISION);
-        _setAmplificationData(initialAmp);
+        _setAmplificationData(amplificationStart);
 
         if (amplificationStart != amplificationEnd) {
             _require(amplificationStart < amplificationEnd, Errors.MIN_AMP);
@@ -682,27 +685,22 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     // Amplification
 
     /**
-     * @dev Begins changing the amplification parameter to `rawEndValue` over time. The value will change linearly until
-     * `endTime` is reached, when it will be `rawEndValue`.
-     *
-     * NOTE: Internally, the amplification parameter is represented using higher precision. The values returned by
-     * `getAmplificationParameter` have to be corrected to account for this when comparing to `rawEndValue`.
+     * @dev Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
+     * `endTime` is reached, when it will be `endValue`.
      */
-    function startAmplificationParameterUpdate(uint256 rawEndValue, uint256 endTime) external authenticate {
-        _startAmplificationParameterUpdate(rawEndValue, endTime);
+    function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) external authenticate {
+        _startAmplificationParameterUpdate(endValue, endTime);
     }
 
-    function _startAmplificationParameterUpdate(uint256 rawEndValue, uint256 endTime) private {
-        _require(rawEndValue >= _MIN_AMP, Errors.MIN_AMP);
-        _require(rawEndValue <= _MAX_AMP, Errors.MAX_AMP);
+    function _startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) private {
+        _require(endValue >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
+        _require(endValue <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
 
         uint256 duration = Math.sub(endTime, block.timestamp);
         _require(duration >= _MIN_UPDATE_TIME, Errors.AMP_END_TIME_TOO_CLOSE);
 
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
         _require(!isUpdating, Errors.AMP_ONGOING_UPDATE);
-
-        uint256 endValue = Math.mul(rawEndValue, _AMP_PRECISION);
 
         // daily rate = (endValue / currentValue) / duration * 1 day
         // We perform all multiplications first to not reduce precision, and round the division up as we want to avoid
