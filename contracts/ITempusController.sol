@@ -81,35 +81,38 @@ interface ITempusController {
     /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
     /// @param minTYSRate Minimum exchange rate of TYS (denominated in TPS) to receive in exchange for TPS
     /// @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
+    /// @return Amount of Principal Shares transferred to `msg.sender`
     function depositAndFix(
         ITempusAMM tempusAMM,
         uint256 tokenAmount,
         bool isBackingToken,
         uint256 minTYSRate,
         uint256 deadline
-    ) external payable;
+    ) external payable returns (uint256);
 
     /// @dev Deposits Yield Bearing Tokens to a Tempus Pool.
     /// @param targetPool The Tempus Pool to which tokens will be deposited
     /// @param yieldTokenAmount amount of Yield Bearing Tokens to be deposited
     ///                         in YBT Contract precision which can be 18 or 8 decimals
     /// @param recipient Address which will receive Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
+    /// @return Amount of minted Shares
     function depositYieldBearing(
         ITempusPool targetPool,
         uint256 yieldTokenAmount,
         address recipient
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Deposits Backing Tokens into the underlying protocol and
     ///      then deposited the minted Yield Bearing Tokens to the Tempus Pool.
     /// @param targetPool The Tempus Pool to which tokens will be deposited
     /// @param backingTokenAmount amount of Backing Tokens to be deposited into the underlying protocol
     /// @param recipient Address which will receive Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
+    /// @return Amount of minted Shares
     function depositBacking(
         ITempusPool targetPool,
         uint256 backingTokenAmount,
         address recipient
-    ) external payable;
+    ) external payable returns (uint256);
 
     /// @dev Redeem TPS+TYS held by msg.sender into Yield Bearing Tokens
     /// @notice `msg.sender` will receive yield bearing tokens

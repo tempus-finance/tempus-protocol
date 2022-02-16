@@ -26,7 +26,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
 
-    constructor() Versioned(1, 0, 0) {}
+    constructor() Versioned(1, 1, 0) {}
 
     function register(address authorizedContract, bool isValid) public override onlyOwner {
         registry[authorizedContract] = isValid;
@@ -65,29 +65,47 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool isBackingToken,
         uint256 minTYSRate,
         uint256 deadline
-    ) external payable override nonReentrant {
+    ) external payable override nonReentrant returns (uint256) {
         requireRegistered(address(tempusAMM));
-        _depositAndFix(tempusAMM, tokenAmount, isBackingToken, minTYSRate, deadline);
+
+        ITempusPool targetPool = tempusAMM.tempusPool();
+        IERC20 principalShares = IERC20(address(targetPool.principalShare()));
+        IERC20 yieldShares = IERC20(address(targetPool.yieldShare()));
+
+        uint256 swapAmount = _deposit(targetPool, tokenAmount, isBackingToken);
+
+        yieldShares.safeIncreaseAllowance(address(tempusAMM.getVault()), swapAmount);
+        uint256 minReturn = swapAmount.mulfV(minTYSRate, targetPool.backingTokenONE());
+        swap(tempusAMM, swapAmount, yieldShares, principalShares, minReturn, deadline);
+
+        // At this point all TYS must be swapped for TPS
+        uint256 principalsBalance = principalShares.balanceOf(address(this));
+        assert(principalsBalance > 0);
+
+        principalShares.safeTransfer(msg.sender, principalsBalance);
+        return principalsBalance;
     }
 
     function depositYieldBearing(
         ITempusPool targetPool,
         uint256 yieldTokenAmount,
         address recipient
-    ) external override nonReentrant {
+    ) external override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
         requireRegistered(address(targetPool));
-        _depositYieldBearing(targetPool, yieldTokenAmount, recipient);
+
+        return _depositYieldBearing(targetPool, yieldTokenAmount, recipient);
     }
 
     function depositBacking(
         ITempusPool targetPool,
         uint256 backingTokenAmount,
         address recipient
-    ) external payable override nonReentrant {
+    ) external payable override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
         requireRegistered(address(targetPool));
-        _depositBacking(targetPool, backingTokenAmount, recipient);
+
+        return _depositBacking(targetPool, backingTokenAmount, recipient);
     }
 
     function redeemToYieldBearing(
@@ -277,30 +295,6 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         vault.joinPool(poolId, address(this), recipient, request);
 
         return ammLiquidityProvisionAmounts;
-    }
-
-    function _depositAndFix(
-        ITempusAMM tempusAMM,
-        uint256 tokenAmount,
-        bool isBackingToken,
-        uint256 minTYSRate,
-        uint256 deadline
-    ) private {
-        ITempusPool targetPool = tempusAMM.tempusPool();
-        IERC20 principalShares = IERC20(address(targetPool.principalShare()));
-        IERC20 yieldShares = IERC20(address(targetPool.yieldShare()));
-
-        uint256 swapAmount = _deposit(targetPool, tokenAmount, isBackingToken);
-
-        yieldShares.safeIncreaseAllowance(address(tempusAMM.getVault()), swapAmount);
-        uint256 minReturn = swapAmount.mulfV(minTYSRate, targetPool.backingTokenONE());
-        swap(tempusAMM, swapAmount, yieldShares, principalShares, minReturn, deadline);
-
-        // At this point all TYS must be swapped for TPS
-        uint256 principalsBalance = principalShares.balanceOf(address(this));
-        assert(principalsBalance > 0);
-
-        principalShares.safeTransfer(msg.sender, principalsBalance);
     }
 
     function _deposit(
