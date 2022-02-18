@@ -73,8 +73,6 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         IERC20 yieldShares = IERC20(address(targetPool.yieldShare()));
 
         uint256 swapAmount = _deposit(targetPool, tokenAmount, isBackingToken);
-
-        yieldShares.safeIncreaseAllowance(address(tempusAMM.getVault()), swapAmount);
         uint256 minReturn = swapAmount.mulfV(minTYSRate, targetPool.backingTokenONE());
         swap(tempusAMM, swapAmount, yieldShares, principalShares, minReturn, deadline);
 
