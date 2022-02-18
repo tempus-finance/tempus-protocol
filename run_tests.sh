@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Load env vars from .env file
+source .env
+
 TESTS_PATH=""
 HARDHAT_FORK="mainnet"
 HARDHAT_FORK_NUMBER="13281002"
