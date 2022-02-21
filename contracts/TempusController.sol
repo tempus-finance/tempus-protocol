@@ -84,6 +84,39 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         return principalsBalance;
     }
 
+    function depositAndLeverage(
+        ITempusPool tempusPool,
+        ITempusAMM tempusAMM,
+        uint256 leverageMultiplier,
+        uint256 tokenAmount,
+        bool isBackingToken,
+        uint256 minCapitalsRate,
+        uint256 deadline
+    ) external payable returns (uint256, uint256) {
+        requireRegistered(address(tempusAMM));
+        requireRegistered(address(tempusPool));
+
+        require(leverageMultiplier > 1e18, "invalid leverage");
+
+        IERC20 principalShares = IERC20(address(tempusPool.principalShare()));
+        IERC20 yieldShares = IERC20(address(tempusPool.yieldShare()));
+
+        uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
+        uint256 leveragedYieldsAmount = mintedShares.mulfV(leverageMultiplier, 1e18) - mintedShares;
+        uint256 maxCapitalsToSwap = leveragedYieldsAmount.divfV(minCapitalsRate, tempusPool.backingTokenONE());
+        swapGivenOut(tempusAMM, leveragedYieldsAmount, principalShares, yieldShares, maxCapitalsToSwap, deadline);
+
+        uint256 principalsBalance = principalShares.balanceOf(address(this));
+        assert(principalsBalance >= (mintedShares - maxCapitalsToSwap));
+
+        uint256 yieldsBalance = yieldShares.balanceOf(address(this));
+        assert(yieldsBalance >= (leveragedYieldsAmount + mintedShares));
+
+        principalShares.safeTransfer(msg.sender, principalsBalance);
+        yieldShares.safeTransfer(msg.sender, yieldsBalance);
+        return (principalsBalance, yieldsBalance);
+    }
+
     function depositYieldBearing(
         ITempusPool targetPool,
         uint256 yieldTokenAmount,
@@ -228,6 +261,38 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             toInternalBalance: false
         });
         vault.swap(singleSwap, fundManagement, minReturn, deadline);
+    }
+
+    function swapGivenOut(
+        ITempusAMM tempusAMM,
+        uint256 swapAmountOut,
+        IERC20 tokenIn,
+        IERC20 tokenOut,
+        uint256 maxSpendAmount,
+        uint256 deadline
+    ) private {
+        require(swapAmountOut > 0, "Invalid swap amount.");
+        require(maxSpendAmount > 0, "Invalid max spend amount.");
+        tokenIn.safeIncreaseAllowance(address(tempusAMM.getVault()), maxSpendAmount);
+
+        (IVault vault, bytes32 poolId, , ) = _getAMMDetailsAndEnsureInitialized(tempusAMM);
+
+        IVault.SingleSwap memory singleSwap = IVault.SingleSwap({
+            poolId: poolId,
+            kind: IVault.SwapKind.GIVEN_OUT,
+            assetIn: tokenIn,
+            assetOut: tokenOut,
+            amount: swapAmountOut,
+            userData: ""
+        });
+
+        IVault.FundManagement memory fundManagement = IVault.FundManagement({
+            sender: address(this),
+            fromInternalBalance: false,
+            recipient: payable(address(this)),
+            toInternalBalance: false
+        });
+        vault.swap(singleSwap, fundManagement, maxSpendAmount, deadline);
     }
 
     function _depositAndProvideLiquidity(
