@@ -291,7 +291,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         SwapRequest memory swapRequest,
         uint256 balanceTokenIn,
         uint256 balanceTokenOut
-    ) internal virtual override returns (uint256) {
+    ) internal virtual override whenNotPaused returns (uint256) {
         (uint256[] memory balances, uint256 indexIn, uint256 indexOut) = _getSwapBalanceArrays(
             swapRequest,
             balanceTokenIn,
