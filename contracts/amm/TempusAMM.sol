@@ -311,11 +311,28 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     function _onSwapGivenOut(
-        SwapRequest memory,
-        uint256,
-        uint256
-    ) internal virtual override returns (uint256) {
-        revert("Unsupported swap type");
+        SwapRequest memory swapRequest,
+        uint256 balanceTokenIn,
+        uint256 balanceTokenOut
+    ) internal virtual override whenNotPaused returns (uint256) {
+        (uint256[] memory balances, uint256 indexIn, uint256 indexOut) = _getSwapBalanceArrays(
+            swapRequest,
+            balanceTokenIn,
+            balanceTokenOut
+        );
+
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+        uint256[] memory rates = _getTokenRates();
+        uint256 tokenInRate = rates[indexIn];
+        uint256 tokenOutRate = rates[indexOut];
+
+        balances.mul(rates, _TEMPUS_SHARE_PRECISION);
+        uint256 rateAdjustedSwapAmount = (swapRequest.amount * tokenOutRate) / _TEMPUS_SHARE_PRECISION;
+
+        uint256 amountIn = StableMath._calcInGivenOut(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
+        amountIn = (amountIn * _TEMPUS_SHARE_PRECISION) / tokenInRate;
+
+        return amountIn;
     }
 
     function _getSwapBalanceArrays(
