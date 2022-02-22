@@ -88,7 +88,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         ITempusPool targetPool,
         uint256 yieldTokenAmount,
         address recipient
-    ) external override nonReentrant returns (uint256) {
+    ) public override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
         requireRegistered(address(targetPool));
 
@@ -99,7 +99,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         ITempusPool targetPool,
         uint256 backingTokenAmount,
         address recipient
-    ) external payable override nonReentrant returns (uint256) {
+    ) public payable override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
         requireRegistered(address(targetPool));
 
@@ -206,7 +206,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         IERC20 tokenOut,
         uint256 minReturn,
         uint256 deadline
-    ) private {
+    ) internal {
         require(swapAmount > 0, "Invalid swap amount.");
         tokenIn.safeIncreaseAllowance(address(tempusAMM.getVault()), swapAmount);
 
