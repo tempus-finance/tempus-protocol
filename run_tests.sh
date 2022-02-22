@@ -87,9 +87,11 @@ if [ "$ONLY_POOL" == "" ] && [ "$ONLY_TOKEN" == "" ]; then
 fi
 
 # wait for results and check for failure
-FAIL=0
+FAILS=0
+TOTAL=0
 for pid in "${PIDS[@]}"; do
-  wait $pid || let "FAIL+=1"
+  let "TOTAL+=1"
+  wait $pid || let "FAILS+=1"
 done
 
 end_time=$(date +%s)
@@ -97,6 +99,7 @@ elapsed=$(( end_time - start_time ))
 echo ""
 echo elapsed time: $(date -ud "@$elapsed" +'%M min %S sec')
 
-if [ "$FAIL" != "0" ]; then
-  exit $FAIL
+if [ "$FAILS" != "0" ]; then
+  echo "$FAILS / $TOTAL test runners failed"
+  exit 1
 fi
