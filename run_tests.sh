@@ -61,6 +61,7 @@ fi
 
 start_time=$(date +%s)
 
+PIDS=()
 for pool in $pools; do
   tokens=${POOL_TOKENS[$pool]}
   if [ "$ONLY_TOKEN" ]; then
@@ -74,6 +75,7 @@ for pool in $pools; do
   for token in $tokens; do
     echo Start Tests $pool - $token
     cross-env ONLY_POOL=$pool ONLY_TOKEN=$token $ENVS $CMD &
+    PIDS+=($!)
   done
 done
 
@@ -81,10 +83,20 @@ done
 if [ "$ONLY_POOL" == "" ] && [ "$ONLY_TOKEN" == "" ]; then
   echo Start Tests Non-Pool
   cross-env ONLY_POOL=None $ENVS $CMD &
+  PIDS+=($!)
 fi
 
-wait # wait for all background tasks to finish
+# wait for results and check for failure
+FAIL=0
+for pid in "${PIDS[@]}"; do
+  wait $pid || let "FAIL+=1"
+done
+
 end_time=$(date +%s)
 elapsed=$(( end_time - start_time ))
 echo ""
 echo elapsed time: $(date -ud "@$elapsed" +'%M min %S sec')
+
+if [ "$FAIL" != "0" ]; then
+  exit $FAIL
+fi
