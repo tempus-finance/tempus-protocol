@@ -371,12 +371,21 @@ export abstract class PoolTestFixture {
   /**
    * TESTING UTILITY: checks user state for TPS+TYS balance and YBT balance
    * @param user User whose wallet to check
+   * @param expects All balance check parameters
+   * @param message Description of what we expected to happen
+   */
+  async checkBalance(user:Signer, expects:BalancesExpectation, message?:string): Promise<void> {
+    (await this.userState(user)).expect(expects.tps, expects.tys, expects.ybt, message);
+  }
+
+  /**
+   * TESTING UTILITY: checks user state for TPS+TYS balance and YBT balance
+   * @param user User whose wallet to check
    * @param wallet All wallet check parameters
    * @param message Description of what we expected to happen
    */
   async checkWallet(user:Signer, wallet:WalletExpectation, message?:string): Promise<void> {
-    const expects:BalancesExpectation = this.yieldPeggedToAsset ? wallet.pegged : wallet.unpegged;
-    (await this.userState(user)).expect(expects.tps, expects.tys, expects.ybt, message);
+    return this.checkBalance(user, this.yieldPeggedToAsset ? wallet.pegged : wallet.unpegged, message);
   }
 
   /**
