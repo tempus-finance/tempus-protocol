@@ -27,10 +27,11 @@ interface IStakingRewards {
     function getReward() external;
 
     function stake(uint256 amount) external;
-    
+
     function withdraw(uint256 amount) external;
 
     /// Non-standard methods (that don't exist in the Synthetix StakingRewards implementation)
     function stake(uint256 amount, address onBehalfOf) external;
+
     function withdraw(uint256 amount, address onBehalfOf) external;
 }

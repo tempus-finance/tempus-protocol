@@ -32,7 +32,7 @@ contract IncentivizedTempusController is TempusController {
         uint256 deadline
     ) external payable nonReentrant {
         ITempusPool targetPool = tempusAMM.tempusPool();
-        
+
         IERC20 principalShares = IERC20(address(targetPool.principalShare()));
         IERC20 yieldShares = IERC20(address(targetPool.yieldShare()));
 
