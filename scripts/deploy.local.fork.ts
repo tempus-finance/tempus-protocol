@@ -6,7 +6,7 @@ import { ERC20 } from '../test/utils/ERC20';
 import { generateTempusSharesNames, PoolType, TempusPool } from '../test/utils/TempusPool';
 import { ContractBase, Signer } from '../test/utils/ContractBase';
 import { TempusController } from '../test/utils/TempusController';
-import { DAY, MONTH, AMP_PRECISION } from '../test/utils/TempusAMM';
+import { DAY, MONTH, AMP_PRECISION, generateAmplificationData } from '../test/utils/TempusAMM';
 import { toWei } from '../test/utils/Decimal';
 import { ERC20Ether } from '../test/utils/ERC20Ether';
 
@@ -278,14 +278,20 @@ class DeployLocalForked {
       );
     }
 
+    const amplificationData =  generateAmplificationData(
+      /*amplifyStart*/5 * AMP_PRECISION,
+      /*amplifyEnd*/95 * AMP_PRECISION,
+      0,
+      params.maturity
+    );
+
     let tempusAMM = await ContractBase.deployContract(
       "TempusAMM",
       this.VAULT_ADDRESS,
       params.lpName,
       params.lpSymbol,
       pool.address,
-      /*amplifyStart*/5 * AMP_PRECISION,
-      /*amplifyEnd*/95 * AMP_PRECISION,
+      amplificationData,
       toWei(0.002),
       3 * MONTH,
       MONTH,

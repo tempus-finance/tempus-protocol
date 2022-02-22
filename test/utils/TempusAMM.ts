@@ -39,6 +39,15 @@ export interface AmplificationData {
   endTime:number;
 }
 
+export function generateAmplificationData(startValue:number, endValue:number, startTime:number, endTime:number): AmplificationData {
+  return {
+    startValue: startValue,
+    endValue: endValue,
+    startTime: startTime,
+    endTime: endTime
+  };
+}
+
 export class TempusAMM extends ContractBase {
   vault: Contract;
   principalShare: ERC20;
@@ -72,12 +81,12 @@ export class TempusAMM extends ContractBase {
     const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
     const vault = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Vault.sol:Vault", authorizer.address, mockedWETH.address, 3 * MONTH, MONTH);
 
-    const amplificationData:AmplificationData = {
-      startValue:+rawAmplificationStart * AMP_PRECISION,
-      endValue:+rawAmplificationEnd * AMP_PRECISION,
-      startTime:0,
-      endTime:amplificationEndTime
-    }
+    const amplificationData = generateAmplificationData(
+      +rawAmplificationStart * AMP_PRECISION,
+      +rawAmplificationEnd * AMP_PRECISION,
+      0,
+      amplificationEndTime
+    );
 
     let tempusAMM = await ContractBase.deployContractBy(
       "TempusAMM",
