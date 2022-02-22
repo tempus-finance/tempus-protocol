@@ -35,6 +35,7 @@ jobs:
     executor:
       name: node/default
       tag: '15.11'
+    resource_class: xlarge
     steps:
       - checkout
       - node/install-packages:
