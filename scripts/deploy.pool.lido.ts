@@ -2,6 +2,7 @@ import { ethers, network } from 'hardhat';
 import * as utils from './utils';
 import * as chalk from "chalk";
 import { generateTempusSharesNames } from '../test/utils/TempusPool';
+import { AMP_PRECISION, generateAmplificationData } from 'test/utils/TempusAMM';
 
 
 const EXCHANGE_RATE_PRECISION = 18;
@@ -100,13 +101,18 @@ async function deploy() {
   const tempusPoolContract = await utils.deployContract(CONTRACT_NAME, poolConstructorArgs, deployerPrivateKey);
   await utils.waitForContractToBeDeployed(tempusPoolContract.address);
 
+  const amplificationData =  generateAmplificationData(
+    amplificationStart * AMP_PRECISION,
+    amplificationEnd * AMP_PRECISION,
+    0,
+    maturityTimestamp
+  );
   const ammConstructorArgs = [
     balancerVault,
     lpName,
     lpSymbol,
     tempusPoolContract.address,
-    amplificationStart,
-    amplificationEnd,
+    amplificationData,
     ethers.utils.parseUnits(swapFeePercentage.toString(), 18).toString(),
     pauseWindowDuration,
     bufferPeriodDuration,
