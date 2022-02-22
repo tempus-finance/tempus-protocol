@@ -437,7 +437,7 @@ export abstract class PoolTestFixture {
         );
 
         // new AMM instance and register the AMM with the controller
-        const amm = await TempusAMM.create(owner, controller, p.ammAmplifyStart, p.ammAmplifyEnd, p.ammSwapFee, tempus);
+        const amm = await TempusAMM.create(owner, controller, p.ammAmplifyStart, p.ammAmplifyEnd, maturityTime, p.ammSwapFee, tempus);
 
         return {
           signers: { owner:owner, user:user, user2:user2 },

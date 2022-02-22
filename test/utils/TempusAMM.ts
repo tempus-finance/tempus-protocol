@@ -32,6 +32,13 @@ export enum TempusAMMJoinKind {
   INVALID  // used to test invalid join type
 }
 
+export interface AmplificationData {
+  startValue:number;
+  endValue:number;
+  startTime:number;
+  endTime:number;
+}
+
 export class TempusAMM extends ContractBase {
   vault: Contract;
   principalShare: ERC20;
@@ -55,6 +62,7 @@ export class TempusAMM extends ContractBase {
     controller: TempusController,
     rawAmplificationStart: number,
     rawAmplificationEnd: number,
+    amplificationEndTime: number,
     swapFeePercentage: number, 
     tempusPool: TempusPool
   ): Promise<TempusAMM> {
@@ -64,6 +72,13 @@ export class TempusAMM extends ContractBase {
     const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
     const vault = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Vault.sol:Vault", authorizer.address, mockedWETH.address, 3 * MONTH, MONTH);
 
+    const amplificationData:AmplificationData = {
+      startValue:+rawAmplificationStart * AMP_PRECISION,
+      endValue:+rawAmplificationEnd * AMP_PRECISION,
+      startTime:0,
+      endTime:amplificationEndTime
+    }
+
     let tempusAMM = await ContractBase.deployContractBy(
       "TempusAMM",
       owner,
@@ -71,8 +86,7 @@ export class TempusAMM extends ContractBase {
       "Tempus LP token", 
       "LP", 
       tempusPool.address,
-      +rawAmplificationStart * AMP_PRECISION,
-      +rawAmplificationEnd * AMP_PRECISION,
+      amplificationData,
       toWei(swapFeePercentage),
       3 * MONTH, 
       MONTH, 
