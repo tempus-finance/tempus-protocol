@@ -136,7 +136,16 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool toInternalBalances
     ) external override nonReentrant {
         requireRegistered(address(tempusAMM));
-        _exitTempusAMM(tempusAMM, lpTokensAmount, principalAmountOutMin, yieldAmountOutMin, toInternalBalances);
+        require(lpTokensAmount > 0, "LP token amount is 0");
+
+        _exitTempusAMM(
+            tempusAMM,
+            lpTokensAmount,
+            principalAmountOutMin,
+            yieldAmountOutMin,
+            msg.sender,
+            toInternalBalances
+        );
     }
 
     function exitAmmGivenAmountsOutAndEarlyRedeem(
@@ -175,16 +184,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) external override nonReentrant {
         requireRegistered(address(tempusAMM));
         if (lpTokens > 0) {
-            // if there is LP balance, transfer to controller
-            require(tempusAMM.transferFrom(msg.sender, address(this), lpTokens), "LP token transfer failed");
-
-            // exit amm and sent shares to controller
-            uint256[] memory minAmountsOutFromLP = getAMMOrderedAmounts(
-                tempusAMM,
-                minPrincipalsStaked,
-                minYieldsStaked
-            );
-            _exitTempusAMMGivenLP(tempusAMM, address(this), address(this), lpTokens, minAmountsOutFromLP, false);
+            _exitTempusAMM(tempusAMM, lpTokens, minPrincipalsStaked, minYieldsStaked, address(this), false);
         }
 
         _redeemWithEqualShares(
@@ -454,33 +454,21 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 lpTokensAmount,
         uint256 principalAmountOutMin,
         uint256 yieldAmountOutMin,
+        address recipient,
         bool toInternalBalances
     ) private {
         require(tempusAMM.transferFrom(msg.sender, address(this), lpTokensAmount), "LP token transfer failed");
 
-        uint256[] memory amounts = getAMMOrderedAmounts(tempusAMM, principalAmountOutMin, yieldAmountOutMin);
-        _exitTempusAMMGivenLP(tempusAMM, address(this), msg.sender, lpTokensAmount, amounts, toInternalBalances);
-    }
-
-    function _exitTempusAMMGivenLP(
-        ITempusAMM tempusAMM,
-        address sender,
-        address recipient,
-        uint256 lpTokensAmount,
-        uint256[] memory minAmountsOut,
-        bool toInternalBalances
-    ) private {
-        require(lpTokensAmount > 0, "LP token amount is 0");
+        uint256[] memory minAmountsOut = getAMMOrderedAmounts(tempusAMM, principalAmountOutMin, yieldAmountOutMin);
 
         (IVault vault, bytes32 poolId, IERC20[] memory ammTokens, ) = _getAMMDetailsAndEnsureInitialized(tempusAMM);
-
         IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest({
             assets: ammTokens,
             minAmountsOut: minAmountsOut,
             userData: abi.encode(uint8(ITempusAMM.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT), lpTokensAmount),
             toInternalBalance: toInternalBalances
         });
-        vault.exitPool(poolId, sender, payable(recipient), request);
+        vault.exitPool(poolId, address(this), payable(recipient), request);
     }
 
     function _exitTempusAMMGivenAmountsOut(
