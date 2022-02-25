@@ -1,0 +1,43 @@
+{
+  "kind": "Yearn",
+  "decimals": 18,
+  "ybt": {
+    "address": "0x637eC617c86D24E421328e6CAEa1d92114892439",
+    "decimals": 18,
+    "name": "DAI yVault",
+    "symbol": "yvDAI"
+  },
+  "controller": "0x8c47924b35C3667F59Df579F3ec061F8d7603242",
+  "principal": {
+    "name": "Tempus Capital Token-FYEDA002",
+    "symbol": "tCapital-FYEDA002"
+  },
+  "yield": {
+    "name": "Token Tempus Yield Token-FYEDA002",
+    "symbol": "tYield-FYEDA002"
+  },
+  "pool": {
+    "address": "0x9c0273E4abB665ce156422a75F5a81db3c264A23",
+    "maturity": "2022-08-26T08:00:00.000+00:00",
+    "estimatedYield": "0.0347",
+    "fees": {
+      "deposit": 0.01,
+      "earlyRedemption": 0.01,
+      "maturedRedemption": 0.01
+    }
+  },
+  "amm": {
+    "address": "0x354090dd4f695D7dc5ad492e48d0f30042Ed7BbE",
+    "vault": "0xfCD78cA49368D3E5A93171335d2f31705d00Ca38",
+    "lp": {
+      "name": "Tempus LP Token-FYEDA002",
+      "symbol": "tLP-FYEDA002"
+    },
+    "owner": "0x5173247654d453612e9018E11229c65de78c553E",
+    "swapFee": 0.01,
+    "pauseWindowDuration": 7776000,
+    "bufferPeriodDuration": 2592000,
+    "initialAmplificationFactor": 1,
+    "finalAmplificationFactor": 80
+  }
+}
