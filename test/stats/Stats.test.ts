@@ -93,6 +93,15 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
     expect(+await stats.estimatedDepositAndFix(testPool, 1, /*BT*/false)).to.be.within(1.096, 1.098);
   });
 
+  it("Estimated DepositAndLeverage returns expected values", async () =>
+  {
+    await initAMM(user1, /*ybtDeposit*/1200, /*principals*/120, /*yields*/1200);
+    await testPool.setNextBlockTimestampRelativeToPoolStart(0.1);
+    const result = await stats.estimatedDepositAndLeverage(testPool, 1, /*BT*/false, /*leverage*/2);
+    expect(+result[0]).to.be.within(0.9, 0.91);
+    expect(+result[1]).to.be.within(1.9, 2);
+  });
+
   it("Estimated exit and redeem returns expected values", async () =>
   {
     await initAMM(user1, /*ybtDeposit*/1200, /*principals*/120, /*yields*/1200);

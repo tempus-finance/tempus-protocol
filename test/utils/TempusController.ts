@@ -179,6 +179,40 @@ export class TempusController extends ContractBase {
     );
   }
 
+  /**
+   * Atomically deposits YBT/BT to TempusPool and swaps Capitals for Yields to get leveraged yield
+   * @param user The user to deposit on behalf of
+   * @param amm The corresponding Tempus AMM to use to swap Capitals for Yields
+   * @param tokenAmount Amount of BT/YBT to deposit
+   * @param isBackingToken Specifies whether the deposited asset is YBT or BT
+   * @param maxCapitalsRate Minimum TYS rate (denominated in TPS) to receive in exchange to TPS
+   * @param ethValue value of ETH to send with the tx
+   * @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
+   */
+   async depositAndLeverage(
+    pool: PoolTestFixture,
+    user: SignerOrAddress,
+    tokenAmount: NumberOrString,
+    isBackingToken: boolean,
+    leverageMultiplier: NumberOrString,
+    minCapitalsRate: NumberOrString,
+    ethValue: NumberOrString = 0,
+    deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
+  ): Promise<Transaction> {
+    await this.approve(pool, user, tokenAmount, isBackingToken);
+    const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
+    return this.connect(user).depositAndLeverage(
+      pool.tempus.address,
+      pool.amm.address,
+      toWei(leverageMultiplier),
+      amount,
+      isBackingToken,
+      pool.tempus.asset.toBigNum(minCapitalsRate),
+      parseInt((deadline.getTime() / 1000).toFixed(0)),
+      { value: toWei(ethValue) }
+    );
+  }
+
   async provideLiquidity(
     pool: PoolTestFixture,
     user: SignerOrAddress,

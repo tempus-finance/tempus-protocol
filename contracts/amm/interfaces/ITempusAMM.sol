@@ -34,6 +34,12 @@ interface ITempusAMM {
     /// @return The expected returned amount of outToken
     function getExpectedReturnGivenIn(uint256 amount, bool yieldShareIn) external view returns (uint256);
 
+    /// Calculates the expected amount of tokens In to return amountOut
+    /// @param amountOut The given amount out of tokens
+    /// @param tokenIn Specifies which token we are swapping
+    /// @return The expected returned amount of tokenIn to be swapped
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view returns (uint256);
+
     /// @dev Returns amount that user needs to swap to end up with almost the same amounts of Principals and Yields
     /// @param principals User's Principals balance
     /// @param yields User's Yields balance

@@ -90,6 +90,25 @@ interface ITempusController {
         uint256 deadline
     ) external payable returns (uint256);
 
+    /// @dev Atomically deposits YBT/BT to TempusPool and swaps Capitals for Yields to get leveraged exposure to yield
+    /// @param tempusPool TempusPool to be used for depositing YBT/BT
+    /// @param tempusAMM TempusAMM to use to swap Capitals for Yields
+    /// @param leverageMultiplier Multiplier to use for leverage, 18 decimal precision. In case of 2x leverage pass 2e18
+    /// @param tokenAmount Amount of YBT/BT to be deposited in underlying YBT/BT decimal precision
+    /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
+    /// @param maxCapitalsRate Maximum exchange rate of Capitals (denominated in Yields) when getting Yield in return
+    /// @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
+    /// @return Amount of Capitals and Yields transferred to `msg.sender`
+    function depositAndLeverage(
+        ITempusPool tempusPool,
+        ITempusAMM tempusAMM,
+        uint256 leverageMultiplier,
+        uint256 tokenAmount,
+        bool isBackingToken,
+        uint256 maxCapitalsRate,
+        uint256 deadline
+    ) external payable returns (uint256, uint256);
+
     /// @dev Deposits Yield Bearing Tokens to a Tempus Pool.
     /// @param targetPool The Tempus Pool to which tokens will be deposited
     /// @param yieldTokenAmount amount of Yield Bearing Tokens to be deposited

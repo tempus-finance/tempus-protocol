@@ -178,6 +178,24 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         return amountOut;
     }
 
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public view returns (uint256) {
+        IPoolShare shareIn = IPoolShare(tokenIn);
+        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+        require(shareIn == _token0 || shareIn == _token1, "invalid tokenIn");
+        IPoolShare tokenOut = (shareIn == _token0) ? _token1 : _token0;
+        (uint256 indexIn, uint256 indexOut) = (shareIn == _token0) ? (0, 1) : (1, 0);
+
+        balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
+        uint256 rateAdjustedAmountOut = (amountOut * tokenOut.getPricePerFullShareStored()) / _TEMPUS_SHARE_PRECISION;
+
+        uint256 amountIn = StableMath._calcInGivenOut(currentAmp, balances, indexIn, indexOut, rateAdjustedAmountOut);
+        amountIn = (amountIn * _TEMPUS_SHARE_PRECISION) / shareIn.getPricePerFullShareStored();
+        amountIn = _subtractSwapFeeAmount(amountIn);
+
+        return amountIn;
+    }
+
     function getSwapAmountToEndWithEqualShares(
         uint256 principals,
         uint256 yields,

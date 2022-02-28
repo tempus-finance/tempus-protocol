@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString } from "./Decimal";
+import { NumberOrString, toWei } from "./Decimal";
 import { ContractBase } from "./ContractBase";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 
@@ -79,6 +79,23 @@ export class Stats extends ContractBase {
         pool.amm.address, isBackingToken ? t.asset.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
       )
     );
+  }
+
+  async estimatedDepositAndLeverage(pool:PoolTestFixture, amount:NumberOrString, isBackingToken:boolean, leverage:NumberOrString): Promise<[NumberOrString,NumberOrString]> {
+    const t = pool.tempus;
+    
+    const principalsYields = await this.contract.estimatedDepositAndLeverage(
+      pool.tempus.address, 
+      pool.amm.address, 
+      toWei(leverage),
+      isBackingToken ? t.asset.toBigNum(amount) : t.yieldBearing.toBigNum(amount), 
+      isBackingToken
+    );
+
+    return [
+      t.principalShare.fromBigNum(principalsYields.principals), 
+      t.yieldShare.fromBigNum(principalsYields.yields)
+    ];
   }
 
   async estimateExitAndRedeem(
