@@ -141,6 +141,31 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         principals += tempusAMM.getExpectedReturnGivenIn(principals, true);
     }
 
+    /// Gets the estimated amount of Shares and Lp token amounts
+    /// @param tempusPool Tempus Pool to which user deposits backing or yield bearing tokens
+    /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
+    /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
+    /// @return principals Amount of Principals that user could receive in this action
+    function estimatedDepositAndLeverage(
+        ITempusPool tempusPool,
+        ITempusAMM tempusAMM,
+        uint256 leverage,
+        uint256 amount,
+        bool isBackingToken
+    ) public view returns (uint256 principals, uint256 yields) {
+        require(leverage > 1e18, "invalid leverage");
+        uint256 mintedShares = estimatedMintedShares(tempusPool, amount, isBackingToken);
+        yields = mintedShares.mulfV(leverage, 1e18);
+
+        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(
+            yields - mintedShares,
+            address(tempusPool.principalShare())
+        );
+        assert(mintedShares > expectedIn);
+        principals = mintedShares - expectedIn;
+    }
+
     /// @dev Get estimated amount of Backing or Yield bearing tokens for exiting pool and redeeming shares
     /// @notice This queries at certain block, actual results can differ as underlying pool state can change
     /// @param tempusAMM Tempus AMM to exit LP tokens from
