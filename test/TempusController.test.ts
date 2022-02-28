@@ -171,6 +171,48 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     });
   });
 
+  describe("depositAndLeverage", () =>
+  {
+    it("verifies tx reverts if provided minimum Capitals rate requirement is not met", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/200, /*yields*/2000); // 10% rate
+      const invalidAction = controller.depositAndLeverage(
+        testPool,
+        user2,
+        5.456789,   // ampunt
+        false,      // isBackingToken
+        2,          // leverageMultiplier
+        20          // minCapitalsRate
+      ); 
+
+      (await expectRevert(invalidAction)).to.equal(SWAP_LIMIT_ERROR_MESSAGE);
+    });
+
+    it("verifies depositing YBT succeeds", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/200, /*yields*/2000); // 10% rate
+      const minCapitalsRate = "9.7";
+      await controller.depositAndLeverage(testPool, user2, 5.456789, false, 2, minCapitalsRate); 
+      await expectValidState();
+
+      expect(+await pool.principalShare.balanceOf(user2)).to.be.lessThan(5.456789, "Some Principals are swapped");
+      expect(+await pool.yieldShare.balanceOf(user2)).to.be.greaterThan(10, "Yields are leveraged");
+    });
+
+    it("verifies depositing BT succeeds", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/20, /*yields*/200); // 10% rate
+      const minCapitalsRate = "9.7";
+      const amount = 5.456789;
+      const ethAmount = testPool.type == PoolType.Lido ? amount : 0;
+      await controller.depositAndLeverage(testPool, user2, 5.456789, true, 2, minCapitalsRate, ethAmount); 
+      await expectValidState();
+
+      expect(+await pool.principalShare.balanceOf(user2)).to.be.lessThan(5.456789, "Some Principals are swapped");
+      expect(+await pool.yieldShare.balanceOf(user2)).to.be.greaterThan(10, "Yields are leveraged");
+    });
+  });
+
   describe("provideLiquidity", () =>
   {
     it("check lp provided", async () =>
