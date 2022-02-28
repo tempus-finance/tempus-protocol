@@ -204,15 +204,15 @@ export class TempusAMM extends ContractBase {
     await this.vault.connect(from).exitPool(poolId, from.address, from.address, exitPoolRequest);
   }
 
-  async swapGivenIn(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString) {    
-    await this.yieldShare.connect(from).approve(this.vault.address, this.yieldShare.toBigNum(amount));
-    await this.principalShare.connect(from).approve(this.vault.address, this.principalShare.toBigNum(amount));
-    const SWAP_KIND_GIVEN_IN = 0;
+  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {    
+    await this.yieldShare.connect(from).approve(this.vault.address, this.yieldShare.toBigNum(await this.yieldShare.balanceOf(from)));
+    await this.principalShare.connect(from).approve(this.vault.address, this.principalShare.toBigNum(await this.principalShare.balanceOf(from)));
+    const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;
     const poolId = await this.contract.getPoolId();    
 
     const singleSwap = {
       poolId,
-      kind: SWAP_KIND_GIVEN_IN,
+      kind: SWAP_KIND,
       assetIn: assetIn,
       assetOut: assetOut,
       amount: this.principalShare.toBigNum(amount),
@@ -225,7 +225,7 @@ export class TempusAMM extends ContractBase {
       recipient: from.address,
       toInternalBalance: false
     };
-    const minimumReturn = 1;
+    const minimumReturn = (givenOut !== undefined && givenOut) ? this.principalShare.toBigNum(1000000000) : 1;
     const deadline = await blockTimestamp() * 2; // not anytime soon 
     await this.vault.connect(from).swap(singleSwap, fundManagement, minimumReturn, deadline);
   }
