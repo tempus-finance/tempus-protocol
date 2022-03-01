@@ -1,12 +1,12 @@
 import { expect } from "chai";
-import { PoolTestFixture, YBTDepositExpectation, YBTRedeemExpectation } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture, YBTDepositExpectation, RedeemExpectation } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
 {
   const deposit = (user, args:YBTDepositExpectation, message?) => pool.depositAndCheck(user, args, message);
-  const redeem = (user, args:YBTRedeemExpectation, message?) => pool.redeemAndCheck(user, args, message);
+  const redeem = (user, args:RedeemExpectation, message?) => pool.redeemAndCheck(user, args, message);
 
   interface RateAndDaysParams { rate:number, daysAfterStart:number; }
 

@@ -29,26 +29,30 @@ export interface YBTDepositExpectation extends WalletExpectation {
   ybtAmount:number;
 }
 
-export interface RedeemAmounts {
+export interface BTDepositExpectation extends WalletExpectation {
+  btAmount:number;
+}
+
+export interface RedeemShareAmounts {
   tps:number; // amount of TPS to redeem
   tys:number; 
 }
 
-export interface YBTRedeemAmounts {
-  pegged:RedeemAmounts;
-  unpegged:RedeemAmounts;
+export interface RedeemAmounts {
+  pegged:RedeemShareAmounts;
+  unpegged:RedeemShareAmounts;
 }
 
-export interface YBTRedeemExpectation extends WalletExpectation {
-  amount:RedeemAmounts|YBTRedeemAmounts;
+export interface RedeemExpectation extends WalletExpectation {
+  amount:RedeemShareAmounts|RedeemAmounts;
 }
 
-function instanceOfYBTRedeemAmounts(object: any): object is YBTRedeemAmounts {
+function instanceOfRedeemAmounts(object: any): object is RedeemAmounts {
   return 'pegged' in object;
 }
 
-function getRedeemAmounts(pegged:boolean, expects:YBTRedeemExpectation): RedeemAmounts {
-  if (instanceOfYBTRedeemAmounts(expects.amount))
+function getRedeemShareAmounts(pegged:boolean, expects:RedeemExpectation): RedeemShareAmounts {
+  if (instanceOfRedeemAmounts(expects.amount))
     return pegged ? expects.amount.pegged : expects.amount.unpegged;
   return expects.amount;
 }
@@ -400,14 +404,37 @@ export abstract class PoolTestFixture {
   }
 
   /**
+   * TESTING UTILITY: does a depositBT and then validates user wallet balances
+   * @param user User who is depositing and receiving shares
+   * @param expects All the deposit and checks parameters
+   * @param message Description of what we expected to happen
+   */
+  async depositAndCheckBT(user:Signer, expects:BTDepositExpectation, message?:string): Promise<void> {
+    await this.depositBT(user, expects.btAmount);
+    await this.checkWallet(user, expects, message);
+  }
+
+  /**
    * TESTING UTILITY: does a redeemToYBT and then validates user wallet balances
    * @param user User who is redeeming shares and receiving tokens
    * @param expects All the redemption and checks parameters
    * @param message Description of what we expected to happen
    */
-  async redeemAndCheck(user:Signer, expects:YBTRedeemExpectation, message?:string): Promise<void> {
-    const amount:RedeemAmounts = getRedeemAmounts(this.yieldPeggedToAsset, expects);
+  async redeemAndCheck(user:Signer, expects:RedeemExpectation, message?:string): Promise<void> {
+    const amount:RedeemShareAmounts = getRedeemShareAmounts(this.yieldPeggedToAsset, expects);
     await this.redeemToYBT(user, amount.tps, amount.tys);
+    await this.checkWallet(user, expects, message);
+  }
+
+  /**
+   * TESTING UTILITY: does a redeemToBT and then validates user wallet balances
+   * @param user User who is redeeming shares and receiving tokens
+   * @param expects All the redemption and checks parameters
+   * @param message Description of what we expected to happen
+   */
+  async redeemAndCheckBT(user:Signer, expects:RedeemExpectation, message?:string): Promise<void> {
+    const amount:RedeemShareAmounts = getRedeemShareAmounts(this.yieldPeggedToAsset, expects);
+    await this.redeemToBT(user, amount.tps, amount.tys);
     await this.checkWallet(user, expects, message);
   }
 
