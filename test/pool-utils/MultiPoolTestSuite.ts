@@ -16,6 +16,11 @@ const onlyRun = getOnlyRunPool();
 const onlyToken = getOnlyRunToken();
 const tokens = getTokens(integration);
 
+// gets ALL_POOLS, excluding PoolType(s) in `except` list
+function poolTypesFromExcept(except:PoolType[]): PoolType[] {
+  return ALL_POOLS.filter(type => !except.includes(type));
+}
+
 function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boolean, fn:(pool:PoolTestFixture) => void)
 {
   let parent:Suite = null;
@@ -93,6 +98,11 @@ interface MultiPoolSuiteFunction {
   type: (title:string, poolTypes:PoolType[], fn:(pool:PoolTestFixture) => void) => void;
 
   /**
+   * Batch describes unit test block for specific PoolTypes, EXCEPT given types
+   */
+  except: (title:string, except:PoolType[], fn:(pool:PoolTestFixture) => void) => void;
+
+  /**
    * Indicates this suite should be executed exclusively.
    */
   only: (title:string, fn:(pool:PoolTestFixture) => void) => void;
@@ -101,6 +111,11 @@ interface MultiPoolSuiteFunction {
    * Combines only() and type()
    */
   onlyType: (title:string, poolTypes:PoolType[], fn:(Pool:PoolTestFixture) => void) => void;
+
+  /**
+   * Combines only() and except()
+   */
+  onlyExcept: (title:string, except:PoolType[], fn:(Pool:PoolTestFixture) => void) => void;
 }
 
 interface NonePoolSuiteFunction {
@@ -132,9 +147,15 @@ export const describeForEachPool: MultiPoolSuiteFunction = (() => {
   f.only = (title:string, fn:(pool:PoolTestFixture) => void) => {
     _describeForEachPoolType(title, ALL_POOLS, /*only*/true, fn);
   };
+  f.except = (title:string, except:PoolType[], fn:(pool:PoolTestFixture) => void) => {
+    _describeForEachPoolType(title, poolTypesFromExcept(except), /*only*/false, fn);
+  };
   f.onlyType = (title:string, poolTypes:PoolType[], fn:(pool:PoolTestFixture) => void) => {
     _describeForEachPoolType(title, poolTypes, /*only*/true, fn);
-  }
+  };
+  f.onlyExcept = (title:string, except:PoolType[], fn:(pool:PoolTestFixture) => void) => {
+    _describeForEachPoolType(title, poolTypesFromExcept(except), /*only*/true, fn);
+  };
   return f;
 })();
 

@@ -4,7 +4,7 @@ import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { expectRevert } from "./utils/Utils";
 
-describeForEachPool.type("TempusPool Redeem", [PoolType.Aave, PoolType.Compound], (pool:PoolTestFixture) =>
+describeForEachPool.except("TempusPool Redeem", [PoolType.Lido], (pool:PoolTestFixture) =>
 {
   it("Should redeem correct BackingTokens after depositing BackingTokens", async () =>
   {
