@@ -11,7 +11,7 @@ import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 interface SwapTestRun {
   amplification:number;
   swapAmountIn:NumberOrString;
-  swapAmountOut: NumberOrString;
+  swapAmountOut?: NumberOrString;
   principalIn:boolean;
   givenOut?:boolean;
 }
@@ -85,6 +85,39 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     
     expect(+tokenIn.fromBigNum(preSwapTokenInBalance.sub(postSwapTokenInBalance))).to.be.within(+swapTest.swapAmountIn * 0.97, +swapTest.swapAmountIn * 1.03);
     expect(+tokenIn.fromBigNum(postSwapTokenOutBalance.sub(preSwapTokenOutBalance))).to.be.within(+swapTest.swapAmountOut * 0.97, +swapTest.swapAmountOut * 1.03);
+  }
+
+  async function printSwap(owner:Signer, swapTest:SwapTestRun) {
+    await tempusAMM.forwardToAmplification(swapTest.amplification);
+
+    const [tokenIn, tokenOut] = 
+      swapTest.principalIn ? 
+      [tempusAMM.principalShare, tempusAMM.yieldShare] : 
+      [tempusAMM.yieldShare, tempusAMM.principalShare];
+
+    const preSwapTokenOutBalance:BigNumber = await tokenOut.contract.balanceOf(owner.address);
+  
+    await tempusAMM.swapGivenInOrOut(owner, tokenIn.address, tokenOut.address, swapTest.swapAmountIn);
+    
+    // mine a block in case the current test case has automining set to false (otherwise expect functions would fail...)
+    await evmMine();
+
+    const postSwapTokenOutBalance:BigNumber = await tokenOut.contract.balanceOf(owner.address);
+
+    console.log(
+      "Amplification: ", 
+      +(await tempusAMM.getAmplificationParam()).value / +(await tempusAMM.getAmplificationParam()).precision,
+      "\nCapitals rate: ", 
+      tempusAMM.principalShare.fromBigNum(await tempusAMM.principalShare.contract.getPricePerFullShareStored()),
+      " Yields rate: ",
+      tempusAMM.yieldShare.fromBigNum(await tempusAMM.yieldShare.contract.getPricePerFullShareStored()),
+      "\nSwaping ",
+      swapTest.swapAmountIn,
+      swapTest.principalIn ? " capitals " : " yields ", 
+      "for",
+      +tokenIn.fromBigNum(postSwapTokenOutBalance.sub(preSwapTokenOutBalance)),
+      swapTest.principalIn ? " yields" : " capitals"
+    );
   }
 
   it("[getExpectedReturnGivenIn] verifies the expected amount is equivilant to actual amount returned from swapping (TYS to TPS)", async () => {
@@ -360,6 +393,21 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await tempusAMM.startAmplificationUpdate(5, ONE_AMP_UPDATE_TIME);
     await checkSwap(owner, {amplification: 95, swapAmountIn: 5000, swapAmountOut: 48717.68223490758, principalIn: true});
     await checkSwap(owner, {amplification: 5, swapAmountIn: 5000, swapAmountOut: 29656.395311170872, principalIn: true});
+  });
+
+  it.only("print swaps principal in with balances aligned with Interest Rate", async () =>
+  {
+    // creating 300 year pool, so that estimated yield is more valued than current one (in order to not update underlying protocols behaviour)
+    await createPools({yieldEst:0.1, duration:ONE_YEAR*300, amplifyStart:1, amplifyEnd:95, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
+
+    // basic swap with Interest Rate aligned to balances with increasing amplification
+    await printSwap(owner, {amplification: 5, swapAmountIn: 1, swapAmountOut: 9.80, principalIn: true});
+    await printSwap(owner, {amplification: 95, swapAmountIn: 1, swapAmountOut: 9.81, principalIn: true});
+    // swap big percentage of tokens 
+    // let's start updating amp backwards
+    await tempusAMM.startAmplificationUpdate(5, ONE_AMP_UPDATE_TIME);
+    await printSwap(owner, {amplification: 95, swapAmountIn: 5000, swapAmountOut: 48717, principalIn: true});
+    await printSwap(owner, {amplification: 5, swapAmountIn: 5000, swapAmountOut: 29656, principalIn: true});
   });
 
   it("test swaps given yields out with balances aligned with Interest Rate", async () =>
