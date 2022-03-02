@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { addressOf, Signer } from "./utils/ContractBase";
-import { TempusAMM, TempusAMMJoinKind } from "./utils/TempusAMM";
+import { TempusAMMJoinKind } from "./utils/TempusAMM";
 import { expectRevert } from "./utils/Utils";
 import { PoolType, TempusPool } from "./utils/TempusPool";
 import { TempusController } from "./utils/TempusController";
@@ -8,6 +8,7 @@ import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
+import { TempusPoolAMM } from "./utils/TempusPoolAMM";
 
 const SWAP_LIMIT_ERROR_MESSAGE = "BAL#507";
 
@@ -15,7 +16,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 {
   let owner:Signer, user1:Signer, user2:Signer;
   let pool:TempusPool;
-  let amm:TempusAMM;
+  let amm:TempusPoolAMM;
   let controller:TempusController;
 
   beforeEach(async () =>

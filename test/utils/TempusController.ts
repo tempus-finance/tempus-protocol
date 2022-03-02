@@ -144,7 +144,7 @@ export class TempusController extends ContractBase {
     await this.approve(pool, user, tokenAmount, isBackingToken);
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
     return this.connect(user).depositAndProvideLiquidity(
-      pool.amm.address, amount, isBackingToken, { value: toWei(ethValue) }
+      pool.amm.address, pool.tempus.address, amount, isBackingToken, { value: toWei(ethValue) }
     );
   }
 
@@ -171,6 +171,7 @@ export class TempusController extends ContractBase {
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
     return this.connect(user).depositAndFix(
       pool.amm.address,
+      pool.tempus.address,
       amount,
       isBackingToken,
       pool.tempus.asset.toBigNum(minTYSRate),
@@ -202,8 +203,8 @@ export class TempusController extends ContractBase {
     await this.approve(pool, user, tokenAmount, isBackingToken);
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
     return this.connect(user).depositAndLeverage(
-      pool.tempus.address,
       pool.amm.address,
+      pool.tempus.address,
       toWei(leverageMultiplier),
       amount,
       isBackingToken,
@@ -238,6 +239,7 @@ export class TempusController extends ContractBase {
     await t.yieldShare.approve(user, t.address, yields);
     return this.connect(user).exitAmmGivenAmountsOutAndEarlyRedeem(
       amm.address,
+      pool.tempus.address,
       t.principalShare.toBigNum(principals),
       t.yieldShare.toBigNum(yields),
       t.principalShare.toBigNum(principalsLp),
@@ -254,7 +256,7 @@ export class TempusController extends ContractBase {
   ): Promise<Transaction> {
     const amm = pool.amm;
     await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
-    return this.connect(user).exitTempusAMM(amm.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
+    return this.connect(user).exitTempusAMM(amm.address, pool.tempus.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
   }
 
   async exitAmmGivenLpAndRedeem(
@@ -285,6 +287,7 @@ export class TempusController extends ContractBase {
 
     return this.connect(user).exitAmmGivenLpAndRedeem(
       amm.address,
+      pool.tempus.address,
       amm.toBigNum(lpTokens),
       amm.principalShare.toBigNum(principals),
       amm.yieldShare.toBigNum(yields),

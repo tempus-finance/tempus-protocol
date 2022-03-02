@@ -63,7 +63,7 @@ export class Stats extends ContractBase {
   ): Promise<[NumberOrString,NumberOrString,NumberOrString]> {
     const t = pool.tempus;
     const tuple = await this.contract.estimatedDepositAndProvideLiquidity(
-      pool.amm.address, isBackingToken ? t.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
+      pool.amm.address, pool.tempus.address, isBackingToken ? t.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
     );
     return [
       pool.amm.fromBigNum(tuple[0]),
@@ -76,7 +76,7 @@ export class Stats extends ContractBase {
     const t = pool.tempus;
     return t.principalShare.fromBigNum(
       await this.contract.estimatedDepositAndFix(
-        pool.amm.address, isBackingToken ? t.asset.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
+        pool.amm.address, pool.tempus.address, isBackingToken ? t.asset.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
       )
     );
   }
@@ -109,6 +109,7 @@ export class Stats extends ContractBase {
     const p = toBackingToken ? t : t.yieldBearing;
     const r = await this.contract.estimateExitAndRedeem(
       pool.amm.address,
+      pool.tempus.address,
       pool.amm.toBigNum(lpTokens),
       t.principalShare.toBigNum(principals),
       t.yieldShare.toBigNum(yields),
@@ -130,6 +131,7 @@ export class Stats extends ContractBase {
     const p = toBackingToken ? t : t.yieldBearing;
     const r = await this.contract.estimateExitAndRedeemGivenStakedOut(
       pool.amm.address,
+      pool.tempus.address,
       t.principalShare.toBigNum(principals),
       t.yieldShare.toBigNum(yields),
       t.principalShare.toBigNum(principalStaked), // lpPrincipals

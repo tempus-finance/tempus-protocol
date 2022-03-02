@@ -5,13 +5,14 @@ import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { Stats } from "../utils/Stats";
 import { TempusController } from "../utils/TempusController";
-import { TempusAMM, TempusAMMJoinKind } from "../utils/TempusAMM";
+import { TempusAMMJoinKind } from "../utils/TempusAMM";
+import { TempusPoolAMM } from "../utils/TempusPoolAMM";
 
 describeForEachPool("Stats", (testPool:PoolTestFixture) =>
 {
   let owner:Signer, user1:Signer, user2:Signer;
   let pool:TempusPool;
-  let amm:TempusAMM;
+  let amm:TempusPoolAMM;
   let stats:Stats;
   let controller:TempusController;
 

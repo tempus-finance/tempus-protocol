@@ -1,12 +1,14 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { NumberOrString } from "../utils/Decimal";
 import { Signer } from "../utils/ContractBase";
 import { TempusPool } from "../utils/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime } from "../utils/Utils";
-import { TempusAMM, TempusAMMJoinKind } from "../utils/TempusAMM";
+import { TempusAMMJoinKind } from "../utils/TempusAMM";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
+import { TempusPoolAMM } from "../utils/TempusPoolAMM";
+import { PoolShare, ShareKind } from "../utils/PoolShare";
 
 interface SwapTestRun {
   amplification:number;
@@ -37,7 +39,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   const ONE_AMP_UPDATE_TIME:number = ONE_DAY;
 
   let tempusPool:TempusPool;
-  let tempusAMM:TempusAMM;
+  let tempusAMM:TempusPoolAMM;
   
   async function createPools(params:CreateParams): Promise<void> {
     tempusPool = await testFixture.createWithAMM({
@@ -65,10 +67,10 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   async function checkSwap(owner:Signer, swapTest:SwapTestRun) {
     await tempusAMM.forwardToAmplification(swapTest.amplification);
 
-    const [tokenIn, tokenOut] = 
-      swapTest.principalIn ? 
-      [tempusAMM.principalShare, tempusAMM.yieldShare] : 
-      [tempusAMM.yieldShare, tempusAMM.principalShare];
+    const tokenInParameter = swapTest.principalIn ? tempusPool.principalShare : tempusPool.yieldShare;
+    const [tokenIn, tokenOut] = (tokenInParameter.address == tempusAMM.token0.address) 
+      ? [tempusAMM.token0, tempusAMM.token1] 
+      : [tempusAMM.token1, tempusAMM.token0];
 
     const givenOut = (swapTest.givenOut !== undefined && swapTest.givenOut);
 
@@ -91,7 +93,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     const inputAmount = 1;
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = await tempusAMM.getExpectedReturnGivenIn(inputAmount, true); // TYS --> TPS
+    const expectedReturn = await tempusAMM.getExpectedReturnGivenIn(inputAmount, tempusPool.yieldShare); // TYS --> TPS
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
@@ -110,13 +112,13 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     const inputAmount = 1;
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = await tempusAMM.getExpectedReturnGivenIn(inputAmount, true); // TYS --> TPS
+    const expectedReturn = await tempusAMM.getExpectedReturnGivenIn(inputAmount, tempusPool.principalShare); // TPS --> TYS
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
     await evmSetAutomine(false);
     try {
-      await checkSwap(owner, {amplification: 5, swapAmountIn: inputAmount, swapAmountOut: expectedReturn, principalIn: false});
+      await checkSwap(owner, {amplification: 5, swapAmountIn: inputAmount, swapAmountOut: expectedReturn, principalIn: true});
     }
     finally {
       // in case checkSwap fails, we must enable automining so that other tests are not affected
@@ -124,12 +126,21 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     }
   });
 
+  it("[getExpectedReturnGivenIn] check tokenIn param revert", async () => {
+    const testPoolShare = await PoolShare.attach(ShareKind.Principal, ethers.constants.AddressZero, 18);
+    const inputAmount = 1;
+    await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
+    await testFixture.setTimeRelativeToPoolStart(0.5);
+    const expectedReturn = tempusAMM.getExpectedReturnGivenIn(inputAmount, testPoolShare);
+    (await expectRevert(expectedReturn)).to.equal("tokenIn must be token0 or token1");
+  });
+  
   it("[getExpectedTokensOutGivenBPTIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
     const inputAmount = 100;
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = await testFixture.amm.getExpectedTokensOutGivenBPTIn(inputAmount);
+    const expectedReturn = await testFixture.amm.getExpectedPYOutGivenBPTIn(inputAmount);
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
     
@@ -138,8 +149,8 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await testFixture.amm.exitPoolExactLpAmountIn(owner, inputAmount);
     const balancePrincipalsAfter = +await testFixture.principals.balanceOf(owner);
     const balanceYieldsAfter = +await testFixture.yields.balanceOf(owner);
-    expect(balancePrincipalsBefore + expectedReturn.principals).to.be.within(0.999999 * balancePrincipalsAfter, 1.0000001 * balancePrincipalsAfter);
-    expect(balanceYieldsBefore + expectedReturn.yields).to.be.within(0.999999 * balanceYieldsAfter, 1.0000001 * balanceYieldsAfter);
+    expect(balancePrincipalsBefore + expectedReturn.principalsOut).to.be.within(0.999999 * balancePrincipalsAfter, 1.0000001 * balancePrincipalsAfter);
+    expect(balanceYieldsBefore + expectedReturn.yieldsOut).to.be.within(0.999999 * balanceYieldsAfter, 1.0000001 * balanceYieldsAfter);
   });
 
   it("[getExpectedLPTokensForTokensIn] verifies the expected amount is equivilant to actual join to TempusAMM", async () => {

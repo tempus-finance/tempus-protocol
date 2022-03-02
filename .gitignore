@@ -12,3 +12,4 @@ typechain/*
 mythxOutput.json
 deposit.local.config.ts
 .history
+.DS_Store

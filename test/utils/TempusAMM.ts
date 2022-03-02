@@ -4,10 +4,10 @@ import { NumberOrString, toWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { MockProvider } from "@ethereum-waffle/provider";
-import { deployMockContract } from "@ethereum-waffle/mock-contract";
+import { deployMockContract, MockContract } from "@ethereum-waffle/mock-contract";
 import { blockTimestamp, setEvmTime } from "./Utils";
-import { TempusPool } from "./TempusPool";
 import { TempusController } from "./TempusController";
+import { PoolShare } from "./PoolShare";
 
 const WETH_ARTIFACTS = require("../../artifacts/@balancer-labs/v2-solidity-utils/contracts/misc/IWETH.sol/IWETH");
 
@@ -34,33 +34,40 @@ export enum TempusAMMJoinKind {
 
 export class TempusAMM extends ContractBase {
   vault: Contract;
-  principalShare: ERC20;
-  yieldShare: ERC20;
-  tempusPool: TempusPool;
+  token0: ERC20;
+  token1: ERC20;
   startAmp: number;
   targetAmp: number;
   startedAmpUpdateTime: number;
   oneAmpUpdateTime: number;
 
-  constructor(tempusAmmPool: Contract, vault: Contract, tempusPool: TempusPool) {
+  constructor(tempusAmmPool: Contract, vault: Contract, token0: PoolShare, token1: PoolShare) {
     super("TempusAMM", 18, tempusAmmPool);
     this.vault = vault;
-    this.tempusPool = tempusPool;
-    this.principalShare = tempusPool.principalShare;
-    this.yieldShare = tempusPool.yieldShare;
+    this.token0 = parseInt(token0.address) > parseInt(token1.address) ? token1 : token0;
+    this.token1 = parseInt(token0.address) > parseInt(token1.address) ? token0 : token1;
+  }
+
+
+  static async createMock(): Promise<MockContract> {
+    const [sender] = new MockProvider().getWallets();
+    const mockedWETH = await deployMockContract(sender, WETH_ARTIFACTS.abi);
+    return mockedWETH;
   }
 
   static async create(
     owner: Signer,
     controller: TempusController,
+    token0: PoolShare,
+    token1: PoolShare,
     rawAmplificationStart: number,
     rawAmplificationEnd: number,
-    swapFeePercentage: number, 
-    tempusPool: TempusPool
+    amplificationEndTime: number,
+    swapFeePercentage: number,
   ): Promise<TempusAMM> {
-    const [sender] = new MockProvider().getWallets();
-    const mockedWETH = await deployMockContract(sender, WETH_ARTIFACTS.abi);
 
+    const mockedWETH = await TempusAMM.createMock();
+    
     const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
     const vault = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Vault.sol:Vault", authorizer.address, mockedWETH.address, 3 * MONTH, MONTH);
 
@@ -69,10 +76,11 @@ export class TempusAMM extends ContractBase {
       owner,
       vault.address, 
       "Tempus LP token", 
-      "LP", 
-      tempusPool.address,
+      "LP",
+      [token0.address, token1.address],
       +rawAmplificationStart * AMP_PRECISION,
       +rawAmplificationEnd * AMP_PRECISION,
+      amplificationEndTime,
       toWei(swapFeePercentage),
       3 * MONTH, 
       MONTH, 
@@ -80,7 +88,7 @@ export class TempusAMM extends ContractBase {
     );
 
     await controller.register(owner, tempusAMM.address);
-    return new TempusAMM(tempusAMM, vault, tempusPool);
+    return new TempusAMM(tempusAMM, vault, token0, token1);
   }
 
   async getLastInvariant(): Promise<{invariant: number, amplification: number}> {
@@ -102,19 +110,19 @@ export class TempusAMM extends ContractBase {
     return this.fromBigNum(await this.contract.getRate());
   }
 
-  async getExpectedReturnGivenIn(inAmount: NumberOrString, yieldShareIn: boolean) : Promise<NumberOrString> {
-    return this.principalShare.fromBigNum(await this.contract.getExpectedReturnGivenIn(this.principalShare.toBigNum(inAmount), yieldShareIn));
+  async getExpectedReturnGivenIn(inAmount: NumberOrString, tokenIn: PoolShare) : Promise<NumberOrString> {
+    return tokenIn.fromBigNum(await this.contract.getExpectedReturnGivenIn(tokenIn.toBigNum(inAmount), tokenIn.address));
   }
 
-  async getExpectedTokensOutGivenBPTIn(inAmount: NumberOrString): Promise<{principals:number, yields:number}> {
+  async getExpectedTokensOutGivenBPTIn(inAmount: NumberOrString): Promise<{token0Out:number, token1Out:number}> {
     const p = await this.contract.getExpectedTokensOutGivenBPTIn(this.toBigNum(inAmount));
-    return {principals: +this.principalShare.fromBigNum(p.principals), yields: +this.yieldShare.fromBigNum(p.yields)};
+    return {token0Out: +this.token0.fromBigNum(p.token0Out), token1Out: +this.token1.fromBigNum(p.token1Out)};
   }
 
-  async getExpectedLPTokensForTokensIn(principalsIn:NumberOrString, yieldsIn:NumberOrString): Promise<NumberOrString> {
+  async getExpectedLPTokensForTokensIn(token0AmountIn:NumberOrString, token1AmountIn:NumberOrString): Promise<NumberOrString> {
     const assets = [
-      { address: this.principalShare.address, amount: this.principalShare.toBigNum(principalsIn) },
-      { address: this.yieldShare.address, amount: this.yieldShare.toBigNum(yieldsIn) }
+      { address: this.token0.address, amount: this.token0.toBigNum(token0AmountIn) },
+      { address: this.token1.address, amount: this.token1.toBigNum(token1AmountIn) }
     ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
     const amountsIn = assets.map(({ amount }) => amount);
 
@@ -123,25 +131,25 @@ export class TempusAMM extends ContractBase {
 
   /**
    * @dev queries exiting TempusAMM with exact tokens out
-   * @param principalsStaked amount of Principals to withdraw
-   * @param yieldsStaked amount of Yields to withdraw
+   * @param token0Out amount of Token0 to withdraw
+   * @param token1Out amount of Token1 to withdraw
    * @return lpTokens Amount of Lp tokens that user would redeem
    */
-  async getExpectedBPTInGivenTokensOut(principalsStaked:NumberOrString, yieldsStaked:NumberOrString): Promise<NumberOrString> {
+  async getExpectedBPTInGivenTokensOut(token0Out:NumberOrString, token1Out:NumberOrString): Promise<NumberOrString> {
     return this.fromBigNum(await this.contract.getExpectedBPTInGivenTokensOut(
-      this.principalShare.toBigNum(principalsStaked),
-      this.yieldShare.toBigNum(yieldsStaked)
+      this.token0.toBigNum(token0Out),
+      this.token1.toBigNum(token1Out)
     ));
   }
 
-  async provideLiquidity(from: Signer, principalShareBalance: Number, yieldShareBalance: Number, joinKind: TempusAMMJoinKind) {
-    await this.principalShare.approve(from, this.vault.address, principalShareBalance);
-    await this.yieldShare.approve(from, this.vault.address, yieldShareBalance);
+  async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number, joinKind: TempusAMMJoinKind) {
+    await this.token0.approve(from, this.vault.address, token0Balance);
+    await this.token1.approve(from, this.vault.address, token1Balance);
     
     const poolId = await this.contract.getPoolId();
     const assets = [
-      { address: this.principalShare.address, amount: this.principalShare.toBigNum(principalShareBalance) },
-      { address: this.yieldShare.address, amount: this.yieldShare.toBigNum(yieldShareBalance) }
+      { address: this.token0.address, amount: this.token0.toBigNum(token0Balance) },
+      { address: this.token1.address, amount: this.token1.toBigNum(token1Balance) }
     ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
     
     const initialBalances = assets.map(({ amount }) => amount);
@@ -162,8 +170,8 @@ export class TempusAMM extends ContractBase {
     const poolId = await this.contract.getPoolId();
     
     const assets = [
-      { address: this.principalShare.address },
-      { address: this.yieldShare.address }
+      { address: this.token0.address },
+      { address: this.token1.address }
     ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
 
     const exitUserData = ethers.utils.defaultAbiCoder.encode(
@@ -185,8 +193,8 @@ export class TempusAMM extends ContractBase {
     const poolId = await this.contract.getPoolId();
     
     const assets = [
-      { address: this.principalShare.address, amountOut: this.principalShare.toBigNum(amountsOut[0]) },
-      { address: this.yieldShare.address, amountOut: this.principalShare.toBigNum(amountsOut[1]) }
+      { address: this.token0.address, amountOut: this.token0.toBigNum(amountsOut[0]) },
+      { address: this.token1.address, amountOut: this.token1.toBigNum(amountsOut[1]) }
     ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
 
     const exitUserData = ethers.utils.defaultAbiCoder.encode(
@@ -205,8 +213,8 @@ export class TempusAMM extends ContractBase {
   }
 
   async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {    
-    await this.yieldShare.connect(from).approve(this.vault.address, this.yieldShare.toBigNum(await this.yieldShare.balanceOf(from)));
-    await this.principalShare.connect(from).approve(this.vault.address, this.principalShare.toBigNum(await this.principalShare.balanceOf(from)));
+    await this.token1.connect(from).approve(this.vault.address, this.token1.toBigNum(await this.token1.balanceOf(from)));
+    await this.token0.connect(from).approve(this.vault.address, this.token0.toBigNum(await this.token0.balanceOf(from)));
     const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;
     const poolId = await this.contract.getPoolId();    
 
@@ -215,7 +223,7 @@ export class TempusAMM extends ContractBase {
       kind: SWAP_KIND,
       assetIn: assetIn,
       assetOut: assetOut,
-      amount: this.principalShare.toBigNum(amount),
+      amount: this.token0.toBigNum(amount),
       userData: 0x0
     };
   
@@ -225,7 +233,7 @@ export class TempusAMM extends ContractBase {
       recipient: from.address,
       toInternalBalance: false
     };
-    const minimumReturn = (givenOut !== undefined && givenOut) ? this.principalShare.toBigNum(1000000000) : 1;
+    const minimumReturn = (givenOut !== undefined && givenOut) ? this.token0.toBigNum(1000000000) : 1;
     const deadline = await blockTimestamp() * 2; // not anytime soon 
     await this.vault.connect(from).swap(singleSwap, fundManagement, minimumReturn, deadline);
   }

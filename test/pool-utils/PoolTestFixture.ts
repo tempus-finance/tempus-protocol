@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber, Transaction } from "ethers";
+import { Transaction } from "ethers";
 import { deployments } from "hardhat";
 import { ContractBase, Signer, SignerOrAddress } from "../utils/ContractBase";
 import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../utils/TempusPool";
@@ -9,7 +9,7 @@ import { IERC20 } from "../utils/IERC20";
 import { NumberOrString, formatDecimal } from "../utils/Decimal";
 import { getRevertMessage } from "../utils/Utils";
 import { TempusController } from "../utils/TempusController";
-import { TempusAMM } from "../utils/TempusAMM";
+import { TempusPoolAMM } from "../utils/TempusPoolAMM";
 import { PoolShare } from "../utils/PoolShare";
 import { strict as assert } from 'assert';
 
@@ -133,7 +133,7 @@ export abstract class PoolTestFixture {
   // initialized by initPool()
   tempus:TempusPool;
   controller:TempusController;
-  amm:TempusAMM;
+  amm:TempusPoolAMM;
   signers:Signer[];
 
   // common state reset when a fixture is instantiated
@@ -473,7 +473,9 @@ export abstract class PoolTestFixture {
         );
 
         // new AMM instance and register the AMM with the controller
-        const amm = await TempusAMM.create(owner, controller, p.ammAmplifyStart, p.ammAmplifyEnd, p.ammSwapFee, tempus);
+        const amm = await TempusPoolAMM.create(owner, controller, tempus.principalShare, tempus.yieldShare, 
+          p.ammAmplifyStart, p.ammAmplifyEnd, maturityTime, p.ammSwapFee
+        );
 
         return {
           signers: { owner:owner, user:user, user2:user2 },
