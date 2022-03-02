@@ -24,7 +24,6 @@ import "@balancer-labs/v2-pool-utils/contracts/BaseMinimalSwapInfoPool.sol";
 import "@balancer-labs/v2-pool-stable/contracts/StableMath.sol";
 
 import "./interfaces/IRateProvider.sol";
-import "./../ITempusPool.sol";
 import "./../token/IPoolShare.sol";
 import "./TempusAMMUserDataHelpers.sol";
 import "./VecMath.sol";
@@ -64,8 +63,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     event AmpUpdateStarted(uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime);
     event AmpUpdateStopped(uint256 currentValue);
 
-    IPoolShare internal immutable _token0;
-    IPoolShare internal immutable _token1;
+    IPoolShare public immutable token0;
+    IPoolShare public immutable token1;
 
     // All token balances are normalized to behave as if the token had 18 decimals. We assume a token's decimals will
     // not change throughout its lifetime, and store the corresponding scaling factor for each at construction time.
@@ -83,8 +82,6 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     // _lastInvariant.
     uint256 internal _lastInvariantAmp;
 
-    ITempusPool public immutable tempusPool;
-
     enum JoinKind {
         INIT,
         EXACT_TOKENS_IN_FOR_BPT_OUT
@@ -98,9 +95,10 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         IVault vault,
         string memory name,
         string memory symbol,
-        ITempusPool pool,
+        IPoolShare[2] memory tokens,
         uint256 amplificationStartValue,
         uint256 amplificationEndValue,
+        uint256 amplificationEndTime,
         uint256 swapFeePercentage,
         uint256 pauseWindowDuration,
         uint256 bufferPeriodDuration,
@@ -114,7 +112,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
             IVault.PoolSpecialization.TWO_TOKEN,
             name,
             symbol,
-            _mapTempusSharesToIERC20(pool),
+            _mapTempusSharesToIERC20(tokens[0], tokens[1]),
             new address[](_TOTAL_TOKENS),
             swapFeePercentage,
             pauseWindowDuration,
@@ -127,31 +125,26 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _require(amplificationStartValue >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
         _require(amplificationStartValue <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
 
-        IPoolShare yieldShare = pool.yieldShare();
-        IPoolShare principalShare = pool.principalShare();
-
         require(
-            ERC20(address(principalShare)).decimals() == ERC20(address(yieldShare)).decimals(),
-            "Principals and Yields need same precision."
+            ERC20(address(tokens[0])).decimals() == ERC20(address(tokens[1])).decimals(),
+            "tokens[0] and tokens[1] need same precision."
         );
-        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(principalShare)).decimals();
+        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(tokens[0])).decimals();
 
         // Immutable variables cannot be initialized inside an if statement, so we must do conditional assignments
-        (IPoolShare token0, IPoolShare token1) = yieldShare < principalShare
-            ? (yieldShare, principalShare)
-            : (principalShare, yieldShare);
-        (_token0, _token1) = (token0, token1);
+        (IPoolShare token0Local, IPoolShare token1Local) = tokens[0] > tokens[1]
+            ? (tokens[1], tokens[0])
+            : (tokens[0], tokens[1]);
+        (token0, token1) = (token0Local, token1Local);
 
-        tempusPool = pool;
-
-        _scalingFactor0 = _computeScalingFactor(IERC20(address(token0)));
-        _scalingFactor1 = _computeScalingFactor(IERC20(address(token1)));
+        _scalingFactor0 = _computeScalingFactor(IERC20(address(token0Local)));
+        _scalingFactor1 = _computeScalingFactor(IERC20(address(token1Local)));
 
         _setAmplificationData(amplificationStartValue);
 
         if (amplificationStartValue != amplificationEndValue) {
             _require(amplificationStartValue < amplificationEndValue, Errors.MIN_AMP);
-            _startAmplificationParameterUpdate(amplificationEndValue, pool.maturityTime());
+            _startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
 
@@ -160,13 +153,13 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         lastInvariantAmp = _lastInvariantAmp;
     }
 
-    function getExpectedReturnGivenIn(uint256 amount, bool yieldShareIn) public view returns (uint256) {
+    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view returns (uint256) {
+        require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
+
         (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        (IPoolShare tokenIn, IPoolShare tokenOut) = yieldShareIn
-            ? (tempusPool.yieldShare(), tempusPool.principalShare())
-            : (tempusPool.principalShare(), tempusPool.yieldShare());
-        (uint256 indexIn, uint256 indexOut) = address(tokenIn) == address(_token0) ? (0, 1) : (1, 0);
+        IPoolShare tokenOut = (tokenIn == token0) ? token1 : token0;
+        (uint256 indexIn, uint256 indexOut) = tokenIn == token0 ? (0, 1) : (1, 0);
 
         amount = _subtractSwapFeeAmount(amount);
         balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
@@ -182,9 +175,9 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         IPoolShare shareIn = IPoolShare(tokenIn);
         (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        require(shareIn == _token0 || shareIn == _token1, "invalid tokenIn");
-        IPoolShare tokenOut = (shareIn == _token0) ? _token1 : _token0;
-        (uint256 indexIn, uint256 indexOut) = (shareIn == _token0) ? (0, 1) : (1, 0);
+        require(shareIn == token0 || shareIn == token1, "invalid tokenIn");
+        IPoolShare tokenOut = (shareIn == token0) ? token1 : token0;
+        (uint256 indexIn, uint256 indexOut) = (shareIn == token0) ? (0, 1) : (1, 0);
 
         balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
         uint256 rateAdjustedAmountOut = (amountOut * tokenOut.getPricePerFullShareStored()) / _TEMPUS_SHARE_PRECISION;
@@ -197,31 +190,33 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     function getSwapAmountToEndWithEqualShares(
-        uint256 principals,
-        uint256 yields,
+        uint256 token0Amount,
+        uint256 token1Amount,
         uint256 threshold
-    ) external view returns (uint256 amountIn, bool yieldsIn) {
+    ) external view returns (uint256 amountIn, IPoolShare tokenIn) {
         uint256 difference;
-        (difference, yieldsIn) = (principals > yields) ? (principals - yields, false) : (yields - principals, true);
+        (difference, tokenIn) = (token0Amount > token1Amount)
+            ? (token0Amount - token1Amount, token0)
+            : (token1Amount - token0Amount, token1);
 
         if (difference > threshold) {
-            uint256 principalsRate = tempusPool.principalShare().getPricePerFullShareStored();
-            uint256 yieldsRate = tempusPool.yieldShare().getPricePerFullShareStored();
+            uint256 token0AmountRate = token0.getPricePerFullShareStored();
+            uint256 token1AmountRate = token1.getPricePerFullShareStored();
 
-            uint256 rate = yieldsIn
-                ? (principalsRate * _TEMPUS_SHARE_PRECISION) / yieldsRate
-                : (yieldsRate * _TEMPUS_SHARE_PRECISION) / principalsRate;
+            uint256 rate = (tokenIn == token1)
+                ? (token0AmountRate * _TEMPUS_SHARE_PRECISION) / token1AmountRate
+                : (token1AmountRate * _TEMPUS_SHARE_PRECISION) / token0AmountRate;
             for (uint256 i = 0; i < 32; i++) {
                 // if we have accurate rate this should hold
                 amountIn = (difference * _TEMPUS_SHARE_PRECISION) / (rate + _TEMPUS_SHARE_PRECISION);
-                uint256 amountOut = getExpectedReturnGivenIn(amountIn, yieldsIn);
-                uint256 newPrincipals = yieldsIn ? (principals + amountOut) : (principals - amountIn);
-                uint256 newYields = yieldsIn ? (yields - amountIn) : (yields + amountOut);
-                uint256 newDifference = (newPrincipals > newYields)
-                    ? (newPrincipals - newYields)
-                    : (newYields - newPrincipals);
+                uint256 amountOut = getExpectedReturnGivenIn(amountIn, tokenIn);
+                uint256 newToken0Amount = (tokenIn == token1) ? (token0Amount + amountOut) : (token0Amount - amountIn);
+                uint256 newToken1Amount = (tokenIn == token1) ? (token1Amount - amountIn) : (token1Amount + amountOut);
+                uint256 newDifference = (newToken0Amount > newToken1Amount)
+                    ? (newToken0Amount - newToken1Amount)
+                    : (newToken1Amount - newToken0Amount);
                 if (newDifference < threshold) {
-                    return (amountIn, yieldsIn);
+                    return (amountIn, tokenIn);
                 } else {
                     rate = (amountOut * _TEMPUS_SHARE_PRECISION) / amountIn;
                 }
@@ -231,16 +226,14 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     // NOTE: Return value in AMM decimals precision (1e18)
-    function getExpectedBPTInGivenTokensOut(uint256 principalsStaked, uint256 yieldsStaked)
+    function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
         view
         returns (uint256 lpTokens)
     {
-        (IERC20[] memory ammTokens, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
+        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         uint256[] memory amountsOut = new uint256[](2);
-        (amountsOut[0], amountsOut[1]) = (address(ammTokens[0]) == address(tempusPool.principalShare()))
-            ? (principalsStaked, yieldsStaked)
-            : (yieldsStaked, principalsStaked);
+        (amountsOut[0], amountsOut[1]) = (token0Out, token1Out);
 
         uint256[] memory scalingFactors = _scalingFactors();
         _upscaleArray(amountsOut, scalingFactors);
@@ -268,16 +261,14 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     function getExpectedTokensOutGivenBPTIn(uint256 bptAmountIn)
         external
         view
-        returns (uint256 principals, uint256 yields)
+        returns (uint256 token0Out, uint256 token1Out)
     {
         // We don't need to scale balances down here
         // as calculation for amounts out is based on btpAmountIn / totalSupply() ratio
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
         (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
         uint256[] memory amountsOut = StableMath._calcTokensOutGivenExactBptIn(balances, bptAmountIn, totalSupply());
-        (principals, yields) = (address(_token0) == address(tempusPool.principalShare()))
-            ? (amountsOut[0], amountsOut[1])
-            : (amountsOut[1], amountsOut[0]);
+        return (amountsOut[0], amountsOut[1]);
     }
 
     function getExpectedLPTokensForTokensIn(uint256[] memory amountsIn) external view returns (uint256) {
@@ -368,7 +359,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     {
         balances = new uint256[](2);
 
-        if (address(_token0) == address(swapRequest.tokenIn)) {
+        if (address(token0) == address(swapRequest.tokenIn)) {
             indexIn = 0;
             indexOut = 1;
 
@@ -465,7 +456,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         uint256[] memory scalingFactors,
         uint256[] memory tokenRates,
         bytes memory userData
-    ) private returns (uint256 bptAmountOut, uint256[] memory amountsIn) {
+    ) private view returns (uint256 bptAmountOut, uint256[] memory amountsIn) {
         JoinKind kind = userData.joinKind();
 
         if (kind == JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
@@ -558,7 +549,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         uint256[] memory scalingFactors,
         uint256[] memory tokenRates,
         bytes memory userData
-    ) private returns (uint256, uint256[] memory) {
+    ) private view returns (uint256, uint256[] memory) {
         ExitKind kind = userData.exitKind();
 
         if (kind == ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
@@ -690,17 +681,17 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     /// @return rates Array of token rates
     function _getTokenRates() private returns (uint256[] memory rates) {
         rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = _token0.getPricePerFullShare();
+        rates[0] = token0.getPricePerFullShare();
         // We already did updateInterestRate, so we can use stored values
-        rates[1] = _token1.getPricePerFullShareStored();
+        rates[1] = token1.getPricePerFullShareStored();
     }
 
     /// @dev Creates 2 element array of token rates(pricePerFullShareStored)
     /// @return rates Array of stored token rates
     function _getTokenRatesStored() private view returns (uint256[] memory rates) {
         rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = _token0.getPricePerFullShareStored();
-        rates[1] = _token1.getPricePerFullShareStored();
+        rates[0] = token0.getPricePerFullShareStored();
+        rates[1] = token1.getPricePerFullShareStored();
     }
 
     function getRate() external view override returns (uint256) {
@@ -873,20 +864,22 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     }
 
     function _isToken0(IERC20 token) private view returns (bool) {
-        return address(token) == address(_token0);
+        return address(token) == address(token0);
     }
 
     function _isToken1(IERC20 token) private view returns (bool) {
-        return address(token) == address(_token1);
+        return address(token) == address(token1);
     }
 
-    function _mapTempusSharesToIERC20(ITempusPool pool) private view returns (IERC20[] memory) {
+    function _mapTempusSharesToIERC20(IPoolShare token0Param, IPoolShare token1Param)
+        private
+        pure
+        returns (IERC20[] memory)
+    {
         IERC20[] memory tokens = new IERC20[](_TOTAL_TOKENS);
-        IPoolShare yieldShare = pool.yieldShare();
-        IPoolShare principalShare = pool.principalShare();
-        (tokens[0], tokens[1]) = (yieldShare < principalShare)
-            ? (IERC20(address(yieldShare)), IERC20(address(principalShare)))
-            : (IERC20(address(principalShare)), IERC20(address(yieldShare)));
+        (tokens[0], tokens[1]) = (token0Param > token1Param)
+            ? (IERC20(address(token1Param)), IERC20(address(token0Param)))
+            : (IERC20(address(token0Param)), IERC20(address(token1Param)));
         return tokens;
     }
 }
