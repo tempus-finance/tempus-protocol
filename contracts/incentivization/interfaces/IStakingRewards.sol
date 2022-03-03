@@ -1,5 +1,7 @@
 pragma solidity >=0.8.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 // https://docs.synthetix.io/contracts/source/interfaces/istakingrewards
 interface IStakingRewards {
     // Views
@@ -16,7 +18,7 @@ interface IStakingRewards {
 
     function rewardsDistribution() external view returns (address);
 
-    function rewardsToken() external view returns (address);
+    function rewardsToken() external view returns (IERC20);
 
     function totalSupply() external view returns (uint256);
 
