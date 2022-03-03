@@ -10,10 +10,12 @@ import "../token/PoolShare.sol";
 import "../amm/interfaces/ITempusAMM.sol";
 import "../utils/AMMBalancesHelper.sol";
 import "../utils/Versioned.sol";
+import "../utils/TempusPoolAMMUtils.sol";
 
 contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     using Fixed256xVar for uint256;
     using AMMBalancesHelper for uint256[];
+    using TempusPoolAMMUtils for ITempusAMM;
 
     constructor() Versioned(2, 0, 0) {}
 
@@ -39,7 +41,8 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     }
 
     /// @param pool The TempusPool to fetch its TVL (total value locked)
-    /// @param chainlinkAggregatorNode the address of a Chainlink price aggregator (e.g. -the address of the 'eth-usd' pair)
+    /// @param chainlinkAggregatorNode the address of a Chainlink price aggregator
+    ///                                (e.g. -the address of the 'eth-usd' pair)
     /// @return total value locked of a TempusPool (denominated in the rate of the provided token pair)
     function totalValueLockedAtGivenRate(ITempusPool pool, address chainlinkAggregatorNode)
         external
@@ -95,6 +98,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
 
     /// Gets the estimated amount of Shares and Lp token amounts
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param pool Tempus Pool instance
     /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
     /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
     /// @return lpTokens Ampunt of LP tokens that user could receive
@@ -102,6 +106,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     /// @return yields Amount of Yields that user could receive in this action
     function estimatedDepositAndProvideLiquidity(
         ITempusAMM tempusAMM,
+        ITempusPool pool,
         uint256 amount,
         bool isBackingToken
     )
@@ -113,7 +118,6 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
             uint256 yields
         )
     {
-        ITempusPool pool = tempusAMM.tempusPool();
         uint256 shares = estimatedMintedShares(pool, amount, isBackingToken);
 
         (IERC20[] memory ammTokens, uint256[] memory ammBalances, ) = tempusAMM.getVault().getPoolTokens(
@@ -129,21 +133,49 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
 
     /// Gets the estimated amount of Shares and Lp token amounts
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param pool Tempus Pool instance
     /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
     /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
     /// @return principals Amount of Principals that user could receive in this action
     function estimatedDepositAndFix(
         ITempusAMM tempusAMM,
+        ITempusPool pool,
         uint256 amount,
         bool isBackingToken
     ) public view returns (uint256 principals) {
-        principals = estimatedMintedShares(tempusAMM.tempusPool(), amount, isBackingToken);
-        principals += tempusAMM.getExpectedReturnGivenIn(principals, true);
+        principals = estimatedMintedShares(pool, amount, isBackingToken);
+        principals += tempusAMM.getExpectedReturnGivenIn(principals, pool.yieldShare());
+    }
+
+    /// Gets the estimated amount of Shares and Lp token amounts
+    /// @param tempusPool Tempus Pool to which user deposits backing or yield bearing tokens
+    /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
+    /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
+    /// @return principals Amount of Principals that user could receive in this action
+    function estimatedDepositAndLeverage(
+        ITempusPool tempusPool,
+        ITempusAMM tempusAMM,
+        uint256 leverage,
+        uint256 amount,
+        bool isBackingToken
+    ) public view returns (uint256 principals, uint256 yields) {
+        require(leverage > 1e18, "invalid leverage");
+        uint256 mintedShares = estimatedMintedShares(tempusPool, amount, isBackingToken);
+        yields = mintedShares.mulfV(leverage, 1e18);
+
+        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(
+            yields - mintedShares,
+            address(tempusPool.principalShare())
+        );
+        assert(mintedShares > expectedIn);
+        principals = mintedShares - expectedIn;
     }
 
     /// @dev Get estimated amount of Backing or Yield bearing tokens for exiting pool and redeeming shares
     /// @notice This queries at certain block, actual results can differ as underlying pool state can change
     /// @param tempusAMM Tempus AMM to exit LP tokens from
+    /// @param pool Tempus Pool instance
     /// @param lpTokens Amount of LP tokens to use to query exit
     /// @param principals Amount of principals to query redeem
     /// @param yields Amount of yields to query redeem
@@ -156,6 +188,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     /// @return yieldsRate Rate on which Yields were swapped to end with equal shares
     function estimateExitAndRedeem(
         ITempusAMM tempusAMM,
+        ITempusPool pool,
         uint256 lpTokens,
         uint256 principals,
         uint256 yields,
@@ -173,30 +206,31 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         if (lpTokens > 0) {
-            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedTokensOutGivenBPTIn(lpTokens);
+            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedPYOutGivenBPTIn(pool, lpTokens);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
 
         // before maturity we need to have equal amount of shares to redeem
-        if (!tempusAMM.tempusPool().matured()) {
-            (uint256 amountIn, bool yieldsIn) = tempusAMM.getSwapAmountToEndWithEqualShares(
-                principals,
-                yields,
-                threshold
-            );
-            uint256 amountOut = (amountIn != 0) ? tempusAMM.getExpectedReturnGivenIn(amountIn, yieldsIn) : 0;
+        if (!pool.matured()) {
+            // TODO: Out of stack error, cannot use utility functions
+            (uint256 amountIn, IPoolShare tokenIn) = (pool.principalShare() == tempusAMM.token0())
+                ? tempusAMM.getSwapAmountToEndWithEqualShares(principals, yields, threshold)
+                : tempusAMM.getSwapAmountToEndWithEqualShares(yields, principals, threshold);
+
+            uint256 amountOut = (amountIn != 0) ? tempusAMM.getExpectedReturnGivenIn(amountIn, tokenIn) : 0;
+
             if (amountIn > 0) {
-                if (yieldsIn) {
+                if (tokenIn == pool.yieldShare()) {
                     // we need to swap some yields as we have more yields
                     principals += amountOut;
                     yields -= amountIn;
-                    yieldsRate = amountOut.divfV(amountIn, tempusAMM.tempusPool().backingTokenONE());
+                    yieldsRate = amountOut.divfV(amountIn, pool.backingTokenONE());
                 } else {
                     // we need to swap some principals as we have more principals
                     principals -= amountIn;
                     yields += amountOut;
-                    principalsRate = amountOut.divfV(amountIn, tempusAMM.tempusPool().backingTokenONE());
+                    principalsRate = amountOut.divfV(amountIn, pool.backingTokenONE());
                 }
             }
 
@@ -208,13 +242,14 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
             }
         }
 
-        tokenAmount = estimatedRedeem(tempusAMM.tempusPool(), principals, yields, toBackingToken);
+        tokenAmount = estimatedRedeem(pool, principals, yields, toBackingToken);
     }
 
     /// @dev Get estimated amount of Backing or Yield bearing tokens for exiting pool and redeeming shares,
     ///      including previously staked Principals and Yields
     /// @notice This queries at certain block, actual results can differ as underlying pool state can change
     /// @param tempusAMM Tempus AMM to exit LP tokens from
+    /// @param pool Tempus Pool instance
     /// @param principals Amount of principals to query redeem
     /// @param yields Amount of yields to query redeem
     /// @param principalsStaked Amount of staked principals to query redeem
@@ -226,20 +261,21 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     ///                          in AMM decimal precision (1e18)
     function estimateExitAndRedeemGivenStakedOut(
         ITempusAMM tempusAMM,
+        ITempusPool pool,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
         uint256 yieldsStaked,
         bool toBackingToken
     ) public view returns (uint256 tokenAmount, uint256 lpTokensRedeemed) {
-        require(!tempusAMM.tempusPool().matured(), "Pool already finalized!");
+        require(!pool.matured(), "Pool already finalized!");
 
         if (principalsStaked > 0 || yieldsStaked > 0) {
-            lpTokensRedeemed = tempusAMM.getExpectedBPTInGivenTokensOut(principalsStaked, yieldsStaked);
+            lpTokensRedeemed = tempusAMM.getExpectedPYBPTInGivenTokensOut(pool, principalsStaked, yieldsStaked);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
 
-        tokenAmount = estimatedRedeem(tempusAMM.tempusPool(), principals, yields, toBackingToken);
+        tokenAmount = estimatedRedeem(pool, principals, yields, toBackingToken);
     }
 }

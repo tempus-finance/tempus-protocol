@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { addressOf, Signer } from "./utils/ContractBase";
-import { TempusAMM, TempusAMMJoinKind } from "./utils/TempusAMM";
+import { TempusAMMJoinKind } from "./utils/TempusAMM";
 import { expectRevert } from "./utils/Utils";
 import { PoolType, TempusPool } from "./utils/TempusPool";
 import { TempusController } from "./utils/TempusController";
@@ -8,6 +8,7 @@ import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
+import { TempusPoolAMM } from "./utils/TempusPoolAMM";
 
 const SWAP_LIMIT_ERROR_MESSAGE = "BAL#507";
 
@@ -15,7 +16,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 {
   let owner:Signer, user1:Signer, user2:Signer;
   let pool:TempusPool;
-  let amm:TempusAMM;
+  let amm:TempusPoolAMM;
   let controller:TempusController;
 
   beforeEach(async () =>
@@ -168,6 +169,48 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
       expect(+await pool.principalShare.balanceOf(user2)).to.be.greaterThan(0, "Some Principals should be returned to user");
       expect(+await pool.yieldShare.balanceOf(user2)).to.be.equal(0, "ALL Yields should be deposited to AMM");
+    });
+  });
+
+  describe("depositAndLeverage", () =>
+  {
+    it("verifies tx reverts if provided minimum Capitals rate requirement is not met", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/200, /*yields*/2000); // 10% rate
+      const invalidAction = controller.depositAndLeverage(
+        testPool,
+        user2,
+        5.456789,   // ampunt
+        false,      // isBackingToken
+        2,          // leverageMultiplier
+        20          // minCapitalsRate
+      ); 
+
+      (await expectRevert(invalidAction)).to.equal(SWAP_LIMIT_ERROR_MESSAGE);
+    });
+
+    it("verifies depositing YBT succeeds", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/200, /*yields*/2000); // 10% rate
+      const minCapitalsRate = "9.7";
+      await controller.depositAndLeverage(testPool, user2, 5.456789, false, 2, minCapitalsRate); 
+      await expectValidState();
+
+      expect(+await pool.principalShare.balanceOf(user2)).to.be.lessThan(5.456789, "Some Principals are swapped");
+      expect(+await pool.yieldShare.balanceOf(user2)).to.be.greaterThan(10, "Yields are leveraged");
+    });
+
+    it("verifies depositing BT succeeds", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/20, /*yields*/200); // 10% rate
+      const minCapitalsRate = "9.7";
+      const amount = 5.456789;
+      const ethAmount = testPool.type == PoolType.Lido ? amount : 0;
+      await controller.depositAndLeverage(testPool, user2, 5.456789, true, 2, minCapitalsRate, ethAmount); 
+      await expectValidState();
+
+      expect(+await pool.principalShare.balanceOf(user2)).to.be.lessThan(5.456789, "Some Principals are swapped");
+      expect(+await pool.yieldShare.balanceOf(user2)).to.be.greaterThan(10, "Yields are leveraged");
     });
   });
 

@@ -14,11 +14,13 @@ interface ITempusAMM {
         BPT_IN_FOR_EXACT_TOKENS_OUT
     }
 
+    function token0() external view returns (IPoolShare);
+
+    function token1() external view returns (IPoolShare);
+
     function getVault() external view returns (IVault);
 
     function getPoolId() external view returns (bytes32);
-
-    function tempusPool() external view returns (ITempusPool);
 
     function balanceOf(address) external view returns (uint256);
 
@@ -30,37 +32,42 @@ interface ITempusAMM {
 
     /// Calculates the expected returned swap amount
     /// @param amount The given input amount of tokens
-    /// @param yieldShareIn Specifies whether to calculate the swap from TYS to TPS (if true) or from TPS to TYS
+    /// @param tokenIn Specifies which token [token0 or token1] that @param amount refers to
     /// @return The expected returned amount of outToken
-    function getExpectedReturnGivenIn(uint256 amount, bool yieldShareIn) external view returns (uint256);
+    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) external view returns (uint256);
 
-    /// @dev Returns amount that user needs to swap to end up with almost the same amounts of Principals and Yields
-    /// @param principals User's Principals balance
-    /// @param yields User's Yields balance
-    /// @param threshold Maximum difference between final balances of Principals and Yields
-    /// @return amountIn Amount of Principals or Yields that user needs to swap to end with almost equal amounts
-    /// @return yieldsIn Specifies the "direction" of the swap -
-    ///         whether Yields should be swapped for Principals (yieldsIn=true) or vice versa
+    /// Calculates the expected amount of tokens In to return amountOut
+    /// @param amountOut The given amount out of tokens
+    /// @param tokenIn Specifies which token we are swapping
+    /// @return The expected returned amount of tokenIn to be swapped
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view returns (uint256);
+
+    /// @dev Returns amount that user needs to swap to end up with almost the same amounts of Token0 and Token1
+    /// @param token0Amount Desired token0 amount after swap()
+    /// @param token1Amount Desired token1 amount after swap()
+    /// @param threshold Maximum difference between final balances of Token0 and Token1
+    /// @return amountIn Amount of Token0 or Token1 that user needs to swap to end with almost equal amounts
+    /// @return tokenIn Specifies inToken pool share address
     function getSwapAmountToEndWithEqualShares(
-        uint256 principals,
-        uint256 yields,
+        uint256 token0Amount,
+        uint256 token1Amount,
         uint256 threshold
-    ) external view returns (uint256 amountIn, bool yieldsIn);
+    ) external view returns (uint256 amountIn, IPoolShare tokenIn);
 
     /// @dev queries exiting TempusAMM with exact BPT tokens in
     /// @param bptAmountIn amount of LP tokens in
-    /// @return principals Amount of principals that user would receive back
-    /// @return yields Amount of yields that user would receive back
+    /// @return token0Out Amount of Token0 that user would receive back
+    /// @return token1Out Amount of Token1 that user would receive back
     function getExpectedTokensOutGivenBPTIn(uint256 bptAmountIn)
         external
         view
-        returns (uint256 principals, uint256 yields);
+        returns (uint256 token0Out, uint256 token1Out);
 
     /// @dev queries exiting TempusAMM with exact tokens out
-    /// @param principalsStaked amount of Principals to withdraw
-    /// @param yieldsStaked amount of Yields to withdraw
+    /// @param token0Out amount of Token0 to withdraw
+    /// @param token1Out amount of Token1 to withdraw
     /// @return lpTokens Amount of Lp tokens that user would redeem
-    function getExpectedBPTInGivenTokensOut(uint256 principalsStaked, uint256 yieldsStaked)
+    function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
         view
         returns (uint256 lpTokens);

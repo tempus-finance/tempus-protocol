@@ -5,13 +5,14 @@ import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { Stats } from "../utils/Stats";
 import { TempusController } from "../utils/TempusController";
-import { TempusAMM, TempusAMMJoinKind } from "../utils/TempusAMM";
+import { TempusAMMJoinKind } from "../utils/TempusAMM";
+import { TempusPoolAMM } from "../utils/TempusPoolAMM";
 
 describeForEachPool("Stats", (testPool:PoolTestFixture) =>
 {
   let owner:Signer, user1:Signer, user2:Signer;
   let pool:TempusPool;
-  let amm:TempusAMM;
+  let amm:TempusPoolAMM;
   let stats:Stats;
   let controller:TempusController;
 
@@ -91,6 +92,15 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
     await initAMM(user1, /*ybtDeposit*/1200, /*principals*/120, /*yields*/1200);
     await testPool.setNextBlockTimestampRelativeToPoolStart(0.5);
     expect(+await stats.estimatedDepositAndFix(testPool, 1, /*BT*/false)).to.be.within(1.096, 1.098);
+  });
+
+  it("Estimated DepositAndLeverage returns expected values", async () =>
+  {
+    await initAMM(user1, /*ybtDeposit*/1200, /*principals*/120, /*yields*/1200);
+    await testPool.setNextBlockTimestampRelativeToPoolStart(0.1);
+    const result = await stats.estimatedDepositAndLeverage(testPool, 1, /*BT*/false, /*leverage*/2);
+    expect(+result[0]).to.be.within(0.9, 0.91);
+    expect(+result[1]).to.be.within(1.9, 2);
   });
 
   it("Estimated exit and redeem returns expected values", async () =>

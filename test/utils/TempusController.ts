@@ -144,7 +144,7 @@ export class TempusController extends ContractBase {
     await this.approve(pool, user, tokenAmount, isBackingToken);
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
     return this.connect(user).depositAndProvideLiquidity(
-      pool.amm.address, amount, isBackingToken, { value: toWei(ethValue) }
+      pool.amm.address, pool.tempus.address, amount, isBackingToken, { value: toWei(ethValue) }
     );
   }
 
@@ -171,9 +171,44 @@ export class TempusController extends ContractBase {
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
     return this.connect(user).depositAndFix(
       pool.amm.address,
+      pool.tempus.address,
       amount,
       isBackingToken,
       pool.tempus.asset.toBigNum(minTYSRate),
+      parseInt((deadline.getTime() / 1000).toFixed(0)),
+      { value: toWei(ethValue) }
+    );
+  }
+
+  /**
+   * Atomically deposits YBT/BT to TempusPool and swaps Capitals for Yields to get leveraged yield
+   * @param user The user to deposit on behalf of
+   * @param amm The corresponding Tempus AMM to use to swap Capitals for Yields
+   * @param tokenAmount Amount of BT/YBT to deposit
+   * @param isBackingToken Specifies whether the deposited asset is YBT or BT
+   * @param maxCapitalsRate Minimum TYS rate (denominated in TPS) to receive in exchange to TPS
+   * @param ethValue value of ETH to send with the tx
+   * @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
+   */
+   async depositAndLeverage(
+    pool: PoolTestFixture,
+    user: SignerOrAddress,
+    tokenAmount: NumberOrString,
+    isBackingToken: boolean,
+    leverageMultiplier: NumberOrString,
+    minCapitalsRate: NumberOrString,
+    ethValue: NumberOrString = 0,
+    deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
+  ): Promise<Transaction> {
+    await this.approve(pool, user, tokenAmount, isBackingToken);
+    const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
+    return this.connect(user).depositAndLeverage(
+      pool.amm.address,
+      pool.tempus.address,
+      toWei(leverageMultiplier),
+      amount,
+      isBackingToken,
+      pool.tempus.asset.toBigNum(minCapitalsRate),
       parseInt((deadline.getTime() / 1000).toFixed(0)),
       { value: toWei(ethValue) }
     );
@@ -204,6 +239,7 @@ export class TempusController extends ContractBase {
     await t.yieldShare.approve(user, t.address, yields);
     return this.connect(user).exitAmmGivenAmountsOutAndEarlyRedeem(
       amm.address,
+      pool.tempus.address,
       t.principalShare.toBigNum(principals),
       t.yieldShare.toBigNum(yields),
       t.principalShare.toBigNum(principalsLp),
@@ -220,7 +256,7 @@ export class TempusController extends ContractBase {
   ): Promise<Transaction> {
     const amm = pool.amm;
     await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
-    return this.connect(user).exitTempusAMM(amm.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
+    return this.connect(user).exitTempusAMM(amm.address, pool.tempus.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
   }
 
   async exitAmmGivenLpAndRedeem(
@@ -251,6 +287,7 @@ export class TempusController extends ContractBase {
 
     return this.connect(user).exitAmmGivenLpAndRedeem(
       amm.address,
+      pool.tempus.address,
       amm.toBigNum(lpTokens),
       amm.principalShare.toBigNum(principals),
       amm.yieldShare.toBigNum(yields),
