@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Create2.sol";
 
 import "./ITempusPool.sol";
 import "./token/PrincipalShare.sol";
@@ -105,8 +106,31 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
 
         uint8 backingDecimals = _backingToken != address(0) ? IERC20Metadata(_backingToken).decimals() : 18;
         backingTokenONE = 10**backingDecimals;
+
         principalShare = new PrincipalShare(this, principalsData.name, principalsData.symbol, backingDecimals);
-        yieldShare = new YieldShare(this, yieldsData.name, yieldsData.symbol, backingDecimals);
+        yieldShare = deployYieldShare(yieldsData, backingDecimals);
+    }
+
+    function deployYieldShare(TokenData memory data, uint8 decimals) private returns (IPoolShare) {
+        bytes memory bytecode = bytes.concat(
+            type(YieldShare).creationCode,
+            abi.encode(address(this), data.name, data.symbol, decimals)
+        );
+        bytes32 bytecodeHash = keccak256(bytecode);
+
+        // we want Yields to have higher address than Principals
+        address minAddress = address(principalShare);
+
+        for (uint256 i = 1; i < 128; i++) {
+            address predicted = Create2.computeAddress(bytes32(i), bytecodeHash, address(this));
+            if (predicted > minAddress) {
+                address deployedAddr = Create2.deploy(0, bytes32(i), bytecode);
+                assert(deployedAddr == predicted);
+                return IPoolShare(deployedAddr);
+            }
+        }
+
+        revert("YieldShare compute failed");
     }
 
     modifier onlyController() {
