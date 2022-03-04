@@ -24,6 +24,15 @@ export class PoolShare extends ERC20OwnerMintable {
   }
 
   /**
+   * @returns Updates and gets price per share as described in PoolShare.sol
+   */
+  async getPricePerFullShare(): Promise<NumberOrString> {
+    // this transaction will update latest PricePerFullShare
+    await this.contract.getPricePerFullShare();
+    return this.getPricePerFullShareStored(); // fetch the stored PPS
+  }
+
+  /**
    * @returns Stored price per share as described in PoolShare.sol
    */
   async getPricePerFullShareStored(): Promise<NumberOrString> {

@@ -51,6 +51,7 @@
     "build": "npx hardhat compile",
     "clean": "rm -rf ./cache && rm -rf ./artifacts",
     "test": "yarn build && bash run_tests.sh",
+    "test:yearn": "yarn build && bash run_tests.sh Yearn",
     "test:integration:lido": "yarn build && bash run_tests.sh integration-suite Lido",
     "test:integration": "yarn build && bash run_tests.sh integration-tests",
     "coverage": "npx hardhat coverage --testfiles \"test/**/*.ts\"",
