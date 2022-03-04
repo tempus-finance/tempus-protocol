@@ -266,6 +266,7 @@ export class TempusController extends ContractBase {
     principals:NumberOrString, 
     yields:NumberOrString, 
     toBacking: boolean,
+    maxLeftoverShares: NumberOrString,
     yieldsRate: NumberOrString = 1,
     maxSlippage: NumberOrString = 1,
     deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
@@ -275,16 +276,6 @@ export class TempusController extends ContractBase {
     await t.principalShare.connect(user).approve(this.address, t.principalShare.contract.balanceOf(addr));
     await t.yieldShare.connect(user).approve(this.address, t.yieldShare.contract.balanceOf(addr));
 
-    let maxLeftoverShares;
-    if (t.principalShare.decimals == 18) { // ETH, DAI
-      maxLeftoverShares = t.principalShare.toBigNum("0.000001");
-    } else if (t.principalShare.decimals == 6) { // this convers USDC
-      maxLeftoverShares = t.principalShare.toBigNum("0.01");
-    } else {
-      // if you get this error, add a new case with suitable maxLeftoverShares precision
-      throw new Error("Cannot determine maxLeftoverShares for principal decimals="+t.principalShare.decimals);
-    }
-
     return this.connect(user).exitAmmGivenLpAndRedeem(
       amm.address,
       pool.tempus.address,
@@ -293,7 +284,7 @@ export class TempusController extends ContractBase {
       amm.yieldShare.toBigNum(yields),
       0,
       0,
-      maxLeftoverShares,
+      t.principalShare.toBigNum(maxLeftoverShares),
       amm.principalShare.toBigNum(yieldsRate),
       toWei(maxSlippage),
       toBacking,
