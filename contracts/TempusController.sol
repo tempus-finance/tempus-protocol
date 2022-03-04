@@ -634,12 +634,15 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         principals = principalShare.balanceOf(address(this));
         yields = yieldShare.balanceOf(address(this));
+        require(maxLeftoverShares < principals || maxLeftoverShares < yields, "maxLeftoverShares too big");
 
         if (!tempusPool.matured()) {
             if (((yields > principals) ? (yields - principals) : (principals - yields)) >= maxLeftoverShares) {
-                (uint256 swapAmount, IPoolShare tokenIn) = (tempusPool.principalShare() == tempusAMM.token0())
-                    ? tempusAMM.getSwapAmountToEndWithEqualShares(principals, yields, maxLeftoverShares)
-                    : tempusAMM.getSwapAmountToEndWithEqualShares(yields, principals, maxLeftoverShares);
+                (uint256 swapAmount, IPoolShare tokenIn) = tempusAMM.getSwapAmountToEndWithEqualShares(
+                    principals,
+                    yields,
+                    maxLeftoverShares
+                );
 
                 bool yieldsIn = tokenIn == tempusPool.yieldShare();
                 uint256 minReturn = yieldsIn
