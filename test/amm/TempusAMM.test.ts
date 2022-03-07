@@ -67,11 +67,8 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   async function checkSwap(owner:Signer, swapTest:SwapTestRun) {
     await tempusAMM.forwardToAmplification(swapTest.amplification);
 
-    const tokenInParameter = swapTest.principalIn ? tempusPool.principalShare : tempusPool.yieldShare;
-    const [tokenIn, tokenOut] = (tokenInParameter.address == tempusAMM.token0.address) 
-      ? [tempusAMM.token0, tempusAMM.token1] 
-      : [tempusAMM.token1, tempusAMM.token0];
-
+    const tokenIn = swapTest.principalIn ? tempusPool.principalShare : tempusPool.yieldShare;
+    const tokenOut = swapTest.principalIn ? tempusPool.yieldShare : tempusPool.principalShare;
     const givenOut = (swapTest.givenOut !== undefined && swapTest.givenOut);
 
     const preSwapTokenInBalance:BigNumber = await tokenIn.contract.balanceOf(owner.address);

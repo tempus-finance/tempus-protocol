@@ -112,7 +112,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
             IVault.PoolSpecialization.TWO_TOKEN,
             name,
             symbol,
-            _mapTempusSharesToIERC20(tokens[0], tokens[1]),
+            _mapSharesToIERC20(tokens),
             new address[](_TOTAL_TOKENS),
             swapFeePercentage,
             pauseWindowDuration,
@@ -125,20 +125,15 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         _require(amplificationStartValue >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
         _require(amplificationStartValue <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
 
-        require(
-            ERC20(address(tokens[0])).decimals() == ERC20(address(tokens[1])).decimals(),
-            "tokens[0] and tokens[1] need same precision."
-        );
-        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(tokens[0])).decimals();
+        (IPoolShare t0, IPoolShare t1) = (tokens[0], tokens[1]);
+        require(t0 < t1, "token0 < token1 address");
+        (token0, token1) = (t0, t1);
 
-        // Immutable variables cannot be initialized inside an if statement, so we must do conditional assignments
-        (IPoolShare token0Local, IPoolShare token1Local) = tokens[0] > tokens[1]
-            ? (tokens[1], tokens[0])
-            : (tokens[0], tokens[1]);
-        (token0, token1) = (token0Local, token1Local);
+        require(ERC20(address(t0)).decimals() == ERC20(address(t1)).decimals(), "token0 != token1 decimals");
+        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(t0)).decimals();
 
-        _scalingFactor0 = _computeScalingFactor(IERC20(address(token0Local)));
-        _scalingFactor1 = _computeScalingFactor(IERC20(address(token1Local)));
+        _scalingFactor0 = _computeScalingFactor(IERC20(address(t0)));
+        _scalingFactor1 = _computeScalingFactor(IERC20(address(t1)));
 
         _setAmplificationData(amplificationStartValue);
 
@@ -804,8 +799,8 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
 
     function _scalingFactor(IERC20 token) internal view virtual override returns (uint256 scalingFactor) {
         // prettier-ignore
-        if (_isToken0(token)) { return _scalingFactor0; }
-        else if (_isToken1(token)) { return _scalingFactor1; }
+        if (address(token) == address(token0)) { return _scalingFactor0; }
+        else if (address(token) == address(token1)) { return _scalingFactor1; }
         else {
             _revert(Errors.INVALID_TOKEN);
         }
@@ -863,23 +858,9 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         }
     }
 
-    function _isToken0(IERC20 token) private view returns (bool) {
-        return address(token) == address(token0);
-    }
-
-    function _isToken1(IERC20 token) private view returns (bool) {
-        return address(token) == address(token1);
-    }
-
-    function _mapTempusSharesToIERC20(IPoolShare token0Param, IPoolShare token1Param)
-        private
-        pure
-        returns (IERC20[] memory)
-    {
-        IERC20[] memory tokens = new IERC20[](_TOTAL_TOKENS);
-        (tokens[0], tokens[1]) = (token0Param > token1Param)
-            ? (IERC20(address(token1Param)), IERC20(address(token0Param)))
-            : (IERC20(address(token0Param)), IERC20(address(token1Param)));
-        return tokens;
+    function _mapSharesToIERC20(IPoolShare[2] memory tokens) private pure returns (IERC20[] memory) {
+        IERC20[] memory mapped = new IERC20[](_TOTAL_TOKENS);
+        (mapped[0], mapped[1]) = (IERC20(address(tokens[0])), IERC20(address(tokens[1])));
+        return mapped;
     }
 }
