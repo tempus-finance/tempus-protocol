@@ -4,26 +4,25 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-/// TODO: IMPORTANT bump compiler version to 8.x and remove safemath (#3) 
+/// TODO: IMPORTANT bump compiler version to 8.x and remove safemath (#3)
 // Inheritance
 import "./interfaces/IStakingRewards.sol";
 import "./StakingMath.sol";
 // import "./RewardsDistributionRecipient.sol"; //  TODO: IMPORTANT (#1)
 // import "./Pausable.sol";
-
+import "../debug/Debug.sol"; /// TODO: IMPORTANT REMOVE
 
 // https://docs.synthetix.io/contracts/source/contracts/stakingrewards
-contract StakingRewards is
 // IStakingRewards,
-StakingMath,
-ReentrancyGuard {
+contract StakingRewards is StakingMath, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /* ========== STATE VARIABLES ========== */
 
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
-    uint256 public periodFinish = 0;
+    // uint256 public periodFinish = 0;
+    uint256 public immutable startTime;
     uint256 public rewardRate = 0;
     uint256 public rewardsDuration = 7 days;
     uint256 public lastUpdateTime;
@@ -32,17 +31,18 @@ ReentrancyGuard {
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
+    uint256 internal _totalSupply;
+    mapping(address => uint256) internal _balances;
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(
-        address _rewardsToken,
-        address _stakingToken
-    ) {
+    uint256 public totalIncentiveSize;
+    uint256 public poolDuration;
+
+    constructor(address _rewardsToken, address _stakingToken) {
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
+        startTime = block.timestamp;
         // rewardsDistribution = _rewardsDistribution;
     }
 
@@ -57,37 +57,36 @@ ReentrancyGuard {
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
+        uint256 periodFinish = startTime + poolDuration;
         return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
-
-    uint256 public constant TOTAL_INCENTIVE_SIZE = 100000 * 1e18; /// TODO: IMPORTANT move this (#2)
-    uint256 public constant POOL_DURATION = 90 days; /// TODO: IMPORTANT move this (#2)
 
     function rewardPerToken() public view returns (uint256) {
         if (_totalSupply == 0) {
             return rewardPerTokenStored;
         }
         return
-            rewardPerTokenStored + (
-                // lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply)
-                R_t_summation(lastUpdateTime, lastTimeRewardApplicable(), POOL_DURATION, TOTAL_INCENTIVE_SIZE) * 1e18 / _totalSupply
-            );
+            rewardPerTokenStored +
+            (// (lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * 1e18 / _totalSupply
+            (R_t_summation(
+                lastUpdateTime - startTime,
+                lastTimeRewardApplicable() - startTime,
+                totalIncentiveSize,
+                poolDuration
+            ) * 1e18) / _totalSupply);
     }
 
-    // function earned(address account) public view returns (uint256) {
-    //     return _balances[account].mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
-    // }
     function earned(address account) public view returns (uint256) {
-        return rewards[account] + (_balances[account] * ( rewardPerToken() - userRewardPerTokenPaid[account]) / 1e18);
+        return rewards[account] + ((_balances[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18);
     }
 
-    function getRewardForDuration() external view returns (uint256) {
-        return rewardRate * rewardsDuration;
-    }
+    // function getRewardForDuration() external view returns (uint256) {
+    //     return rewardRate * rewardsDuration;
+    // }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
+    function _stake(uint256 amount) internal initialized nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot stake 0");
         _totalSupply += amount;
         _balances[msg.sender] += amount;
@@ -95,7 +94,7 @@ ReentrancyGuard {
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
+    function _withdraw(uint256 amount) internal initialized nonReentrant updateReward(msg.sender) {
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply -= amount;
         _balances[msg.sender] -= amount;
@@ -103,7 +102,7 @@ ReentrancyGuard {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function getReward() public nonReentrant updateReward(msg.sender) {
+    function _getReward() internal initialized nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
         if (reward > 0) {
             rewards[msg.sender] = 0;
@@ -111,10 +110,15 @@ ReentrancyGuard {
             emit RewardPaid(msg.sender, reward);
         }
     }
- 
-    function exit() external {
-        withdraw(_balances[msg.sender]);
-        getReward();
+
+    function exit() internal {
+        _withdraw(_balances[msg.sender]);
+        _getReward();
+    }
+
+    function _initialize(uint256 _totalIncentiveSize, uint256 _poolDuration) internal {
+        totalIncentiveSize = _totalIncentiveSize;
+        poolDuration = _poolDuration;
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -166,6 +170,12 @@ ReentrancyGuard {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
+        _;
+    }
+
+    modifier initialized() {
+        require(totalIncentiveSize > 0, "incentive amount not initialized");
+        require(poolDuration > 0, "pool duration not initialized");
         _;
     }
 
