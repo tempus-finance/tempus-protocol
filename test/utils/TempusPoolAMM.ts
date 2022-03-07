@@ -30,6 +30,10 @@ export class TempusPoolAMM extends TempusAMM {
     amplificationEndTime: number,
     swapFeePercentage: number
   ): Promise<TempusPoolAMM> {
+    if (parseInt(principalShare.address) >= parseInt(yieldShare.address)) {
+      throw new Error("principalShare.address must be < yieldShare.address!");
+    }
+
     const mockedWETH = await TempusAMM.createMock();
 
     const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
@@ -54,36 +58,21 @@ export class TempusPoolAMM extends TempusAMM {
     await controller.register(owner, tempusAMM.address);
     return new TempusPoolAMM(tempusAMM, vault, principalShare, yieldShare);
   }
-  
-  public getPYAmounts(token0Amount: NumberOrString, token1Amount: NumberOrString): {principalsAmount:number, yieldsAmount:number} {
-    return (this.principalShare.address == this.token0.address)
-      ? {principalsAmount: +token0Amount, yieldsAmount: +token1Amount}
-      : {principalsAmount: +token1Amount, yieldsAmount: +token0Amount};
-  }
 
   async getExpectedPYOutGivenBPTIn(inAmount: NumberOrString): Promise<{principalsOut:number, yieldsOut:number}> {
     const p = await super.getExpectedTokensOutGivenBPTIn(inAmount);
-    const {principalsAmount, yieldsAmount} = this.getPYAmounts(p.token0Out, p.token1Out);
-    return {principalsOut: +principalsAmount, yieldsOut: +yieldsAmount};
+    return {principalsOut: +p.token0Out, yieldsOut: +p.token1Out};
   }
 
   async getExpectedLPTokensForTokensIn(principalsAmountIn:NumberOrString, yieldsAmountIn:NumberOrString): Promise<NumberOrString> {
-    const {principalsAmount, yieldsAmount} = this.getPYAmounts(principalsAmountIn, yieldsAmountIn); 
-    return super.getExpectedLPTokensForTokensIn(principalsAmount, yieldsAmount);
+    return super.getExpectedLPTokensForTokensIn(principalsAmountIn, yieldsAmountIn);
   }
 
   async getExpectedBPTInGivenTokensOut(principalStaked:NumberOrString, yieldsStaked:NumberOrString): Promise<NumberOrString> {
-    const {principalsAmount, yieldsAmount} = this.getPYAmounts(principalStaked, yieldsStaked); 
-    return super.getExpectedBPTInGivenTokensOut(principalsAmount, yieldsAmount);
+    return super.getExpectedBPTInGivenTokensOut(principalStaked, yieldsStaked);
   }
 
   async provideLiquidity(from: Signer, principals: Number, yields: Number, joinKind: TempusAMMJoinKind) {
-    const {principalsAmount, yieldsAmount} = this.getPYAmounts(principals, yields); 
-    await super.provideLiquidity(from, principalsAmount, yieldsAmount, joinKind);
-  }
-
-  async exitPoolExactAmountOut(from:Signer, amountsOut:Number[], maxAmountLpIn:Number) {
-    const {principalsAmount, yieldsAmount} = this.getPYAmounts(amountsOut[0], amountsOut[1]); 
-    await super.exitPoolExactAmountOut(from, [principalsAmount, yieldsAmount], maxAmountLpIn);
+    await super.provideLiquidity(from, principals, yields, joinKind);
   }
 }

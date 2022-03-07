@@ -10,12 +10,10 @@ import "../token/PoolShare.sol";
 import "../amm/interfaces/ITempusAMM.sol";
 import "../utils/AMMBalancesHelper.sol";
 import "../utils/Versioned.sol";
-import "../utils/TempusPoolAMMUtils.sol";
 
 contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     using Fixed256xVar for uint256;
     using AMMBalancesHelper for uint256[];
-    using TempusPoolAMMUtils for ITempusAMM;
 
     constructor() Versioned(2, 0, 0) {}
 
@@ -126,9 +124,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         uint256[] memory ammLiquidityProvisionAmounts = ammBalances.getLiquidityProvisionSharesAmounts(shares);
 
         lpTokens = tempusAMM.getExpectedLPTokensForTokensIn(ammLiquidityProvisionAmounts);
-        (principals, yields) = (address(tempusPool.principalShare()) == address(ammTokens[0]))
-            ? (shares - ammLiquidityProvisionAmounts[0], shares - ammLiquidityProvisionAmounts[1])
-            : (shares - ammLiquidityProvisionAmounts[1], shares - ammLiquidityProvisionAmounts[0]);
+        (principals, yields) = (shares - ammLiquidityProvisionAmounts[0], shares - ammLiquidityProvisionAmounts[1]);
     }
 
     /// Gets the estimated amount of Shares and Lp token amounts
@@ -206,7 +202,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         if (lpTokens > 0) {
-            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedPYOutGivenBPTIn(tempusPool, lpTokens);
+            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedTokensOutGivenBPTIn(lpTokens);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
@@ -214,10 +210,11 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         // before maturity we need to have equal amount of shares to redeem
         if (!tempusPool.matured()) {
             // TODO: Out of stack error, cannot use utility functions
-            (uint256 amountIn, IPoolShare tokenIn) = (tempusPool.principalShare() == tempusAMM.token0())
-                ? tempusAMM.getSwapAmountToEndWithEqualShares(principals, yields, threshold)
-                : tempusAMM.getSwapAmountToEndWithEqualShares(yields, principals, threshold);
-
+            (uint256 amountIn, IPoolShare tokenIn) = tempusAMM.getSwapAmountToEndWithEqualShares(
+                principals,
+                yields,
+                threshold
+            );
             uint256 amountOut = (amountIn != 0) ? tempusAMM.getExpectedReturnGivenIn(amountIn, tokenIn) : 0;
 
             if (amountIn > 0) {
@@ -271,7 +268,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         require(!tempusPool.matured(), "Pool already finalized!");
 
         if (principalsStaked > 0 || yieldsStaked > 0) {
-            lpTokensRedeemed = tempusAMM.getExpectedPYBPTInGivenTokensOut(tempusPool, principalsStaked, yieldsStaked);
+            lpTokensRedeemed = tempusAMM.getExpectedBPTInGivenTokensOut(principalsStaked, yieldsStaked);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
