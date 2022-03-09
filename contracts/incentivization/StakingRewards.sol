@@ -2,7 +2,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /// TODO: IMPORTANT bump compiler version to 8.x and remove safemath (#3)
 // Inheritance
@@ -14,7 +13,7 @@ import "../debug/Debug.sol"; /// TODO: IMPORTANT REMOVE
 
 // https://docs.synthetix.io/contracts/source/contracts/stakingrewards
 // IStakingRewards,
-contract StakingRewards is StakingMath, ReentrancyGuard {
+contract StakingRewards is StakingMath {
     using SafeERC20 for IERC20;
 
     /* ========== STATE VARIABLES ========== */
@@ -86,37 +85,39 @@ contract StakingRewards is StakingMath, ReentrancyGuard {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function _stake(uint256 amount) internal initialized nonReentrant updateReward(msg.sender) {
+    function _stake(uint256 amount, address account) internal initialized updateReward(account) {
         require(amount > 0, "Cannot stake 0");
         _totalSupply += amount;
-        _balances[msg.sender] += amount;
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
-        emit Staked(msg.sender, amount);
+        _balances[account] += amount;
+        stakingToken.safeTransferFrom(account, address(this), amount);
+        emit Staked(account, amount);
     }
 
-    function _withdraw(uint256 amount) internal initialized nonReentrant updateReward(msg.sender) {
+    function _withdraw(uint256 amount, address account) internal initialized updateReward(account) {
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply -= amount;
-        _balances[msg.sender] -= amount;
-        stakingToken.safeTransfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
+        _balances[account] -= amount;
+        stakingToken.safeTransfer(account, amount);
+        emit Withdrawn(account, amount);
     }
 
-    function _getReward() internal initialized nonReentrant updateReward(msg.sender) {
-        uint256 reward = rewards[msg.sender];
+    function _getReward(address account) internal initialized updateReward(account) {
+        uint256 reward = rewards[account];
         if (reward > 0) {
-            rewards[msg.sender] = 0;
-            rewardsToken.safeTransfer(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
+            rewards[account] = 0;
+            rewardsToken.safeTransfer(account, reward);
+            emit RewardPaid(account, reward);
         }
     }
 
-    function exit() internal {
-        _withdraw(_balances[msg.sender]);
-        _getReward();
+    function _exit(address account) internal returns (uint256 withdrawnAmount) {
+        withdrawnAmount = _balances[account];
+        _withdraw(withdrawnAmount, account);
+        _getReward(account);
     }
 
     function _initialize(uint256 _totalIncentiveSize, uint256 _poolDuration) internal {
+        require(totalIncentiveSize == 0 && poolDuration == 0, "already initialized");
         totalIncentiveSize = _totalIncentiveSize;
         poolDuration = _poolDuration;
     }

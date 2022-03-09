@@ -7,7 +7,7 @@ contract StakingRewardsMock is StakingRewards {
     constructor(address _rewardsToken, address _stakingToken) StakingRewards(_rewardsToken, _stakingToken) {}
 
     function stake(uint256 amount) external {
-        _stake(amount);
+        _stake(amount, msg.sender);
     }
 
     function initialize(uint256 _totalIncentiveSize, uint256 _poolDuration) external {
