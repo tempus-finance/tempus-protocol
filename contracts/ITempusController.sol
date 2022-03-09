@@ -58,12 +58,12 @@ interface ITempusController {
     /// @dev Atomically deposits YBT/BT to TempusPool and provides liquidity
     ///      to the corresponding Tempus AMM with the issued TYS & TPS
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
-    /// @param targetPool The Tempus Pool to which tokens will be deposited
+    /// @param tempusPool The Tempus Pool to which tokens will be deposited
     /// @param tokenAmount Amount of YBT/BT to be deposited
     /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
     function depositAndProvideLiquidity(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken
     ) external payable;
@@ -79,7 +79,7 @@ interface ITempusController {
     /// @dev Atomically deposits YBT/BT to TempusPool and swaps TYS for TPS to get fixed yield
     ///      See https://docs.balancer.fi/developers/guides/single-swaps#swap-overview
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
-    /// @param targetPool The Tempus Pool to which tokens will be deposited
+    /// @param tempusPool The Tempus Pool to which tokens will be deposited
     /// @param tokenAmount Amount of YBT/BT to be deposited in underlying YBT/BT decimal precision
     /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
     /// @param minTYSRate Minimum exchange rate of TYS (denominated in TPS) to receive in exchange for TPS
@@ -87,7 +87,7 @@ interface ITempusController {
     /// @return Amount of Principal Shares transferred to `msg.sender`
     function depositAndFix(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken,
         uint256 minTYSRate,
@@ -114,25 +114,25 @@ interface ITempusController {
     ) external payable returns (uint256, uint256);
 
     /// @dev Deposits Yield Bearing Tokens to a Tempus Pool.
-    /// @param targetPool The Tempus Pool to which tokens will be deposited
+    /// @param tempusPool The Tempus Pool to which tokens will be deposited
     /// @param yieldTokenAmount amount of Yield Bearing Tokens to be deposited
     ///                         in YBT Contract precision which can be 18 or 8 decimals
     /// @param recipient Address which will receive Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
     /// @return Amount of minted Shares
     function depositYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 yieldTokenAmount,
         address recipient
     ) external returns (uint256);
 
     /// @dev Deposits Backing Tokens into the underlying protocol and
     ///      then deposited the minted Yield Bearing Tokens to the Tempus Pool.
-    /// @param targetPool The Tempus Pool to which tokens will be deposited
+    /// @param tempusPool The Tempus Pool to which tokens will be deposited
     /// @param backingTokenAmount amount of Backing Tokens to be deposited into the underlying protocol
     /// @param recipient Address which will receive Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
     /// @return Amount of minted Shares
     function depositBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 backingTokenAmount,
         address recipient
     ) external payable returns (uint256);
@@ -140,12 +140,12 @@ interface ITempusController {
     /// @dev Redeem TPS+TYS held by msg.sender into Yield Bearing Tokens
     /// @notice `msg.sender` will receive yield bearing tokens
     /// @notice Before maturity, `principalAmount` must equal to `yieldAmount`
-    /// @param targetPool The Tempus Pool from which to redeem Tempus Shares
+    /// @param tempusPool The Tempus Pool from which to redeem Tempus Shares
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
     function redeemToYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
@@ -154,12 +154,12 @@ interface ITempusController {
     /// @dev Redeem TPS+TYS held by msg.sender into Backing Tokens
     /// @notice `recipient` will receive the backing tokens
     /// @notice Before maturity, `principalAmount` must equal to `yieldAmount`
-    /// @param targetPool The Tempus Pool from which to redeem Tempus Shares
+    /// @param tempusPool The Tempus Pool from which to redeem Tempus Shares
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
     function redeemToBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
@@ -169,14 +169,14 @@ interface ITempusController {
     /// @notice `msg.sender` needs to approve controller for @param lpTokensAmount of LP tokens
     /// @notice Transfers LP tokens to controller and exiting tempusAmm with `msg.sender` as recipient
     /// @param tempusAMM Tempus AMM instance
-    /// @param targetPool Tempus Pool instance
+    /// @param tempusPool Tempus Pool instance
     /// @param lpTokensAmount Amount of LP tokens to be withdrawn
     /// @param principalAmountOutMin Minimal amount of TPS to be withdrawn
     /// @param yieldAmountOutMin Minimal amount of TYS to be withdrawn
     /// @param toInternalBalances Withdrawing liquidity to internal balances
     function exitTempusAMM(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 lpTokensAmount,
         uint256 principalAmountOutMin,
         uint256 yieldAmountOutMin,
@@ -192,7 +192,7 @@ interface ITempusController {
     /// @notice Can fail if there is not enough user balance
     /// @notice Only available before maturity since exiting AMM with exact amounts is disallowed after maturity
     /// @param tempusAMM TempusAMM instance to withdraw liquidity from
-    /// @param targetPool TempusPool instance to withdraw liquidity from
+    /// @param tempusPool TempusPool instance to withdraw liquidity from
     /// @param principals Amount of Principals to redeem
     /// @param yields Amount of Yields to redeem
     /// @param principalsStaked Amount of staked principals (in TempusAMM) to redeem
@@ -201,7 +201,7 @@ interface ITempusController {
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
@@ -214,7 +214,7 @@ interface ITempusController {
     /// @notice `msg.sender` needs to approve controller for whole balance of LP token
     /// @notice Can fail if there is not enough user balance
     /// @param tempusAMM TempusAMM instance to withdraw liquidity from
-    /// @param targetPool TempusPool instance to withdraw liquidity from
+    /// @param tempusPool TempusPool instance to withdraw liquidity from
     /// @param lpTokens Number of Lp tokens to redeem
     /// @param principals Number of Principals to redeem
     /// @param yields Number of Yields to redeem
@@ -228,7 +228,7 @@ interface ITempusController {
     ///    otherwise it would revert
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 lpTokens,
         uint256 principals,
         uint256 yields,

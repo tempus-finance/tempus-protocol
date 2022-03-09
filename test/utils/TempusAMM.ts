@@ -44,8 +44,11 @@ export class TempusAMM extends ContractBase {
   constructor(tempusAmmPool: Contract, vault: Contract, token0: PoolShare, token1: PoolShare) {
     super("TempusAMM", 18, tempusAmmPool);
     this.vault = vault;
-    this.token0 = parseInt(token0.address) > parseInt(token1.address) ? token1 : token0;
-    this.token1 = parseInt(token0.address) > parseInt(token1.address) ? token0 : token1;
+    this.token0 = token0;
+    this.token1 = token1;
+    if (parseInt(token0.address) >= parseInt(token1.address)) {
+      throw new Error("Token0.address must be < Token1.address!");
+    }
   }
 
 
@@ -212,9 +215,9 @@ export class TempusAMM extends ContractBase {
     await this.vault.connect(from).exitPool(poolId, from.address, from.address, exitPoolRequest);
   }
 
-  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {    
-    await this.token1.connect(from).approve(this.vault.address, this.token1.toBigNum(await this.token1.balanceOf(from)));
-    await this.token0.connect(from).approve(this.vault.address, this.token0.toBigNum(await this.token0.balanceOf(from)));
+  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {
+    await this.token0.approve(from, this.vault.address, await this.token0.balanceOf(from));
+    await this.token1.approve(from, this.vault.address, await this.token1.balanceOf(from));
     const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;
     const poolId = await this.contract.getPoolId();    
 

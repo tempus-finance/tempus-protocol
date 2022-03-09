@@ -9,6 +9,7 @@ import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
 import { TempusPoolAMM } from "./utils/TempusPoolAMM";
+import { NumberOrString } from "./utils/Decimal";
 
 const SWAP_LIMIT_ERROR_MESSAGE = "BAL#507";
 
@@ -34,6 +35,17 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     const principals = await pool.principalShare.balanceOf(amm.vault.address);
     const yields = await pool.yieldShare.balanceOf(amm.vault.address);
     return amm.toBigNum(1.0).mul(amm.toBigNum(principals)).div(amm.toBigNum(yields));
+  }
+
+  function getDefaultLeftoverShares(): NumberOrString
+  {
+    if (pool.principalShare.decimals == 18) {
+      return "0.000001";
+    } else if (pool.principalShare.decimals == 6) {
+      return "0.01";
+    } else {
+      throw new Error("Cannot set default leftoverShares for token with decimals=" + pool.principalShare.decimals);
+    }
   }
 
   // pre-initialize AMM liquidity
@@ -325,6 +337,23 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
   describe("Complete Exit", () => 
   {
+    it("Complete exit before maturity maxLeftoverShares too big", async () =>
+    {
+      await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
+      
+      await testPool.controller.depositAndFix(testPool, owner, 100, false, 0);
+
+      (await expectRevert(controller.exitAmmGivenLpAndRedeem(
+        testPool, 
+        owner, 
+        0, // lp tokens
+        await testPool.principals.balanceOf(owner),
+        0, // yields
+        false,
+        await testPool.principals.balanceOf(owner)
+      ))).to.equal("maxLeftoverShares too big");
+    });
+
     it("Complete exit before maturity", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
@@ -340,7 +369,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.amm.balanceOf(user2), 
         await testPool.principals.balanceOf(user2),
         await testPool.yields.balanceOf(user2), 
-        false
+        false,
+        getDefaultLeftoverShares()
       );
       await controller.exitAmmGivenLpAndRedeem(
         testPool, 
@@ -348,7 +378,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.amm.balanceOf(owner), 
         await testPool.principals.balanceOf(owner),
         await testPool.yields.balanceOf(owner), 
-        false
+        false,
+        getDefaultLeftoverShares()
       );
 
       const postBalanceUser2 = +await testPool.ybt.balanceOf(user2);
@@ -371,7 +402,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         await testPool.principals.balanceOf(owner),
         await testPool.yields.balanceOf(owner), 
-        false
+        false,
+        getDefaultLeftoverShares()
       );
 
       const postBalanceOwner = +await testPool.ybt.balanceOf(owner);
@@ -391,6 +423,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         await testPool.yields.balanceOf(owner),
         false,
+        getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         0.03
       )).to.emit(testPool.amm.vault, 'Swap');;
@@ -408,6 +441,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.principals.balanceOf(owner),
         0,
         false,
+        getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         0.03
       )).to.emit(testPool.amm.vault, 'Swap');
@@ -425,6 +459,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.principals.balanceOf(owner),
         0,
         false,
+        getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "0.001"
       )).to.be.revertedWith("BAL#507");
@@ -442,6 +477,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         await testPool.yields.balanceOf(owner),
         false,
+        getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "0.001"
       )).to.be.revertedWith("BAL#507");
@@ -460,6 +496,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         await testPool.yields.balanceOf(owner),
         false,
+        getDefaultLeftoverShares(),
         yieldsRate,
         "0.001"
       )).to.be.revertedWith("yieldsRate must be greater than 0");
@@ -477,6 +514,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         await testPool.yields.balanceOf(owner),
         false,
+        getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "1.000000000000000001"
       )).to.be.revertedWith("maxSlippage can not be greater than 1e18");
@@ -503,7 +541,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.amm.balanceOf(user1), 
         await testPool.principals.balanceOf(user1),
         await testPool.yields.balanceOf(user1),
-        false
+        false,
+        getDefaultLeftoverShares()
       );
 
       expect(await testPool.yields.balanceOf(user1)).to.equal(0);
@@ -538,7 +577,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           await testPool.amm.balanceOf(user1), 
           await testPool.principals.balanceOf(user1),
           await testPool.yields.balanceOf(user1),
-          true
+          true,
+          getDefaultLeftoverShares()
         ))).to.equal(
           "LidoTempusPool.withdrawFromUnderlyingProtocol not supported"
         );
@@ -552,7 +592,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           await testPool.amm.balanceOf(user1), 
           await testPool.principals.balanceOf(user1),
           await testPool.yields.balanceOf(user1),
-          true
+          true,
+          getDefaultLeftoverShares()
         );
         expect(await pool.yieldShare.balanceOf(user1)).to.equal(0);
         expect(await pool.principalShare.balanceOf(user1)).to.equal(0);

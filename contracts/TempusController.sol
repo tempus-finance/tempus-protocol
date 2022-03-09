@@ -40,14 +40,14 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function depositAndProvideLiquidity(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken
     ) external payable override nonReentrant {
         requireRegistered(address(tempusAMM));
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
-        _depositAndProvideLiquidity(tempusAMM, targetPool, tokenAmount, isBackingToken);
+        _depositAndProvideLiquidity(tempusAMM, tempusPool, tokenAmount, isBackingToken);
     }
 
     function provideLiquidity(ITempusAMM tempusAMM, uint256 sharesAmount) external override nonReentrant {
@@ -64,20 +64,20 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function depositAndFix(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken,
         uint256 minTYSRate,
         uint256 deadline
     ) external payable override nonReentrant returns (uint256) {
         requireRegistered(address(tempusAMM));
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
-        IERC20 principalShares = IERC20(address(targetPool.principalShare()));
-        IERC20 yieldShares = IERC20(address(targetPool.yieldShare()));
+        IERC20 principalShares = IERC20(address(tempusPool.principalShare()));
+        IERC20 yieldShares = IERC20(address(tempusPool.yieldShare()));
 
-        uint256 swapAmount = _deposit(targetPool, tokenAmount, isBackingToken);
-        uint256 minReturn = swapAmount.mulfV(minTYSRate, targetPool.backingTokenONE());
+        uint256 swapAmount = _deposit(tempusPool, tokenAmount, isBackingToken);
+        uint256 minReturn = swapAmount.mulfV(minTYSRate, tempusPool.backingTokenONE());
         swap(tempusAMM, swapAmount, yieldShares, principalShares, minReturn, deadline);
 
         // At this point all TYS must be swapped for TPS
@@ -122,65 +122,65 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     }
 
     function depositYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 yieldTokenAmount,
         address recipient
     ) public override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
-        return _depositYieldBearing(targetPool, yieldTokenAmount, recipient);
+        return _depositYieldBearing(tempusPool, yieldTokenAmount, recipient);
     }
 
     function depositBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 backingTokenAmount,
         address recipient
     ) public payable override nonReentrant returns (uint256) {
         require(recipient != address(0), "recipient can not be 0x0");
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
-        return _depositBacking(targetPool, backingTokenAmount, recipient);
+        return _depositBacking(tempusPool, backingTokenAmount, recipient);
     }
 
     function redeemToYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
     ) external override nonReentrant {
         require(recipient != address(0), "recipient can not be 0x0");
-        requireRegistered(address(targetPool));
-        _redeemToYieldBearing(targetPool, msg.sender, principalAmount, yieldAmount, recipient);
+        requireRegistered(address(tempusPool));
+        _redeemToYieldBearing(tempusPool, msg.sender, principalAmount, yieldAmount, recipient);
     }
 
     function redeemToBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
     ) external override nonReentrant {
         require(recipient != address(0), "recipient can not be 0x0");
-        requireRegistered(address(targetPool));
-        _redeemToBacking(targetPool, msg.sender, principalAmount, yieldAmount, recipient);
+        requireRegistered(address(tempusPool));
+        _redeemToBacking(tempusPool, msg.sender, principalAmount, yieldAmount, recipient);
     }
 
     function exitTempusAMM(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 lpTokensAmount,
         uint256 principalAmountOutMin,
         uint256 yieldAmountOutMin,
         bool toInternalBalances
     ) external override nonReentrant {
         requireRegistered(address(tempusAMM));
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
         require(lpTokensAmount > 0, "LP token amount is 0");
 
         _exitTempusAMM(
             tempusAMM,
-            targetPool,
+            tempusPool,
             lpTokensAmount,
             principalAmountOutMin,
             yieldAmountOutMin,
@@ -191,7 +191,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
@@ -200,11 +200,11 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool toBackingToken
     ) external override nonReentrant {
         requireRegistered(address(tempusAMM));
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
         _exitAmmGivenAmountsOutAndEarlyRedeem(
             tempusAMM,
-            targetPool,
+            tempusPool,
             principals,
             yields,
             principalsStaked,
@@ -216,7 +216,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 lpTokens,
         uint256 principals,
         uint256 yields,
@@ -229,15 +229,15 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 deadline
     ) external override nonReentrant {
         requireRegistered(address(tempusAMM));
-        requireRegistered(address(targetPool));
+        requireRegistered(address(tempusPool));
 
         if (lpTokens > 0) {
-            _exitTempusAMM(tempusAMM, targetPool, lpTokens, minPrincipalsStaked, minYieldsStaked, address(this), false);
+            _exitTempusAMM(tempusAMM, tempusPool, lpTokens, minPrincipalsStaked, minYieldsStaked, address(this), false);
         }
 
         _redeemWithEqualShares(
             tempusAMM,
-            targetPool,
+            tempusPool,
             principals,
             yields,
             maxLeftoverShares,
@@ -313,7 +313,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function _depositAndProvideLiquidity(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken
     ) private {
@@ -324,7 +324,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             uint256[] memory ammBalances
         ) = _getAMMDetailsAndEnsureInitialized(tempusAMM);
 
-        uint256 mintedShares = _deposit(targetPool, tokenAmount, isBackingToken);
+        uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
 
         uint256[] memory sharesUsed = _provideLiquidity(
             address(this),
@@ -378,38 +378,38 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     }
 
     function _deposit(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 tokenAmount,
         bool isBackingToken
     ) private returns (uint256 mintedShares) {
         mintedShares = isBackingToken
-            ? _depositBacking(targetPool, tokenAmount, address(this))
-            : _depositYieldBearing(targetPool, tokenAmount, address(this));
+            ? _depositBacking(tempusPool, tokenAmount, address(this))
+            : _depositYieldBearing(tempusPool, tokenAmount, address(this));
     }
 
     function _depositYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 yieldTokenAmount,
         address recipient
     ) private returns (uint256) {
         require(yieldTokenAmount > 0, "yieldTokenAmount is 0");
 
-        IERC20 yieldBearingToken = IERC20(targetPool.yieldBearingToken());
+        IERC20 yieldBearingToken = IERC20(tempusPool.yieldBearingToken());
 
-        // Transfer funds from msg.sender to targetPool
+        // Transfer funds from msg.sender to tempusPool
         uint256 transferredYBT = yieldBearingToken.untrustedTransferFrom(
             msg.sender,
-            address(targetPool),
+            address(tempusPool),
             yieldTokenAmount
         );
 
-        (uint256 mintedShares, uint256 depositedBT, uint256 fee, uint256 rate) = targetPool.onDepositYieldBearing(
+        (uint256 mintedShares, uint256 depositedBT, uint256 fee, uint256 rate) = tempusPool.onDepositYieldBearing(
             transferredYBT,
             recipient
         );
 
         emit Deposited(
-            address(targetPool),
+            address(tempusPool),
             msg.sender,
             recipient,
             transferredYBT,
@@ -423,13 +423,13 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     }
 
     function _depositBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 backingTokenAmount,
         address recipient
     ) private returns (uint256) {
         require(backingTokenAmount > 0, "backingTokenAmount is 0");
 
-        IERC20 backingToken = IERC20(targetPool.backingToken());
+        IERC20 backingToken = IERC20(tempusPool.backingToken());
 
         // In case the underlying pool expects deposits in Ether (e.g. Lido),
         // it uses `backingToken = address(0)`.  Since we disallow 0-value deposits,
@@ -442,7 +442,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
             backingTokenAmount = backingToken.untrustedTransferFrom(
                 msg.sender,
-                address(targetPool),
+                address(tempusPool),
                 backingTokenAmount
             );
         } else {
@@ -450,12 +450,12 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             require(msg.value == backingTokenAmount, "ETH value does not match provided amount");
         }
 
-        (uint256 mintedShares, uint256 depositedYBT, uint256 fee, uint256 interestRate) = targetPool.onDepositBacking{
+        (uint256 mintedShares, uint256 depositedYBT, uint256 fee, uint256 interestRate) = tempusPool.onDepositBacking{
             value: msg.value
         }(backingTokenAmount, recipient);
 
         emit Deposited(
-            address(targetPool),
+            address(tempusPool),
             msg.sender,
             recipient,
             depositedYBT,
@@ -469,7 +469,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     }
 
     function _redeemToYieldBearing(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         address sender,
         uint256 principals,
         uint256 yields,
@@ -477,17 +477,17 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) private {
         require((principals > 0) || (yields > 0), "principalAmount and yieldAmount cannot both be 0");
 
-        (uint256 redeemedYBT, uint256 fee, uint256 interestRate) = targetPool.redeem(
+        (uint256 redeemedYBT, uint256 fee, uint256 interestRate) = tempusPool.redeem(
             sender,
             principals,
             yields,
             recipient
         );
 
-        uint256 redeemedBT = targetPool.numAssetsPerYieldToken(redeemedYBT, targetPool.currentInterestRate());
-        bool earlyRedeem = !targetPool.matured();
+        uint256 redeemedBT = tempusPool.numAssetsPerYieldToken(redeemedYBT, tempusPool.currentInterestRate());
+        bool earlyRedeem = !tempusPool.matured();
         emit Redeemed(
-            address(targetPool),
+            address(tempusPool),
             sender,
             recipient,
             principals,
@@ -501,7 +501,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     }
 
     function _redeemToBacking(
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         address sender,
         uint256 principals,
         uint256 yields,
@@ -509,16 +509,16 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) private {
         require((principals > 0) || (yields > 0), "principalAmount and yieldAmount cannot both be 0");
 
-        (uint256 redeemedYBT, uint256 redeemedBT, uint256 fee, uint256 rate) = targetPool.redeemToBacking(
+        (uint256 redeemedYBT, uint256 redeemedBT, uint256 fee, uint256 rate) = tempusPool.redeemToBacking(
             sender,
             principals,
             yields,
             recipient
         );
 
-        bool earlyRedeem = !targetPool.matured();
+        bool earlyRedeem = !tempusPool.matured();
         emit Redeemed(
-            address(targetPool),
+            address(tempusPool),
             sender,
             recipient,
             principals,
@@ -533,7 +533,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function _exitTempusAMM(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 lpTokensAmount,
         uint256 principalAmountOutMin,
         uint256 yieldAmountOutMin,
@@ -544,7 +544,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         uint256[] memory minAmountsOut = getAMMOrderedAmounts(
             tempusAMM,
-            targetPool,
+            tempusPool,
             principalAmountOutMin,
             yieldAmountOutMin
         );
@@ -584,7 +584,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function _exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
@@ -592,7 +592,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 maxLpTokensToRedeem,
         bool toBackingToken
     ) private {
-        require(!targetPool.matured(), "Pool already finalized");
+        require(!tempusPool.matured(), "Pool already finalized");
         principals += principalsStaked;
         yields += yieldsStaked;
         require(principals == yields, "Needs equal amounts of shares before maturity");
@@ -600,7 +600,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         // transfer LP tokens to controller
         require(tempusAMM.transferFrom(msg.sender, address(this), maxLpTokensToRedeem), "LP token transfer failed");
 
-        uint256[] memory amounts = getAMMOrderedAmounts(tempusAMM, targetPool, principalsStaked, yieldsStaked);
+        uint256[] memory amounts = getAMMOrderedAmounts(tempusAMM, tempusPool, principalsStaked, yieldsStaked);
         _exitTempusAMMGivenAmountsOut(tempusAMM, address(this), msg.sender, amounts, maxLpTokensToRedeem, false);
 
         // transfer remainder of LP tokens back to user
@@ -608,15 +608,15 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         require(tempusAMM.transferFrom(address(this), msg.sender, lpTokenBalance), "LP token transfer failed");
 
         if (toBackingToken) {
-            _redeemToBacking(targetPool, msg.sender, principals, yields, msg.sender);
+            _redeemToBacking(tempusPool, msg.sender, principals, yields, msg.sender);
         } else {
-            _redeemToYieldBearing(targetPool, msg.sender, principals, yields, msg.sender);
+            _redeemToYieldBearing(tempusPool, msg.sender, principals, yields, msg.sender);
         }
     }
 
     function _redeemWithEqualShares(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principals,
         uint256 yields,
         uint256 maxLeftoverShares,
@@ -625,8 +625,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 deadline,
         bool toBackingToken
     ) private {
-        IERC20 principalShare = IERC20(address(targetPool.principalShare()));
-        IERC20 yieldShare = IERC20(address(targetPool.yieldShare()));
+        IERC20 principalShare = IERC20(address(tempusPool.principalShare()));
+        IERC20 yieldShare = IERC20(address(tempusPool.yieldShare()));
         require(principalShare.transferFrom(msg.sender, address(this), principals), "Principals transfer failed");
         require(yieldShare.transferFrom(msg.sender, address(this), yields), "Yields transfer failed");
         require(yieldsRate > 0, "yieldsRate must be greater than 0");
@@ -634,17 +634,20 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         principals = principalShare.balanceOf(address(this));
         yields = yieldShare.balanceOf(address(this));
+        require(maxLeftoverShares < principals || maxLeftoverShares < yields, "maxLeftoverShares too big");
 
-        if (!targetPool.matured()) {
+        if (!tempusPool.matured()) {
             if (((yields > principals) ? (yields - principals) : (principals - yields)) >= maxLeftoverShares) {
-                (uint256 swapAmount, IPoolShare tokenIn) = (targetPool.principalShare() == tempusAMM.token0())
-                    ? tempusAMM.getSwapAmountToEndWithEqualShares(principals, yields, maxLeftoverShares)
-                    : tempusAMM.getSwapAmountToEndWithEqualShares(yields, principals, maxLeftoverShares);
+                (uint256 swapAmount, IPoolShare tokenIn) = tempusAMM.getSwapAmountToEndWithEqualShares(
+                    principals,
+                    yields,
+                    maxLeftoverShares
+                );
 
-                bool yieldsIn = tokenIn == targetPool.yieldShare();
+                bool yieldsIn = tokenIn == tempusPool.yieldShare();
                 uint256 minReturn = yieldsIn
-                    ? swapAmount.mulfV(yieldsRate, targetPool.backingTokenONE())
-                    : swapAmount.divfV(yieldsRate, targetPool.backingTokenONE());
+                    ? swapAmount.mulfV(yieldsRate, tempusPool.backingTokenONE())
+                    : swapAmount.divfV(yieldsRate, tempusPool.backingTokenONE());
 
                 minReturn = minReturn.mulfV(1e18 - maxSlippage, 1e18);
 
@@ -664,9 +667,9 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         }
 
         if (toBackingToken) {
-            _redeemToBacking(targetPool, address(this), principals, yields, msg.sender);
+            _redeemToBacking(tempusPool, address(this), principals, yields, msg.sender);
         } else {
-            _redeemToYieldBearing(targetPool, address(this), principals, yields, msg.sender);
+            _redeemToYieldBearing(tempusPool, address(this), principals, yields, msg.sender);
         }
     }
 
@@ -691,14 +694,14 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function getAMMOrderedAmounts(
         ITempusAMM tempusAMM,
-        ITempusPool targetPool,
+        ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount
     ) private view returns (uint256[] memory) {
         IVault vault = tempusAMM.getVault();
         (IERC20[] memory ammTokens, , ) = vault.getPoolTokens(tempusAMM.getPoolId());
         uint256[] memory amounts = new uint256[](2);
-        (amounts[0], amounts[1]) = (address(targetPool.principalShare()) == address(ammTokens[0]))
+        (amounts[0], amounts[1]) = (address(tempusPool.principalShare()) == address(ammTokens[0]))
             ? (principalAmount, yieldAmount)
             : (yieldAmount, principalAmount);
         return amounts;
