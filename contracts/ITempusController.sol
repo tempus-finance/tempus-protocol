@@ -137,6 +137,112 @@ interface ITempusController {
     /// @param isValid If true, contract is valid to be used, if false, it's not allowed anymore
     function register(address authorizedContract, bool isValid) external;
 
+    /// Gets the estimated amount of Shares and Lp token amounts
+    /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param tempusPool Tempus Pool instance
+    /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
+    /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
+    /// @return lpTokens Ampunt of LP tokens that user could receive
+    /// @return principals Amount of Principals that user could receive in this action
+    /// @return yields Amount of Yields that user could receive in this action
+    function estimatedDepositAndProvideLiquidity(
+        ITempusAMM tempusAMM,
+        ITempusPool tempusPool,
+        uint256 amount,
+        bool isBackingToken
+    )
+        external
+        view
+        returns (
+            uint256 lpTokens,
+            uint256 principals,
+            uint256 yields
+        );
+
+    /// Gets the estimated amount of Shares and Lp token amounts
+    /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param tempusPool Tempus Pool instance
+    /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
+    /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
+    /// @return principals Amount of Principals that user could receive in this action
+    function estimatedDepositAndFix(
+        ITempusAMM tempusAMM,
+        ITempusPool tempusPool,
+        uint256 amount,
+        bool isBackingToken
+    ) external view returns (uint256 principals);
+
+    /// Gets the estimated amount of Shares and Lp token amounts
+    /// @param tempusPool Tempus Pool to which user deposits backing or yield bearing tokens
+    /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
+    /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
+    /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
+    /// @return principals Amount of Principals that user could receive in this action
+    function estimatedDepositAndLeverage(
+        ITempusPool tempusPool,
+        ITempusAMM tempusAMM,
+        uint256 leverage,
+        uint256 amount,
+        bool isBackingToken
+    ) external view returns (uint256 principals, uint256 yields);
+
+    /// @dev Get estimated amount of Backing or Yield bearing tokens for exiting tempusPool and redeeming shares
+    /// @notice This queries at certain block, actual results can differ as underlying tempusPool state can change
+    /// @param tempusAMM Tempus AMM to exit LP tokens from
+    /// @param tempusPool Tempus Pool instance
+    /// @param lpTokens Amount of LP tokens to use to query exit
+    /// @param principals Amount of principals to query redeem
+    /// @param yields Amount of yields to query redeem
+    /// @param threshold Maximum amount of Principals or Yields to be left in case of early exit
+    /// @param toBackingToken If exit is to backing or yield bearing token
+    /// @return tokenAmount Amount of yield bearing or backing token user can get
+    /// @return principalsStaked Amount of Principals that can be redeemed for `lpTokens`
+    /// @return yieldsStaked Amount of Yields that can be redeemed for `lpTokens`
+    /// @return principalsRate Rate on which Principals were swapped to end with equal shares
+    /// @return yieldsRate Rate on which Yields were swapped to end with equal shares
+    function estimateExitAndRedeem(
+        ITempusAMM tempusAMM,
+        ITempusPool tempusPool,
+        uint256 lpTokens,
+        uint256 principals,
+        uint256 yields,
+        uint256 threshold,
+        bool toBackingToken
+    )
+        external
+        view
+        returns (
+            uint256 tokenAmount,
+            uint256 principalsStaked,
+            uint256 yieldsStaked,
+            uint256 principalsRate,
+            uint256 yieldsRate
+        );
+
+    /// @dev Get estimated amount of Backing or Yield bearing tokens for exiting tempusPool and redeeming shares,
+    ///      including previously staked Principals and Yields
+    /// @notice This queries at certain block, actual results can differ as underlying tempusPool state can change
+    /// @param tempusAMM Tempus AMM to exit LP tokens from
+    /// @param tempusPool Tempus Pool instance
+    /// @param principals Amount of principals to query redeem
+    /// @param yields Amount of yields to query redeem
+    /// @param principalsStaked Amount of staked principals to query redeem
+    /// @param yieldsStaked Amount of staked yields to query redeem
+    /// @param toBackingToken If exit is to backing or yield bearing token
+    /// @return tokenAmount Amount of yield bearing or backing token user can get,
+    ///                     in Yield Bearing or Backing Token precision, depending on `toBackingToken`
+    /// @return lpTokensRedeemed Amount of LP tokens that are redeemed to get `principalsStaked` and `yieldsStaked`,
+    ///                          in AMM decimal precision (1e18)
+    function estimateExitAndRedeemGivenStakedOut(
+        ITempusAMM tempusAMM,
+        ITempusPool tempusPool,
+        uint256 principals,
+        uint256 yields,
+        uint256 principalsStaked,
+        uint256 yieldsStaked,
+        bool toBackingToken
+    ) external view returns (uint256 tokenAmount, uint256 lpTokensRedeemed);
+
     /// @dev Atomically deposits YBT/BT to TempusPool and provides liquidity
     ///      to the corresponding Tempus AMM with the issued TYS & TPS
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
