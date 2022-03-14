@@ -80,4 +80,11 @@ interface ITempusAMM {
     /// @dev This function returns the appreciation of one BPT relative to the
     /// underlying tokens. This starts at 1 when the pool is created and grows over time
     function getRate() external view returns (uint256);
+
+    /// @dev Returns the balances the given account controlers in terms of token0/token1
+    /// via the LP tokens they have.
+    /// @param account The account to check the balance of
+    /// @return token0Balance Amount of Token0 corresponding to the LP tokens
+    /// @return token1Balance Amount of Token1 corresponding to the LP tokens
+    function compositionBalanceOf(address account) external view returns (uint256 token0Balance, uint256 token1Balance);
 }
