@@ -317,6 +317,11 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     let balanceUser = +await tempusAMM.balanceOf(user);
     let balanceOwner = +await tempusAMM.balanceOf(owner);
     expect(balanceOwner).to.be.within(balanceUser * 0.99999, balanceUser * 1.000001);
+
+    let underlyingBalanceUser = await tempusAMM.compositionBalanceOf(user);
+    let underlyingBalanceOwner = await tempusAMM.compositionBalanceOf(owner);
+    expect(+underlyingBalanceOwner.token0).to.be.within(+underlyingBalanceUser.token0 * 0.99999, +underlyingBalanceUser.token0 * 1.000001);
+    expect(+underlyingBalanceOwner.token1).to.be.within(+underlyingBalanceUser.token1 * 0.99999, +underlyingBalanceUser.token1 * 1.000001);
   });
 
   it("checks rate and second LP's pool token balance with swaps between", async () =>
