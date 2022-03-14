@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
+import { expectRevert } from "./utils/Utils";
 
 describeForEachPool("TempusPool YieldShare", (pool:PoolTestFixture) =>
 {
@@ -8,6 +9,33 @@ describeForEachPool("TempusPool YieldShare", (pool:PoolTestFixture) =>
   {
     // TODO: refactor these tests to be less sensitive to time
     await pool.createDefault();
+  });
+
+  it("Get shares amount for exact amountOut", async () =>
+  {
+    expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/false)).to.equal(10, "1x shares YBT with rate 1.0");
+    expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/true )).to.equal(10, "1x shares BT with rate 1.0");
+
+    if (pool.yieldPeggedToAsset)
+    {
+      await pool.setInterestRate(2.0);
+      expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/false)).to.equal(5, "0.5x shares YBT with rate 2.0");
+      expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/true )).to.equal(5, "0.5x shares BT with rate 2.0");
+    }
+    else
+    {
+      await pool.setInterestRate(2.0);
+      expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/false)).to.equal(10, "1x shares YBT with rate 2.0");
+      expect(await pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/true )).to.equal(5, "0.5x shares BT with rate 2.0");
+    }
+  });
+
+  it("Should revert getSharesAmountForExactTokensOut if maturity reached", async () =>
+  {
+    await pool.fastForwardToMaturity();
+
+    const expectedReturn = pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/false);
+    (await expectRevert(expectedReturn)).to.equal("Should run only before maturity");
   });
 
   it("getPricePerFullShare() must equal TempusPool::pricePerShare", async () =>
