@@ -203,6 +203,13 @@ interface ITempusPool is ITempusFees, IVersioned {
         bool toBackingToken
     ) external view returns (uint256);
 
+    /// Gets the amount of Principals and Yields for exact amountOut(YBT/BT)
+    /// @param amountOut Amount of BackingTokens or YieldBearingTokens to be withdrawn
+    /// @param isBackingToken If true, @param amountOut is in BackingTokens, otherwise YieldBearingTokens
+    /// @return Amount of Principals (TPS) and Yields (TYS) in Principal/YieldShare decimal precision
+    ///         TPS and TYS are redeemed in 1:1 ratio before maturity, hence a single return value.
+    function getSharesAmountForExactTokensOut(uint256 amountOut, bool isBackingToken) external view returns (uint256);
+
     /// @dev This updates the underlying pool's interest rate
     ///      It is done first thing before deposit/redeem to avoid arbitrage
     ///      It is available to call publically to periodically update interest rates in cases of low volume

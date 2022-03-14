@@ -528,6 +528,17 @@ export class TempusPool extends ContractBase {
     return this.principalShare.fromBigNum(await this.contract.estimatedMintedShares(amount, backingToken));
   }
 
+  /**
+   * @param amountOut Amount of BackingTokens or YieldBearingTokens to be withdrawn
+   * @param isBackingToken If true, @param amountOut is in BackingTokens, otherwise YieldBearingTokens
+   * @return Amount of Principals (TPS) and Yields (TYS), scaled as 1e18 decimals.
+   *         TPS and TYS are redeemed in 1:1 ratio before maturity, hence a single return value.
+   */
+  async getSharesAmountForExactTokensOut(amountOut:NumberOrString, isBackingToken:boolean): Promise<NumberOrString> {
+    const numTokensOut = isBackingToken ? this.asset.toBigNum(amountOut) : this.yieldBearing.toBigNum(amountOut);
+    return this.principalShare.fromBigNum(await this.contract.getSharesAmountForExactTokensOut(numTokensOut, isBackingToken));
+  }
+  
   async numAssetsPerYieldToken(amount:NumberOrString, interestRate:NumberOrString): Promise<NumberOrString> {
     return this.asset.fromBigNum(await this.contract.numAssetsPerYieldToken(
       this.yieldBearing.toBigNum(amount), this.toContractExchangeRate(interestRate)
