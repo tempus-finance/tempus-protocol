@@ -87,7 +87,7 @@ describe('StableMath', () =>
 
   it('invariant reverts if it does not converge', async () =>
   {
-    await expect(mockMath.invariant(amp(5000), [fp(0.00001), fp(1200000), fp(300)], true))
+    await expect(mockMath.invariant(amp(50000), [fp(1.777777777777), fp(18181818181818181818)], true))
           .to.be.revertedWith('StableMath no convergence');
   });
 
