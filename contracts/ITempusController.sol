@@ -144,12 +144,13 @@ interface ITempusController {
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
+    /// @return Amount of Yield Bearing Tokens that were imbursed as a result of the redemption
     function redeemToYieldBearing(
         ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Redeem TPS+TYS held by msg.sender into Backing Tokens
     /// @notice `recipient` will receive the backing tokens
@@ -158,12 +159,13 @@ interface ITempusController {
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
+    /// @return Amount of Backing Tokens that were imbursed as a result of the redemption
     function redeemToBacking(
         ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Withdraws liquidity from TempusAMM
     /// @notice `msg.sender` needs to approve controller for @param lpTokensAmount of LP tokens
@@ -199,6 +201,8 @@ interface ITempusController {
     /// @param yieldsStaked Amount of staked yields (in TempusAMM) to redeem
     /// @param maxLpTokensToRedeem Maximum amount of LP tokens to spend for staked shares redemption
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
+    /// @return Amount of Yield Bearing Tokens (if `toBackingToken == false`) or
+    ///         Backing Tokens (if `toBackingToken == true`) that were imbursed as a result of the redemption
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -208,7 +212,7 @@ interface ITempusController {
         uint256 yieldsStaked,
         uint256 maxLpTokensToRedeem,
         bool toBackingToken
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Withdraws ALL liquidity from TempusAMM and redeems Shares to Yield Bearing or Backing Tokens
     /// @notice `msg.sender` needs to approve controller for whole balance of LP token
@@ -226,6 +230,8 @@ interface ITempusController {
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
     /// @param deadline A timestamp by which, if a swap is necessary, the transaction must be completed,
     ///    otherwise it would revert
+    /// @return Amount of Yield Bearing Tokens (if `toBackingToken == false`) or
+    ///         Backing Tokens (if `toBackingToken == true`) that were imbursed as a result of the redemption
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -239,5 +245,5 @@ interface ITempusController {
         uint256 maxSlippage,
         bool toBackingToken,
         uint256 deadline
-    ) external;
+    ) external returns (uint256);
 }
