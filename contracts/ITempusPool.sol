@@ -117,7 +117,8 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// @notice Deposit will fail if maturity has been reached.
     /// @notice This function can only be called by TempusController
     /// @notice This function assumes funds were already transferred to the TempusPool from the TempusController
-    /// @param backingTokenAmount amount of Backing Tokens to be deposited to underlying protocol in BackingToken decimal precision
+    /// @param backingTokenAmount amount of Backing Tokens to be deposited to underlying protocol
+    ///         in BackingToken decimal precision
     /// @param recipient Address which will receive Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
     /// @return mintedShares Amount of TPS and TYS minted to `recipient`
     /// @return depositedYBT The BT value deposited, denominated as Yield Bearing Tokens
@@ -138,7 +139,8 @@ interface ITempusPool is ITempusFees, IVersioned {
     ///      NOTE #1 Before maturity, principalAmount must equal to yieldAmount.
     ///      NOTE #2 This function can only be called by TempusController
     /// @param from Address to redeem its Tempus Shares
-    /// @param principalAmount Amount of Tempus Principal Shares (TPS) to redeem for YBT in PrincipalShare decimal precision
+    /// @param principalAmount Amount of Tempus Principal Shares (TPS)
+    ///         to redeem for YBT in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yield Shares (TYS) to redeem for YBT in YieldShare decimal precision
     /// @param recipient Address to which redeemed YBT will be sent
     /// @return redeemableYieldTokens Amount of Yield Bearing Tokens redeemed to `recipient`
@@ -185,14 +187,15 @@ interface ITempusPool is ITempusFees, IVersioned {
             uint256 rate
         );
 
-    /// Gets the estimated amount of Principals and Yields after a successful deposit
+    /// @dev Gets the estimated amount of Principals and Yields after a successful deposit
     /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
     /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
     /// @return Amount of Principals (TPS) and Yields (TYS) in Principal/YieldShare decimal precision
     ///         TPS and TYS are minted in 1:1 ratio, hence a single return value.
     function estimatedMintedShares(uint256 amount, bool isBackingToken) external view returns (uint256);
 
-    /// Gets the estimated amount of YieldBearingTokens or BackingTokens received when calling `redeemXXX()` functions
+    /// @dev Gets the estimated amount of YieldBearingTokens or BackingTokens received
+    ///     when calling `redeemXXX()` functions
     /// @param principals Amount of Principals (TPS) in PrincipalShare decimal precision
     /// @param yields Amount of Yields (TYS) in YieldShare decimal precision
     /// @param toBackingToken If true, redeem amount is estimated in BackingTokens instead of YieldBearingTokens
@@ -203,7 +206,8 @@ interface ITempusPool is ITempusFees, IVersioned {
         bool toBackingToken
     ) external view returns (uint256);
 
-    /// Gets the amount of Principals and Yields for exact amountOut(YBT/BT)
+    /// @dev Gets the number of Principals and Yields for exact YBT/BT amount out
+    /// This function can be called only before maturity
     /// @param amountOut Amount of BackingTokens or YieldBearingTokens to be withdrawn
     /// @param isBackingToken If true, @param amountOut is in BackingTokens, otherwise YieldBearingTokens
     /// @return Amount of Principals (TPS) and Yields (TYS) in Principal/YieldShare decimal precision
