@@ -23,6 +23,8 @@ export interface DeployedPoolInfo {
   estimatedYield: number;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   maturityDate: number;
   startDate: number;
@@ -54,6 +56,8 @@ interface CookiePoolInfo {
   backingToken: string;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   poolId: string;
   protocol: string;
   startDate: number;
@@ -74,13 +78,23 @@ interface CookiePoolInfo {
 }
 
 interface CookieConfigData {
-  tempusPools: CookiePoolInfo[];
-  statisticsContract: string;
-  tempusControllerContract: string;
-  vaultContract: string;
-  networkUrl: string;
-  lidoOracle: string;
-  networkName: 'localhost';
+  ethereum: {
+    tempusPools: CookiePoolInfo[];
+    statisticsContract: string;
+    tempusControllerContract: string;
+    lidoOracle: string;
+    vaultContract: string;
+    publicNetworkUrl: string;
+    privateNetworkUrl: string;
+    networkName: 'localhost';
+    alchemyKey: string;
+    chainId: number;
+    averageBlockTime: number;
+    nativeToken: 'ETH' | 'FTM';
+    nativeTokenPrecision: number;
+    blockExplorerName: 'Etherscan' | 'FTMScan';
+    blockExplorerUrl: string;
+  }
 }
 
 interface DeployPoolParams {
@@ -97,6 +111,8 @@ interface DeployPoolParams {
   lpSymbol: string;
   spotPrice: string;
   maxLeftoverShares: string;
+  showEstimatesInBackingToken: boolean;
+  protocolDisplayName: string;
   decimalsForUI: number;
   tokenPrecision: {
     backingToken: number;
@@ -140,25 +156,28 @@ class DeployLocalForked {
 
     const maturityTimeOneYear = latestBlock.timestamp + DAY * 365;
     const maturityTimeOneMonth = latestBlock.timestamp + MONTH;
+    const maturityTimeTheeDays = (Date.now() / 1000) + DAY * 3
 
     this.controller = await TempusController.deploy(this.owner);
     this.stats = await ContractBase.deployContract("Stats");
 
-    console.log('Deploying Lido Pool - stETH - 1 month duration...');
+    console.log('Deploying Lido Pool - stETH - 3 days duration...');
     await this.deployPool({
       poolType: PoolType.Lido,
       owner: this.owner,
       backingToken: 'ETH',
       bt: eth,
       ybt: stETHToken,
-      maturity: maturityTimeOneMonth,
-      yieldEstimate: 0.01,
+      maturity: maturityTimeTheeDays,
+      yieldEstimate: 0.039/365 * 3,
       ybtName: 'Lido stETH',
       ybtSymbol: 'stETH',
       lpName: 'Tempus Lido LP Token - 1',
       lpSymbol: 'LPstETH - 1',
       spotPrice: '2',
       maxLeftoverShares: '0.00001',
+      showEstimatesInBackingToken: false,
+      protocolDisplayName: 'Lido',
       decimalsForUI: 4,
       tokenPrecision: {
         backingToken: 18,
@@ -197,11 +216,11 @@ class DeployLocalForked {
       params.lpName,
       params.lpSymbol,
       pool.address,
-      /*amplifyStart*/5,
-      /*amplifyEnd*/95,
+      /*amplifyStart*/20000,
+      /*amplifyEnd*/80000,
       toWei(0.002),
-      3 * MONTH,
-      MONTH,
+      7890000,
+      7890000,
       this.owner.address
     );
 
@@ -220,6 +239,8 @@ class DeployLocalForked {
       estimatedYield: params.yieldEstimate,
       spotPrice: params.spotPrice,
       maxLeftoverShares: params.maxLeftoverShares,
+      showEstimatesInBackingToken: params.showEstimatesInBackingToken,
+      protocolDisplayName: params.protocolDisplayName,
       decimalsForUI: params.decimalsForUI,
       maturityDate: params.maturity,
       startDate: await pool.startTime() as number,
@@ -246,6 +267,8 @@ class DeployLocalForked {
             estimatedYield: poolInfo.estimatedYield,
             spotPrice: poolInfo.spotPrice,
             maxLeftoverShares: poolInfo.maxLeftoverShares,
+            showEstimatesInBackingToken: poolInfo.showEstimatesInBackingToken,
+            protocolDisplayName: poolInfo.protocolDisplayName,
             backingTokenAddress: poolInfo.backingTokenAddress,
             yieldBearingTokenAddress: poolInfo.yieldBearingTokenAddress,
             decimalsForUI: poolInfo.decimalsForUI,
@@ -277,32 +300,44 @@ class DeployLocalForked {
 
   private generateCookieBookmark(local: boolean) {
     const cookieConfig: CookieConfigData = {
-      tempusPools: this.deployedTempusPoolsInfo.map((deployedPoolInfo) => {
-        return {
-          address: deployedPoolInfo.address,
-          ammAddress: deployedPoolInfo.amm,
-          backingToken: deployedPoolInfo.backingToken,
-          spotPrice: deployedPoolInfo.spotPrice,
-          maxLeftoverShares: deployedPoolInfo.maxLeftoverShares,
-          backingTokenAddress: deployedPoolInfo.backingTokenAddress,
-          yieldBearingTokenAddress: deployedPoolInfo.yieldBearingTokenAddress,
-          decimalsForUI: deployedPoolInfo.decimalsForUI,
-          maturityDate: deployedPoolInfo.maturityDate * 1000, // Scale seconds to milliseconds
-          startDate: deployedPoolInfo.startDate * 1000, // Scale seconds to milliseconds
-          poolId: deployedPoolInfo.poolId,
-          principalsAddress: deployedPoolInfo.principalShareAddress,
-          protocol: deployedPoolInfo.protocol.toLowerCase(),
-          yieldBearingToken: deployedPoolInfo.yieldBearingToken,
-          yieldsAddress: deployedPoolInfo.yieldShareAddress,
-          tokenPrecision: deployedPoolInfo.tokenPrecision
-        }
-      }),
-      networkUrl: local ? 'http://127.0.0.1:8545' : 'https://network.tempus.finance',
-      statisticsContract: this.stats.address,
-      vaultContract: this.VAULT_ADDRESS,
-      tempusControllerContract: this.controller.address,
-      lidoOracle: this.LIDO_ORACLE_ADDRESS,
-      networkName: 'localhost',
+      ethereum: {
+        tempusPools: this.deployedTempusPoolsInfo.map((deployedPoolInfo) => {
+          return {
+            address: deployedPoolInfo.address,
+            ammAddress: deployedPoolInfo.amm,
+            backingToken: deployedPoolInfo.backingToken,
+            spotPrice: deployedPoolInfo.spotPrice,
+            maxLeftoverShares: deployedPoolInfo.maxLeftoverShares,
+            showEstimatesInBackingToken: deployedPoolInfo.showEstimatesInBackingToken,
+            protocolDisplayName: deployedPoolInfo.protocolDisplayName,
+            backingTokenAddress: deployedPoolInfo.backingTokenAddress,
+            yieldBearingTokenAddress: deployedPoolInfo.yieldBearingTokenAddress,
+            decimalsForUI: deployedPoolInfo.decimalsForUI,
+            maturityDate: deployedPoolInfo.maturityDate * 1000, // Scale seconds to milliseconds
+            startDate: deployedPoolInfo.startDate * 1000, // Scale seconds to milliseconds
+            poolId: deployedPoolInfo.poolId,
+            principalsAddress: deployedPoolInfo.principalShareAddress,
+            protocol: deployedPoolInfo.protocol.toLowerCase(),
+            yieldBearingToken: deployedPoolInfo.yieldBearingToken,
+            yieldsAddress: deployedPoolInfo.yieldShareAddress,
+            tokenPrecision: deployedPoolInfo.tokenPrecision
+          }
+        }),
+        statisticsContract: this.stats.address,
+        vaultContract: this.VAULT_ADDRESS,
+        tempusControllerContract: this.controller.address,
+        lidoOracle: this.LIDO_ORACLE_ADDRESS,
+        networkName: 'localhost',
+        alchemyKey: '',
+        averageBlockTime: 13.2,
+        blockExplorerName: 'Etherscan',
+        blockExplorerUrl: 'https://etherscan.io/',
+        chainId: 31337,
+        nativeToken: 'ETH',
+        nativeTokenPrecision: 18,
+        privateNetworkUrl: local ? 'http://127.0.0.1:8545' : 'https://network.tempus.finance',
+        publicNetworkUrl: ''
+      }
     }
 
     const cookieValue = encodeURIComponent(JSON.stringify(cookieConfig));
