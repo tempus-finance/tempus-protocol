@@ -2,7 +2,10 @@ module.exports = {
   skipFiles: [
     'mocks/lido/StETH.sol', // 1:1 with Lido, already tested by upstream
     'mocks/aave/WadRayMath.sol', // 1:1 with Aave, already tested by upstream
-    'amm/TempusAMMFactory.sol' // Balancer implementation
+    'amm/TempusAMMFactory.sol', // Balancer implementation
+    'echidna/EchidnaLidoTempusPool.sol', // Echidna contract
+    'echidna/EchidnaTempusPool.sol', // Echidna contract
+    'echidna/EchidnaYearnTempusPool.sol' // Echidna contract
   ],
   mocha: {
     grep: "@skip-on-coverage", // Find everything with this tag
