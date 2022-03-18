@@ -6,6 +6,13 @@ const SCALING_FACTOR = 1e18;
 
 export type BigNumberish = string | number | BigNumber;
 
+/** @returns True if value is BigNumber-like */
+export function isBigNumberish(value:any) {
+  return value instanceof BigNumber
+      || typeof(value) === 'number'
+      || typeof(value) === 'string';
+}
+
 // converts anything to Decimal type
 export function decimal(x: BigNumberish | Decimal): Decimal {
   return new Decimal(x.toString());

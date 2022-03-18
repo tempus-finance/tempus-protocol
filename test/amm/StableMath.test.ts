@@ -1,10 +1,11 @@
-import { expect } from 'chai';
+import { expect, AssertionError } from 'chai';
 import { AsyncFunc } from 'mocha';
 import { Contract } from 'ethers';
 import { ContractBase } from "../utils/ContractBase";
-import { BigNumberish, bn, fp, num } from './Numbers';
+import { BigNumberish, fp, num, isBigNumberish } from './Numbers';
 import { Decimal } from 'decimal.js';
 import {
+  amp,
   calculateAnalyticalInvariantForTwoTokens,
   calculateInvariant,
   calcInGivenOut,
@@ -13,135 +14,213 @@ import {
   calcTokenInGivenExactBptOut,
   calcBptInGivenExactTokensOut,
   calcTokenOutGivenExactBptIn,
+  calcTokensOutGivenExactBptIn,
   calculateOneTokenSwapFeeAmount,
+  getTokenBalanceGivenInvariantAndAllOtherBalances
 } from './StableMath';
 
-function expectEqual(actual:BigNumberish|Decimal, expected:BigNumberish|Decimal, error:number = 0.001) {
-  const _actual = num(actual);
-  const _expected = num(expected);
-  const maxErr = _expected * error;
+function expectEqual(expected:BigNumberish|Decimal, actual:BigNumberish|Decimal) {
+  const _actual = num(expected);
+  const _expected = num(actual);
+  const maxErr = _expected * 0.001;
+  //console.log('actual=%s expected=%s\n', _actual, _expected);
   expect(_actual).to.be.within(_expected - maxErr, _expected + maxErr);
-  console.log('OK actual=%s expected=%s', _actual, _expected);
 }
 
-async function expectEquals(fun1:AsyncFunc, fun2:Function, ...args:any[]) {
-  const result = await fun1.apply(null, args);
+async function expectEquals(fun1:AsyncFunc, fun2:Function, ...args:any[]): Promise<void> {
+  //console.log("%s(%s)", fun2.name, args.toString());
+  const actual = await fun1.apply(null, args);
   const expected = fun2.apply(null, args);
-  expectEqual(result, expected);
+  try {
+    if (isBigNumberish(actual)) {
+      expectEqual(actual, expected);
+    } else {
+      const actualArr = Object.keys(actual).map(key => actual[key]);
+      const expectArr = Object.keys(expected).map(key => expected[key]);
+      if (actualArr.length !== expectArr.length) {
+        throw new Error("Array length mismatch:"+actualArr.toString()+" != "+expectArr.toString());
+      }
+      for (let i = 0; i < actualArr.length; ++i) {
+        expectEqual(actualArr[i], expectArr[i]);
+      }
+    }
+  } catch (e) {
+    if (e instanceof AssertionError) {
+      throw new AssertionError(e.message + " in " + fun2.name + " with args ("+args+")");
+    }
+  }
 }
 
-describe.only('StableMath', () =>
+describe('StableMath', () =>
 {
-  let mock:Contract;
-  const getAmp = (amp:number) => bn(amp).mul(1e3);
+  let mockMath:Contract;
 
-  before(async () =>
-  {
-    mock = await ContractBase.deployContract("MockStableMath");
+  before(async () => {
+    mockMath = await ContractBase.deployContract("MockStableMath");
   });
 
   it('invariant', async () =>
   {
-    const balances = [fp(10), fp(12)];
-    const result = await mock.invariant(getAmp(100), balances, true);
-    const expected = calculateInvariant(bn(100), balances, true);
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateInvariant, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], true);
 
-    expectEquals(mock.invariant, calculateInvariant, getAmp(100), balances, true);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], true);
   });
 
   it('invariant equals analytical solution', async () =>
   {
-    const balances = [fp(10), fp(12)];
-    const result = await mock.invariant(getAmp(100), balances, true);
-    const expected = calculateAnalyticalInvariantForTwoTokens(balances, bn(100));
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateAnalyticalInvariantForTwoTokens, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], true);
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], true);
   });
 
   it('invariant reverts if it does not converge', async () =>
   {
-    const balances = [fp(0.00001), fp(1200000), fp(300)];
-    await expect(mock.invariant(getAmp(5000), balances, true)).to.be.revertedWith(
-        'StableMath no convergence'
-    );
+    await expect(mockMath.invariant(amp(5000), [fp(0.00001), fp(1200000), fp(300)], true))
+          .to.be.revertedWith('StableMath no convergence');
   });
 
+  // Computes how many IN tokens must be sent to a pool if `tokenAmountOut` are received, given the current balances
   it('inGivenOut', async () =>
   {
-    const balances = [fp(10), fp(12)];
-    const result = await mock.inGivenOut(getAmp(100), balances, 0, 1, fp(1));
-    const expected = calcInGivenOut(bn(100), balances, 0, 1, fp(1));
-    expectEqual(result, expected);
+    const inGivenOut = (...args:any[]) => expectEquals(mockMath.inGivenOut, calcInGivenOut, ...args);
+
+    await inGivenOut(amp(100), /*balances*/[fp(10), fp(12)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(1));
+    await inGivenOut(amp(1), /*balances*/[fp(100), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(10));
+
+    // balances are not close enough, and then we want them to diverge even more.
+    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+
+    // adding more "balanced" swap by adding token which has less balance
+    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
+    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
+    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
+    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
+    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
+    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
   });
 
   it('outGivenIn', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const result = await mock.outGivenIn(getAmp(10), balances, 0, 1, fp(1));
-    const expected = calcOutGivenIn(bn(10), balances, 0, 1, fp(1));
-    expectEqual(result, expected);
+    const outGivenIn = (...args:any[]) => expectEquals(mockMath.outGivenIn, calcOutGivenIn, ...args);
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(1));
+    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(10));
+
+    // balances are not close enough, and then we want them to diverge even more.
+    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
+
+    // adding more "balanced" swap by adding token which has less balance
+    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
   });
 
   it('bptOutGivenExactTokensIn', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const amountsIn = [fp(1), fp(1)];
-    const result = await mock.bptOutGivenExactTokensIn(
-      getAmp(100), balances, amountsIn, fp(10000), fp(0.1)
-    );
-    const expected = calcBptOutGivenExactTokensIn(
-      bn(100), balances, amountsIn, fp(10000), fp(0.1)
-    );
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.bptOutGivenExactTokensIn, calcBptOutGivenExactTokensIn, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
   });
 
   it('tokenInGivenExactBptOut', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const result = await mock.tokenInGivenExactBptOut(
-      getAmp(100), balances, 0, /*bptOut*/fp(100), fp(10000), fp(0.1)
-    );
-    const expected = calcTokenInGivenExactBptOut(
-      bn(100), balances, 0, /*bptOut*/fp(100), fp(10000), fp(0.1)
-    );
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.tokenInGivenExactBptOut, calcTokenInGivenExactBptOut, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
   });
 
   it('bptInGivenExactTokensOut', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const amountsOut = [fp(1), fp(1)];
-    const result = await mock.bptInGivenExactTokensOut(
-      getAmp(100), balances, amountsOut, fp(10000), fp(0.1)
-    );
-    const expected = calcBptInGivenExactTokensOut(
-      bn(100), balances, amountsOut, fp(10000), fp(0.1)
-    );
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.bptInGivenExactTokensOut, calcBptInGivenExactTokensOut, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*amountsOut*/[fp(1), fp(1)], fp(10000), fp(0.1));
   });
 
   it('tokenOutGivenExactBptIn', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const result = await mock.tokenOutGivenExactBptIn(
-      getAmp(100), balances, 0, fp(100), fp(10000), fp(0.1)
-    );
-    const expected = calcTokenOutGivenExactBptIn(
-      bn(100), balances, 0, fp(100), fp(10000), fp(0.1)
-    );
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.tokenOutGivenExactBptIn, calcTokenOutGivenExactBptIn, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
   });
 
-  it('dueTokenProtocolSwapFeeAmount returns protocol swap fees', async () =>
+  it('tokensOutGivenExactBptIn', async () =>
   {
-    const balances = [fp(10), fp(11)];
-    const lastInvariant = fp(10);
-    const result = await mock.dueTokenProtocolSwapFeeAmount(
-      getAmp(100), balances, lastInvariant, 0, fp(0.1)
-    );
-    const expected = calculateOneTokenSwapFeeAmount(
-      bn(100), balances, lastInvariant, 0, fp(0.1)
-    );
-    expectEqual(result, expected);
+    const equal = (...args:any[]) => expectEquals(mockMath.tokensOutGivenExactBptIn, calcTokensOutGivenExactBptIn, ...args);
+    await equal(/*balances*/[fp(10), fp(11)], /*bptAmountIn*/fp(100), /*bptTotalSupply*/fp(100));
+    await equal(/*balances*/[fp(10), fp(100)], /*bptAmountIn*/fp(100), /*bptTotalSupply*/fp(100));
+  });
+
+  it('dueTokenProtocolSwapFeeAmount', async () =>
+  {
+    const equal = (...args:any[]) => expectEquals(mockMath.dueTokenProtocolSwapFeeAmount, calculateOneTokenSwapFeeAmount, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
+  });
+
+  it('tokenBalanceGivenInvariantAndAllOtherBalances', async () =>
+  {
+    const equal = (...args:any[]) => expectEquals(mockMath.tokenBalanceGivenInvariantAndAllOtherBalances, getTokenBalanceGivenInvariantAndAllOtherBalances, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(10), /*tokenIndex*/0);
+
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
   });
 });
