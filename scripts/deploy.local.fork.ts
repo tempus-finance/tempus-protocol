@@ -169,7 +169,7 @@ class DeployLocalForked {
       bt: eth,
       ybt: stETHToken,
       maturity: maturityTimeTheeDays,
-      yieldEstimate: 0.039/365 * 3,
+      yieldEstimate: 0.0003,
       ybtName: 'Lido stETH',
       ybtSymbol: 'stETH',
       lpName: 'Tempus Lido LP Token - 1',
@@ -219,8 +219,8 @@ class DeployLocalForked {
       /*amplifyStart*/20000,
       /*amplifyEnd*/80000,
       toWei(0.002),
-      7890000,
-      7890000,
+      DAY * 3,
+      DAY * 3,
       this.owner.address
     );
 
