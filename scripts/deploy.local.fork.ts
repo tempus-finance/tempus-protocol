@@ -156,7 +156,7 @@ class DeployLocalForked {
 
     const maturityTimeOneYear = latestBlock.timestamp + DAY * 365;
     const maturityTimeOneMonth = latestBlock.timestamp + MONTH;
-    const maturityTimeTheeDays = (Date.now() / 1000) + DAY * 3
+    const maturityTimeTheeDays = latestBlock.timestamp + DAY * 3
 
     this.controller = await TempusController.deploy(this.owner);
     this.stats = await ContractBase.deployContract("Stats");
