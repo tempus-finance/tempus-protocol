@@ -101,15 +101,21 @@ abstract contract EchidnaTempusPool {
     }
 
     function _depositBacking(uint256 backingTokenAmount, address recipient) internal {
+        require(backingTokenAmount > 0, "backingTokenAmount is 0");
+
+        uint256 ethAmount = msg.value;
         IERC20 backingToken = IERC20(tempusPool.backingToken());
         if (address(backingToken) != address(0)) {
+            ethAmount = 0;
             backingTokenAmount = backingToken.untrustedTransfer(address(tempusPool), backingTokenAmount);
         }
 
-        tempusPool.onDepositBacking{value: msg.value}(backingTokenAmount, convertAddressToLimitedSet(recipient));
+        tempusPool.onDepositBacking{value: ethAmount}(backingTokenAmount, convertAddressToLimitedSet(recipient));
     }
 
     function _depositYieldBearing(uint256 yieldTokenAmount, address recipient) internal {
+        require(yieldTokenAmount > 0, "yieldTokenAmount is 0");
+
         IERC20 yieldBearingToken = IERC20(tempusPool.yieldBearingToken());
 
         uint256 transferredYBT = yieldBearingToken.untrustedTransfer(address(tempusPool), yieldTokenAmount);
