@@ -122,63 +122,36 @@ jobs:
           command: yarn deploy-ci:fork:mainnet
 
   runMythX-Pool:
-    executor:
-      name: node/default
-      tag: '15.11'
+    docker:
+      - image: tempusfinance/tempus-mythx:latest
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-      - run:
-          name: "Install MythX"
-          command: |
-            sudo apt update
-            sudo apt install python3-pip
-            sudo pip3 install markupsafe==2.0.1
-            sudo pip3 install python-dateutil==2.8.1
-            sudo yarn mythx-install
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
           command: yarn mythx-pool
 
   runMythX-AMM:
-    executor:
-      name: node/default
-      tag: '15.11'
+    docker:
+      - image: tempusfinance/tempus-mythx:latest
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-      - run:
-          name: "Install MythX"
-          command: |
-            sudo apt update
-            sudo apt install python3-pip
-            sudo pip3 install markupsafe==2.0.1
-            sudo pip3 install python-dateutil==2.8.1
-            sudo yarn mythx-install
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
           command: yarn mythx-amm
 
   runMythX-Misc:
-    executor:
-      name: node/default
-      tag: '15.11'
+    docker:
+      - image: tempusfinance/tempus-mythx:latest
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-      - run:
-          name: "Install MythX"
-          command: |
-            sudo apt update
-            sudo apt install python3-pip
-            sudo pip3 install markupsafe==2.0.1
-            sudo pip3 install python-dateutil==2.8.1
-            sudo yarn mythx-install
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
