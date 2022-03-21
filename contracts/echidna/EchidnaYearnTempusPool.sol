@@ -39,4 +39,10 @@ contract EchidnaYearnTempusPool is EchidnaTempusPool {
     function depositBacking(uint256 backingTokenAmount, address recipient) public payable override {
         _depositBacking(backingTokenAmount, recipient);
     }
+
+    function depositRedeemYieldBearing(address fromRecipient, uint256 yieldTokenAmount) public payable override {
+        asset.approve(address(yearnVaultMock), yieldTokenAmount);
+        yearnVaultMock.deposit(yieldTokenAmount);
+        _depositRedeemYieldBearing(fromRecipient, yieldTokenAmount);
+    }
 }

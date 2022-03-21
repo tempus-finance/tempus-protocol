@@ -35,4 +35,9 @@ contract EchidnaLidoTempusPool is EchidnaTempusPool {
     function depositBacking(uint256, address recipient) public payable override {
         _depositBacking(msg.value, recipient);
     }
+
+    function depositRedeemYieldBearing(address fromRecipient, uint256) public payable override {
+        lidoMock.submit{value: msg.value}(address(0));
+        _depositRedeemYieldBearing(fromRecipient, msg.value);
+    }
 }
