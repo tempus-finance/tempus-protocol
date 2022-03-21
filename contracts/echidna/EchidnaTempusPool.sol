@@ -31,6 +31,14 @@ abstract contract EchidnaTempusPool {
     ///                         Tempus Principal Shares (TPS) and Tempus Yield Shares (TYS)
     function depositBacking(uint256 backingTokenAmount, address recipient) public payable virtual;
 
+    /// @dev Deposits Yield Bearing Tokens to a Tempus Pool and after that
+    ///     redeem TPS+TYS into Yield Bearing Tokens
+    /// @param fromRecipient Address which will receive Tempus Principal Shares (TPS)
+    ///     and Tempus Yield Shares (TYS), and after that redeem that into YBT
+    /// @param yieldTokenAmount Amount of Yield Bearing Tokens to be deposited
+    ///                         in YBT Contract precision which can be 18 or 8 decimals
+    function depositRedeemYieldBearing(address fromRecipient, uint256 yieldTokenAmount) public payable virtual;
+
     /// @dev Replace the current fee configuration with a new one.
     ///     By default all the fees are expected to be set to zero.
     /// @param depositPercent Deposit fee percent
@@ -70,12 +78,7 @@ abstract contract EchidnaTempusPool {
         uint256 yieldAmount,
         address recipient
     ) public {
-        tempusPool.redeem(
-            convertAddressToLimitedSet(from),
-            principalAmount,
-            yieldAmount,
-            convertAddressToLimitedSet(recipient)
-        );
+        _redeemToYieldBearing(from, principalAmount, yieldAmount, recipient);
     }
 
     /// @dev Redeem TPS+TYS held by msg.sender into Backing Tokens
@@ -100,6 +103,19 @@ abstract contract EchidnaTempusPool {
         );
     }
 
+    function _depositRedeemYieldBearing(address fromRecipient, uint256 yieldTokenAmount) internal {
+        (uint256 mintedShares, , , ) = _depositYieldBearing(yieldTokenAmount, fromRecipient);
+
+        (uint256 redeemedYieldTokens, , ) = _redeemToYieldBearing(
+            fromRecipient,
+            mintedShares,
+            mintedShares,
+            fromRecipient
+        );
+
+        assert(redeemedYieldTokens <= yieldTokenAmount);
+    }
+
     function _depositBacking(uint256 backingTokenAmount, address recipient) internal {
         require(backingTokenAmount > 0, "backingTokenAmount is 0");
 
@@ -113,14 +129,44 @@ abstract contract EchidnaTempusPool {
         tempusPool.onDepositBacking{value: ethAmount}(backingTokenAmount, convertAddressToLimitedSet(recipient));
     }
 
-    function _depositYieldBearing(uint256 yieldTokenAmount, address recipient) internal {
+    function _depositYieldBearing(uint256 yieldTokenAmount, address recipient)
+        internal
+        returns (
+            uint256 mintedShares,
+            uint256 depositedBT,
+            uint256 fee,
+            uint256 rate
+        )
+    {
         require(yieldTokenAmount > 0, "yieldTokenAmount is 0");
 
         IERC20 yieldBearingToken = IERC20(tempusPool.yieldBearingToken());
 
         uint256 transferredYBT = yieldBearingToken.untrustedTransfer(address(tempusPool), yieldTokenAmount);
 
-        tempusPool.onDepositYieldBearing(transferredYBT, convertAddressToLimitedSet(recipient));
+        return tempusPool.onDepositYieldBearing(transferredYBT, convertAddressToLimitedSet(recipient));
+    }
+
+    function _redeemToYieldBearing(
+        address from,
+        uint256 principalAmount,
+        uint256 yieldAmount,
+        address recipient
+    )
+        internal
+        returns (
+            uint256 redeemedYieldTokens,
+            uint256 fee,
+            uint256 rate
+        )
+    {
+        return
+            tempusPool.redeem(
+                convertAddressToLimitedSet(from),
+                principalAmount,
+                yieldAmount,
+                convertAddressToLimitedSet(recipient)
+            );
     }
 
     /// @dev Convert original(Echidna generated) address to a limited set of address
