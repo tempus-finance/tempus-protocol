@@ -157,32 +157,57 @@ jobs:
           no_output_timeout: 30m
           command: yarn mythx-misc
 
-  echidna:
-    executor:
-      name: node/default
-      tag: '15.11'
+  echidna-lido-pool:
+    docker:
+      - image: tempusfinance/tempus-echidna:latest
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
       - run:
-          name: "Install Echidna"
-          command: |
-            sudo apt update
-            sudo apt install python3-pip
-            sudo pip3 install slither-analyzer
-            sudo pip3 install solc-select
-            sudo solc-select install 0.8.10
-            sudo solc-select use 0.8.10
-            sudo wget -O /tmp/echidna-test.tar.gz https://github.com/crytic/echidna/releases/download/v2.0.0/echidna-test-2.0.0-Ubuntu-18.04.tar.gz
-            sudo tar -xf /tmp/echidna-test.tar.gz -C /usr/bin
-            sudo chmod +x /usr/bin/echidna-test
-      - run:
-          name: "Run Echidna"
+          name: "Run Echidna lido pool"
           no_output_timeout: 30m
           command: |
             yarn echidna-test:pool:lido
+  
+  echidna-yearn-pool:
+    docker:
+      - image: tempusfinance/tempus-echidna:latest
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: "Run Echidna yearn pool"
+          no_output_timeout: 30m
+          command: |
             yarn echidna-test:pool:yearn
+
+  echidna-assertion-lido-pool:
+    docker:
+      - image: tempusfinance/tempus-echidna:latest
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: "Run Echidna assertion lido pool"
+          no_output_timeout: 30m
+          command: |
+            yarn echidna-test-assertion:pool:lido
+
+  echidna-assertion-yearn-pool:
+    docker:
+      - image: tempusfinance/tempus-echidna:latest
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: "Run Echidna assertion yearn pool"
+          no_output_timeout: 30m
+          command: |
+            yarn echidna-test-assertion:pool:yearn
 
 workflows:
   code_coverage:
@@ -225,7 +250,10 @@ workflows:
       - runMythX-Misc
   echidna:
     jobs:
-      - echidna
+      - echidna-lido-pool
+      - echidna-yearn-pool
+      - echidna-assertion-lido-pool
+      - echidna-assertion-yearn-pool
 
 notify:
   webhooks:

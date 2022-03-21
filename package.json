@@ -79,7 +79,9 @@
     "mythx-misc": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/stats/Stats.sol contracts/token/TempusToken.sol contracts/token/vesting/ERC20Vesting.sol",
     "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither .",
     "echidna-test:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --format text",
-    "echidna-test:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --format text"
+    "echidna-test:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --format text",
+    "echidna-test-assertion:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --test-mode assertion --format text",
+    "echidna-test-assertion:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --test-mode assertion --format text"
   },
   "dependencies": {
     "@balancer-labs/v2-asset-manager-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/asset-manager-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
