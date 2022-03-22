@@ -498,8 +498,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             yields,
             redeemedYBT,
             redeemedBT,
-            fee,
             interestRate,
+            fee,
             earlyRedeem
         );
 
@@ -531,8 +531,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             yields,
             redeemedYBT,
             redeemedBT,
-            fee,
             rate,
+            fee,
             earlyRedeem
         );
 
