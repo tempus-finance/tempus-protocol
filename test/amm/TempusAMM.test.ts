@@ -310,13 +310,28 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 100, ammBalanceYield: 1000});
 
+    let balanceUser = +await tempusAMM.balanceOf(user);
+    let balanceOwner = +await tempusAMM.balanceOf(owner);
+    let underlyingBalanceUser = await tempusAMM.compositionBalanceOf(user);
+    let underlyingBalanceOwner = await tempusAMM.compositionBalanceOf(owner);
+    expect(balanceUser).to.equal(0);
+    expect(balanceOwner).to.be.within(181, 182);
+    expect(+underlyingBalanceUser.token0).to.equal(0);
+    expect(+underlyingBalanceUser.token1).to.equal(0);
+    expect(+underlyingBalanceOwner.token0).to.be.within(99.99, 100);
+    expect(+underlyingBalanceOwner.token1).to.be.within(999.99, 1000);
     await tempusAMM.principalShare.transfer(owner, user.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user.address, 1000);
     await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
 
-    let balanceUser = +await tempusAMM.balanceOf(user);
-    let balanceOwner = +await tempusAMM.balanceOf(owner);
+    balanceUser = +await tempusAMM.balanceOf(user);
+    balanceOwner = +await tempusAMM.balanceOf(owner);
+    underlyingBalanceUser = await tempusAMM.compositionBalanceOf(user);
+    underlyingBalanceOwner = await tempusAMM.compositionBalanceOf(owner);
+
     expect(balanceOwner).to.be.within(balanceUser * 0.99999, balanceUser * 1.000001);
+    expect(+underlyingBalanceOwner.token0).to.be.within(+underlyingBalanceUser.token0 * 0.99999, +underlyingBalanceUser.token0 * 1.000001);
+    expect(+underlyingBalanceOwner.token1).to.be.within(+underlyingBalanceUser.token1 * 0.99999, +underlyingBalanceUser.token1 * 1.000001);
   });
 
   it("checks rate and second LP's pool token balance with swaps between", async () =>

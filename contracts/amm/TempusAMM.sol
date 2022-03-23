@@ -287,6 +287,18 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
                 );
     }
 
+    function compositionBalanceOf(address account)
+        external
+        view
+        returns (uint256 token0Balance, uint256 token1Balance)
+    {
+        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
+        uint256 supply = totalSupply();
+        uint256 accountBalance = balanceOf(account);
+        token0Balance = (accountBalance * balances[0]) / supply;
+        token1Balance = (accountBalance * balances[1]) / supply;
+    }
+
     // Base Pool handlers
 
     // Swap - Two Token Pool specialization (from BaseMinimalSwapInfoPool)

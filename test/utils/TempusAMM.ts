@@ -105,6 +105,14 @@ export class TempusAMM extends ContractBase {
     return this.fromBigNum(await this.contract.balanceOf(user.address));
   }
 
+  /**
+   * @dev Returns the amount of token0/token1 the users' LP tokens represent.
+   */
+  async compositionBalanceOf(user:Signer): Promise<{token0: NumberOrString, token1: NumberOrString}> {
+    const [token0, token1] = await this.contract.compositionBalanceOf(user.address);
+    return {token0: this.token0.fromBigNum(token0), token1: this.token1.fromBigNum(token1)};
+  }
+
   async totalSupply(): Promise<NumberOrString> {
     return this.fromBigNum(await this.contract.totalSupply());
   }
