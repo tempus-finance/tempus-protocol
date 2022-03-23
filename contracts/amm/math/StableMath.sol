@@ -215,46 +215,6 @@ library StableMath {
         }
     }
 
-    function _calcTokenInGivenExactBptOut(
-        uint256 amp,
-        uint256 balance0,
-        uint256 balance1,
-        uint256 tokenIndex,
-        uint256 bptAmountOut,
-        uint256 bptTotalSupply,
-        uint256 swapFeePercentage
-    ) internal pure returns (uint256) {
-        // Token in, so we round up overall.
-
-        // Get the current invariant
-        uint256 currentInvariant = _calculateInvariant(amp, balance0, balance1, true);
-
-        // Calculate new invariant
-        uint256 newInvariant = (bptTotalSupply + bptAmountOut).divUp(bptTotalSupply).mulUp(currentInvariant);
-
-        // Calculate amount in without fee.
-        uint256 newBalanceTokenIndex = _getTokenBalanceGivenInvariantAndAllOtherBalances(
-            amp,
-            balance0,
-            balance1,
-            newInvariant,
-            tokenIndex
-        );
-
-        uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
-        uint256 amountInWithoutFee = newBalanceTokenIndex - tokenBalance;
-
-        // We can now compute how much extra balance is being deposited and used in virtual swaps, and charge swap fees
-        // accordingly.
-        uint256 currentWeight = tokenBalance.divDown(balance0 + balance1);
-        uint256 taxablePercentage = currentWeight.complement();
-        uint256 taxableAmount = amountInWithoutFee.mulUp(taxablePercentage);
-        uint256 nonTaxableAmount = amountInWithoutFee - taxableAmount;
-
-        // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
-        return nonTaxableAmount + taxableAmount.divUp(FixedPoint.ONE - swapFeePercentage);
-    }
-
     /*
     Flow of calculations:
     amountsTokenOut -> amountsOutProportional ->

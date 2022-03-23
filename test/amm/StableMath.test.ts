@@ -11,7 +11,6 @@ import {
   calcInGivenOut,
   calcOutGivenIn,
   calcBptOutGivenExactTokensIn,
-  calcTokenInGivenExactBptOut,
   calcBptInGivenExactTokensOut,
   calcTokenOutGivenExactBptIn,
   calcTokensOutGivenExactBptIn,
@@ -150,19 +149,6 @@ describe('StableMath', () =>
     await equal(amp(20), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
     await equal(amp(50), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
     await equal(amp(90), /*balances*/[fp(10), fp(100)], /*amountsIn*/[fp(1), fp(1)], fp(10000), fp(0.1));
-  });
-
-  it('tokenInGivenExactBptOut', async () =>
-  {
-    const equal = (...args:any[]) => expectEquals(mockMath.tokenInGivenExactBptOut, calcTokenInGivenExactBptOut, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, /*bptOut*/fp(100), fp(10000), fp(0.1));
   });
 
   it('bptInGivenExactTokensOut', async () =>

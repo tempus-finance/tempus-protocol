@@ -52,26 +52,6 @@ contract MockStableMath {
             );
     }
 
-    function tokenInGivenExactBptOut(
-        uint256 amp,
-        uint256[] memory balances,
-        uint256 tokenIdx,
-        uint256 bptAmountOut,
-        uint256 bptTotalSupply,
-        uint256 swapFee
-    ) external pure returns (uint256) {
-        return
-            StableMath._calcTokenInGivenExactBptOut(
-                amp,
-                balances[0],
-                balances[1],
-                tokenIdx,
-                bptAmountOut,
-                bptTotalSupply,
-                swapFee
-            );
-    }
-
     function bptInGivenExactTokensOut(
         uint256 amp,
         uint256[] memory balances,

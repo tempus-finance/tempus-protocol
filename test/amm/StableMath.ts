@@ -177,43 +177,6 @@ export function calcBptOutGivenExactTokensIn(
   }
 }
 
-export function calcTokenInGivenExactBptOut(
-  amp: BigNumber,
-  fpBalances: BigNumberish[],
-  tokenIndex: number,
-  fpBptAmountOut: BigNumberish,
-  fpBptTotalSupply: BigNumberish,
-  fpSwapFeePercentage: BigNumberish
-): BigNumberish {
-  // Get current invariant
-  const fpCurrentInvariant = calculateInvariant(amp, fpBalances, true);
-
-  // Calculate new invariant
-  const newInvariant = fromFp(bn(fpBptTotalSupply).add(fpBptAmountOut))
-    .div(fromFp(fpBptTotalSupply))
-    .mul(fromFp(fpCurrentInvariant));
-
-  // First calculate the sum of all token balances which will be used to calculate
-  // the current weight of token
-  const balances = fpBalances.map(fromFp);
-  const sumBalances = balances.reduce((a: Decimal, b: Decimal) => a.add(b), decimal(0));
-
-  // Calculate amount in without fee.
-  const newBalanceTokenIndex = getTokenBalance(amp, balances, newInvariant, tokenIndex);
-  const amountInWithoutFee = newBalanceTokenIndex.sub(balances[tokenIndex]);
-
-  // We can now compute how much extra balance is being deposited and used in virtual swaps, and charge swap fees
-  // accordingly.
-  const currentWeight = balances[tokenIndex].div(sumBalances);
-  const taxablePercentage = currentWeight.gt(1) ? 0 : decimal(1).sub(currentWeight);
-  const taxableAmount = amountInWithoutFee.mul(taxablePercentage);
-  const nonTaxableAmount = amountInWithoutFee.sub(taxableAmount);
-
-  const bptOut = nonTaxableAmount.add(taxableAmount.div(decimal(1).sub(fromFp(fpSwapFeePercentage))));
-
-  return fp(bptOut);
-}
-
 export function calcBptInGivenExactTokensOut(
   amplificationParameter: BigNumber,
   fpBalances: BigNumberish[],
