@@ -32,8 +32,8 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
       pool.yields.toBigNum(100), // yield amount
       pool.ybt.toBigNum(100), // yield bearing token amount
       pool.asset.toBigNum(100), // backing token amount
-      pool.yields.toBigNum(0), // fee
       pool.tempus.toContractExchangeRate(1.0), // rate
+      pool.yields.toBigNum(0), // fee
       true // early redeem
     );
   });
