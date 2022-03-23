@@ -10,7 +10,7 @@ contract MockStableMath {
         uint256[] memory balances,
         bool roundUp
     ) external pure returns (uint256) {
-        return StableMath._calculateInvariant(amp, balances[0], balances[1], roundUp);
+        return StableMath.invariant(amp, balances[0], balances[1], roundUp);
     }
 
     function inGivenOut(
