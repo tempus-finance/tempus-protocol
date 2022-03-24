@@ -1,4 +1,4 @@
-import { blockTimestamp, increaseTime } from "./../test/utils/TimeUtils";
+import { blockTimestamp, increaseTime } from "../test/utils/Utils";
 
 async function main() {
   console.log('Block timestamp before: ', await blockTimestamp());
