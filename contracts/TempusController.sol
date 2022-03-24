@@ -26,7 +26,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
 
-    constructor() Versioned(1, 1, 0) {}
+    constructor() Versioned(1, 1, 1) {}
 
     function register(address authorizedContract, bool isValid) public override onlyOwner {
         registry[authorizedContract] = isValid;
