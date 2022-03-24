@@ -1,8 +1,10 @@
 import { ethers } from "hardhat";
-import { Contract, BigNumber } from "ethers";
-import { NumberOrString, parseDecimal, formatDecimal, MAX_NUMBER_DIGITS, DecimalConvertible } from "./Decimal";
+import { Contract } from "ethers";
+import { DecimalConvertible } from "./Decimal";
 import * as signers from "@nomiclabs/hardhat-ethers/dist/src/signers";
+import * as abstractSigner from "@ethersproject/abstract-signer/src.ts";
 
+export type AbstractSigner = abstractSigner.Signer;
 export type Signer = signers.SignerWithAddress;
 export type SignerOrAddress = Signer|string;
 
@@ -74,6 +76,17 @@ export abstract class ContractBase extends DecimalConvertible
    */
   static async attachContract(contractName:string, contractAddress:string): Promise<Contract> {
     const factory = await ethers.getContractFactory(contractName);
-    return await factory.attach(contractAddress);
+    return factory.attach(contractAddress);
+  }
+
+  /**
+   * Attaches to any contract address with a Signer
+   * @param contractName Name of the solidity contract
+   * @param contractAddress Address of the contract
+   * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
+   */
+  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:AbstractSigner): Promise<Contract> {
+    const factory = await ethers.getContractFactory(contractName, signer);
+    return factory.attach(contractAddress);
   }
 }
