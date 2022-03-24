@@ -26,8 +26,8 @@ library StableMath {
 
     // Computes the invariant given the current balances, using the Newton-Raphson approximation.
     // The amplification parameter equals: A n^(n-1)
-    function _calculateInvariant(
-        uint256 amplificationParameter,
+    function invariant(
+        uint256 amp,
         uint256 balance0,
         uint256 balance1,
         bool roundUp
@@ -39,37 +39,29 @@ library StableMath {
         // S = sum of balances                                             n^n P                     //
         // P = product of balances                                                                   //
         // n = number of tokens                                                                      //
-        *********x************************************************************************************/
-
-        // We support rounding up or down.
-
+        **********************************************************************************************/
         uint256 sum = balance0 + balance1;
-
         if (sum == 0) {
             return 0;
         }
 
-        uint256 prevInvariant = 0;
-        uint256 invariant = sum;
-        uint256 totalAmp = amplificationParameter * _NUM_TOKENS;
-        uint256 productOfBalances = balance0 * balance1 * _NUM_TOKENS * _NUM_TOKENS;
+        uint256 prevInv;
+        uint256 invar = sum;
+        uint256 totalAmp = amp * _NUM_TOKENS;
+        uint256 productOfBalances = balance0 * balance1 * (_NUM_TOKENS * _NUM_TOKENS);
 
-        // TODO: Cleanup & simplify math
         for (uint256 i = 0; i < 255; i++) {
-            prevInvariant = invariant;
-            uint256 P_D = Math.div(productOfBalances, prevInvariant, roundUp);
-            invariant = Math.div(
-                _NUM_TOKENS * invariant * invariant + Math.div(totalAmp * sum * P_D, _AMP_PRECISION, roundUp),
-                (_NUM_TOKENS + 1) * invariant + Math.div((totalAmp - _AMP_PRECISION) * P_D, _AMP_PRECISION, !roundUp),
+            prevInv = invar;
+            uint256 P_D = Math.div(productOfBalances, prevInv, roundUp);
+            invar = Math.div(
+                _NUM_TOKENS * prevInv * prevInv + Math.div(totalAmp * sum * P_D, _AMP_PRECISION, roundUp),
+                (_NUM_TOKENS + 1) * prevInv + Math.div((totalAmp - _AMP_PRECISION) * P_D, _AMP_PRECISION, !roundUp),
                 roundUp
             );
 
-            if (invariant > prevInvariant) {
-                if (invariant - prevInvariant <= 1) {
-                    return invariant;
-                }
-            } else if (prevInvariant - invariant <= 1) {
-                return invariant;
+            uint256 difference = invar > prevInv ? invar - prevInv : prevInv - invar;
+            if (difference <= 1) {
+                return invar; // converged
             }
         }
 
@@ -101,13 +93,13 @@ library StableMath {
         // Amount out, so we round down overall.
 
         // Given that we need to have a greater final balance out, the invariant needs to be rounded up
-        uint256 invariant = _calculateInvariant(amplificationParameter, balance0, balance1, true);
+        uint256 inv = invariant(amplificationParameter, balance0, balance1, true);
 
         uint256 finalBalanceOut = _getTokenBalanceGivenInvariantAndAllOtherBalances(
             amplificationParameter,
             tokenIndexIn == 0 ? balance0 + tokenAmountIn : balance0,
             tokenIndexIn == 0 ? balance1 : balance1 + tokenAmountIn,
-            invariant,
+            inv,
             tokenIndexOut
         );
 
@@ -141,13 +133,13 @@ library StableMath {
         // Amount in, so we round up overall.
 
         // Given that we need to have a greater final balance in, the invariant needs to be rounded up
-        uint256 invariant = _calculateInvariant(amplificationParameter, balance0, balance1, true);
+        uint256 currentInvariant = invariant(amplificationParameter, balance0, balance1, true);
 
         uint256 finalBalanceIn = _getTokenBalanceGivenInvariantAndAllOtherBalances(
             amplificationParameter,
             tokenIndexOut == 0 ? balance0 - tokenAmountOut : balance0,
             tokenIndexOut == 0 ? balance1 : balance1 - tokenAmountOut,
-            invariant,
+            currentInvariant,
             tokenIndexIn
         );
 
@@ -203,8 +195,8 @@ library StableMath {
         }
 
         // Get current and new invariants, taking swap fees into account
-        uint256 currentInvariant = _calculateInvariant(amp, balance0, balance1, true);
-        uint256 newInvariant = _calculateInvariant(amp, newBalance0, newBalance1, false);
+        uint256 currentInvariant = invariant(amp, balance0, balance1, true);
+        uint256 newInvariant = invariant(amp, newBalance0, newBalance1, false);
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
         // If the invariant didn't increase for any reason, we simply don't mint BPT
@@ -269,8 +261,8 @@ library StableMath {
         }
 
         // Get current and new invariants, taking into account swap fees
-        uint256 currentInvariant = _calculateInvariant(amp, balance0, balance1, true);
-        uint256 newInvariant = _calculateInvariant(amp, newBalance0, newBalance1, false);
+        uint256 currentInvariant = invariant(amp, balance0, balance1, true);
+        uint256 newInvariant = invariant(amp, newBalance0, newBalance1, false);
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
         // return amountBPTIn
@@ -289,7 +281,7 @@ library StableMath {
         // Token out, so we round down overall.
 
         // Get the current and new invariants. Since we need a bigger new invariant, we round the current one up.
-        uint256 currentInvariant = _calculateInvariant(amp, balance0, balance1, true);
+        uint256 currentInvariant = invariant(amp, balance0, balance1, true);
         uint256 newInvariant = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(currentInvariant);
 
         // Calculate amount out without fee
@@ -392,7 +384,7 @@ library StableMath {
         uint256 amplificationParameter,
         uint256 balance0,
         uint256 balance1,
-        uint256 invariant,
+        uint256 invar,
         uint256 tokenIndex
     ) internal pure returns (uint256) {
         // Rounds result up overall
@@ -400,27 +392,27 @@ library StableMath {
         uint256 ampTimesTotal = amplificationParameter * _NUM_TOKENS;
         uint256 sum = balance0 + balance1;
         uint256 P_D = balance0 * _NUM_TOKENS;
-        P_D = Math.divDown(P_D * balance1 * _NUM_TOKENS, invariant);
+        P_D = Math.divDown(P_D * balance1 * _NUM_TOKENS, invar);
 
         // No need to use safe math, based on the loop above `sum` is greater than or equal to `balances[tokenIndex]`
         uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
         sum -= tokenBalance;
 
-        uint256 inv2 = invariant * invariant;
+        uint256 inv2 = invar * invar;
         // We remove the balance fromm c by multiplying it
         uint256 c = Math.divUp(inv2, ampTimesTotal * P_D) * _AMP_PRECISION * tokenBalance;
-        uint256 b = sum + (Math.divDown(invariant, ampTimesTotal) * _AMP_PRECISION);
+        uint256 b = sum + (Math.divDown(invar, ampTimesTotal) * _AMP_PRECISION);
 
         // We iterate to find the balance
         uint256 prevTokenBalance = 0;
         // We multiply the first iteration outside the loop with the invariant to set the value of the
         // initial approximation.
-        tokenBalance = Math.divUp(inv2 + c, invariant + b);
+        tokenBalance = Math.divUp(inv2 + c, invar + b);
 
         for (uint256 i = 0; i < 255; i++) {
             prevTokenBalance = tokenBalance;
 
-            tokenBalance = Math.divUp((tokenBalance * tokenBalance) + c, ((tokenBalance * 2) + b) - invariant);
+            tokenBalance = Math.divUp((tokenBalance * tokenBalance) + c, ((tokenBalance * 2) + b) - invar);
 
             if (tokenBalance > prevTokenBalance) {
                 if (tokenBalance - prevTokenBalance <= 1) {

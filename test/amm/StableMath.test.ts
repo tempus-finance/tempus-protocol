@@ -4,6 +4,7 @@ import { Contract } from 'ethers';
 import { ContractBase } from "../utils/ContractBase";
 import { BigNumberish, fp, num, isBigNumberish } from './Numbers';
 import { Decimal } from 'decimal.js';
+import { describeNonPool } from '../pool-utils/MultiPoolTestSuite';
 import {
   amp,
   calculateAnalyticalInvariantForTwoTokens,
@@ -50,7 +51,7 @@ async function expectEquals(fun1:AsyncFunc, fun2:Function, ...args:any[]): Promi
   }
 }
 
-describe('StableMath', () =>
+describeNonPool('StableMath', () =>
 {
   let mockMath:Contract;
 
