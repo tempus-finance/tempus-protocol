@@ -34,7 +34,11 @@ const TEST_ACCOUNTS_KEYS = [
   "0x6c6c264916401a7c067c014c61e8c89dba5525e904a6631fd84ccc6e0829f0b3",
   "0xddb0d7ed4eae780e20fef9bf8d4591b3766526cee8b7307ebb8ea597cd16d066",
   "0x18728648caa52cc938670482acfdcb9196d002b8c06b902679d7b4429df97ef3",
-  "0x35ed970f932d0e41f4bd7e1e95ca44a0229c73408f9b6f9cf4f949f3699599cc"
+  "0x35ed970f932d0e41f4bd7e1e95ca44a0229c73408f9b6f9cf4f949f3699599cc", // Vukasin
+  "0x12e0d8dced437b053697beaf2d4c3114db282ceac38d2348135f65f7a7d3c102", // Tim
+  "0xf6d7ec97bed92c7a78f397db647a145df0d2c403dc760dc774c2e36002a346fc", // Daniele
+  "0xb637999807e9baa293bdb939a0fd75d533fde230d52d08c7f517c10528f40f03", // Irinel
+  "0x0450f6b76a7095fed06fbdd789242898b4aa73a568df2533ad16f1d798653d7d", // Lazar
 ];
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -96,7 +100,8 @@ module.exports = {
               : undefined,
           }
         : undefined,
-      accounts: TEST_ACCOUNTS_KEYS.map(privateKey => ({ privateKey, balance: "10000000000000000000000000" }))
+      accounts: TEST_ACCOUNTS_KEYS.map(privateKey => ({ privateKey, balance: "10000000000000000000000000" })),
+      hardfork: 'arrowGlacier'
     },
     goerli: {
       url: 'https://rpc.goerli.mudit.blog/'
@@ -124,5 +129,5 @@ module.exports = {
   },
   mocha: {
     timeout: 120000
-  }
+  },
 };
