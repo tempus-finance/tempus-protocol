@@ -16,7 +16,7 @@ import {
   calcTokenOutGivenExactBptIn,
   calcTokensOutGivenExactBptIn,
   calculateOneTokenSwapFeeAmount,
-  getTokenBalanceGivenInvariantAndAllOtherBalances
+  getTokenBalance
 } from './StableMath';
 
 function expectEqual(expected:BigNumberish|Decimal, actual:BigNumberish|Decimal) {
@@ -63,6 +63,9 @@ describeNonPool('StableMath', () =>
   {
     const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateInvariant, ...args);
     await equal(amp(100), /*balances*/[fp(10), fp(12)], true);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], true);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(100), /*balances*/[fp(100), fp(100)], true);
 
     await equal(amp(1), /*balances*/[fp(10), fp(100)], true);
     await equal(amp(5), /*balances*/[fp(10), fp(100)], true);
@@ -200,10 +203,16 @@ describeNonPool('StableMath', () =>
 
   it('tokenBalanceGivenInvariantAndAllOtherBalances', async () =>
   {
-    const equal = (...args:any[]) => expectEquals(mockMath.tokenBalanceGivenInvariantAndAllOtherBalances, getTokenBalanceGivenInvariantAndAllOtherBalances, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    const equal = (...args:any[]) => expectEquals(mockMath.getTokenBalance, getTokenBalance, ...args);
+    
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*tokenIndex*/0);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*tokenIndex*/0);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*tokenIndex*/0);
 
+    await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*tokenIndex*/0);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*tokenIndex*/0);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+
     await equal(amp(5), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
     await equal(amp(10), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
     await equal(amp(20), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
