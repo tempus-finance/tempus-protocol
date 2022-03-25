@@ -95,7 +95,7 @@ library StableMath {
         // Given that we need to have a greater final balance out, the invariant needs to be rounded up
         uint256 inv = invariant(amplificationParameter, balance0, balance1, true);
 
-        uint256 finalBalanceOut = _getTokenBalanceGivenInvariantAndAllOtherBalances(
+        uint256 finalBalanceOut = getTokenBalance(
             amplificationParameter,
             tokenIndexIn == 0 ? balance0 + tokenAmountIn : balance0,
             tokenIndexIn == 0 ? balance1 : balance1 + tokenAmountIn,
@@ -135,7 +135,7 @@ library StableMath {
         // Given that we need to have a greater final balance in, the invariant needs to be rounded up
         uint256 currentInvariant = invariant(amplificationParameter, balance0, balance1, true);
 
-        uint256 finalBalanceIn = _getTokenBalanceGivenInvariantAndAllOtherBalances(
+        uint256 finalBalanceIn = getTokenBalance(
             amplificationParameter,
             tokenIndexOut == 0 ? balance0 - tokenAmountOut : balance0,
             tokenIndexOut == 0 ? balance1 : balance1 - tokenAmountOut,
@@ -285,13 +285,7 @@ library StableMath {
         uint256 newInvariant = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(currentInvariant);
 
         // Calculate amount out without fee
-        uint256 newBalanceTokenIndex = _getTokenBalanceGivenInvariantAndAllOtherBalances(
-            amp,
-            balance0,
-            balance1,
-            newInvariant,
-            tokenIndex
-        );
+        uint256 newBalanceTokenIndex = getTokenBalance(amp, balance0, balance1, newInvariant, tokenIndex);
 
         uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
         uint256 amountOutWithoutFee = tokenBalance - newBalanceTokenIndex;
@@ -356,7 +350,7 @@ library StableMath {
 
         // Protocol swap fee amount, so we round down overall.
 
-        uint256 finalBalanceFeeToken = _getTokenBalanceGivenInvariantAndAllOtherBalances(
+        uint256 finalBalanceFeeToken = getTokenBalance(
             amplificationParameter,
             balance0,
             balance1,
@@ -380,8 +374,8 @@ library StableMath {
 
     // This function calculates the balance of a given token (tokenIndex)
     // given all the other balances and the invariant
-    function _getTokenBalanceGivenInvariantAndAllOtherBalances(
-        uint256 amplificationParameter,
+    function getTokenBalance(
+        uint256 amp,
         uint256 balance0,
         uint256 balance1,
         uint256 invar,
@@ -389,40 +383,29 @@ library StableMath {
     ) internal pure returns (uint256) {
         // Rounds result up overall
 
-        uint256 ampTimesTotal = amplificationParameter * _NUM_TOKENS;
-        uint256 sum = balance0 + balance1;
-        uint256 P_D = balance0 * _NUM_TOKENS;
-        P_D = Math.divDown(P_D * balance1 * _NUM_TOKENS, invar);
-
-        // No need to use safe math, based on the loop above `sum` is greater than or equal to `balances[tokenIndex]`
-        uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
-        sum -= tokenBalance;
-
+        uint256 P_D = Math.divDown(balance0 * balance1 * (_NUM_TOKENS * _NUM_TOKENS), invar);
+        uint256 totalAmp = amp * _NUM_TOKENS;
         uint256 inv2 = invar * invar;
         // We remove the balance fromm c by multiplying it
-        uint256 c = Math.divUp(inv2, ampTimesTotal * P_D) * _AMP_PRECISION * tokenBalance;
-        uint256 b = sum + (Math.divDown(invar, ampTimesTotal) * _AMP_PRECISION);
+        uint256 c = Math.divUp(inv2, totalAmp * P_D) * _AMP_PRECISION * (tokenIndex == 0 ? balance0 : balance1);
+        uint256 b = (tokenIndex != 0 ? balance0 : balance1) + (Math.divDown(invar, totalAmp) * _AMP_PRECISION);
 
         // We iterate to find the balance
-        uint256 prevTokenBalance = 0;
+        uint256 prevBalance = 0;
         // We multiply the first iteration outside the loop with the invariant to set the value of the
         // initial approximation.
-        tokenBalance = Math.divUp(inv2 + c, invar + b);
+        uint256 tokenBalance = Math.divUp(inv2 + c, invar + b);
 
         for (uint256 i = 0; i < 255; i++) {
-            prevTokenBalance = tokenBalance;
+            prevBalance = tokenBalance;
+            tokenBalance = Math.divUp((prevBalance * prevBalance) + c, ((prevBalance * 2) + b) - invar);
 
-            tokenBalance = Math.divUp((tokenBalance * tokenBalance) + c, ((tokenBalance * 2) + b) - invar);
-
-            if (tokenBalance > prevTokenBalance) {
-                if (tokenBalance - prevTokenBalance <= 1) {
-                    return tokenBalance;
-                }
-            } else if (prevTokenBalance - tokenBalance <= 1) {
-                return tokenBalance;
+            uint256 difference = tokenBalance > prevBalance ? tokenBalance - prevBalance : prevBalance - tokenBalance;
+            if (difference <= 1) {
+                return tokenBalance; // converged
             }
         }
 
-        revert("StableMath: no convergence.");
+        revert("StableMath no convergence");
     }
 }

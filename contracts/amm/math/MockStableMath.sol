@@ -117,19 +117,12 @@ contract MockStableMath {
             );
     }
 
-    function tokenBalanceGivenInvariantAndAllOtherBalances(
+    function getTokenBalance(
         uint256 amp,
         uint256[] memory balances,
-        uint256 _invariant,
+        uint256 invar,
         uint256 tokenIndex
     ) external pure returns (uint256) {
-        return
-            StableMath._getTokenBalanceGivenInvariantAndAllOtherBalances(
-                amp,
-                balances[0],
-                balances[1],
-                _invariant,
-                tokenIndex
-            );
+        return StableMath.getTokenBalance(amp, balances[0], balances[1], invar, tokenIndex);
     }
 }
