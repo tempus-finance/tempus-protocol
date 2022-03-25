@@ -1,7 +1,5 @@
-import { ethers, network } from 'hardhat';
+import { network } from 'hardhat';
 import * as utils from './utils';
-import * as chalk from "chalk";
-import { generateTempusSharesNames } from '../test/utils/TempusPool';
 
 const MONTH = 60 * 60 * 24 * 30;
 const AUTHORIZER_FULLY_QUALIFIED_PATH = "@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer";
