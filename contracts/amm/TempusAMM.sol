@@ -12,26 +12,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pragma solidity 0.7.6;
-pragma experimental ABIEncoderV2;
+pragma solidity 0.8.10;
 
-import "@balancer-labs/v2-solidity-utils/contracts/math/FixedPoint.sol";
-import "@balancer-labs/v2-solidity-utils/contracts/helpers/InputHelpers.sol";
 
-import "@balancer-labs/v2-pool-utils/contracts/BaseGeneralPool.sol";
-import "@balancer-labs/v2-pool-utils/contracts/BaseMinimalSwapInfoPool.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-import "@balancer-labs/v2-pool-stable/contracts/StableMath.sol";
-
-import "./interfaces/IRateProvider.sol";
+import "./interfaces/ITempusAMM.sol";
 import "./../token/IPoolShare.sol";
-import "./TempusAMMUserDataHelpers.sol";
-import "./VecMath.sol";
 
-contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
+import "./math/FixedPoint.sol";
+import "./math/StableMath.sol";
+import "../utils/Ownable.sol";
+import "../math/Fixed256xVar.sol";
+
+contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     using FixedPoint for uint256;
-    using TempusAMMUserDataHelpers for bytes;
-    using VecMath for uint256[];
+    using Fixed256xVar for uint256;
 
     // This contract uses timestamps to slowly update its Amplification parameter over time. These changes must occur
     // over a minimum time period much larger than the blocktime, making timestamp manipulation a non-issue.
@@ -42,14 +39,15 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     // WARNING: this only limits *a single* amplification change to have a maximum rate of change of twice the original
     // value daily. It is possible to perform multiple amplification changes in sequence to increase this value more
     // rapidly: for example, by doubling the value every day it can increase by a factor of 8 over three days (2^3).
-    uint256 private constant _MIN_UPDATE_TIME = 1 days;
-    uint256 private constant _MAX_AMP_UPDATE_DAILY_RATE = 2;
-    uint256 private immutable _TEMPUS_SHARE_PRECISION;
-    uint256 private constant _TOTAL_TOKENS = 2;
+    uint256 private constant MIN_UPDATE_TIME = 1 days;
+    uint256 private constant MAX_AMP_UPDATE_DAILY_RATE = 2;
 
     // Tempus custom MIN_AMPLIFICATION and MAX_AMPLIFICATION constant
-    uint256 private constant _MIN_AMPLIFICATION = 1000; // Math.mul(_MIN_AMP, _AMP_PRECISION);
-    uint256 private constant _MAX_AMPLIFICATION = 5000000; //Math.mul(_MAX_AMP, _AMP_PRECISION);
+    uint256 private constant MIN_AMPLIFICATION = 1000;
+    uint256 private constant MAX_AMPLIFICATION = 5000000;
+
+    // fixed point precision of TempusShare tokens
+    uint256 private immutable TEMPUS_SHARE_PRECISION;
 
     struct AmplificationData {
         uint64 startValue;
@@ -58,7 +56,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         uint64 endTime;
     }
 
-    AmplificationData private _amplificationData;
+    AmplificationData private amplificationData;
 
     event AmpUpdateStarted(uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime);
     event AmpUpdateStopped(uint256 currentValue);
@@ -69,126 +67,296 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     // All token balances are normalized to behave as if the token had 18 decimals. We assume a token's decimals will
     // not change throughout its lifetime, and store the corresponding scaling factor for each at construction time.
     // These factors are always greater than or equal to one: tokens with more than 18 decimals are not supported.
+    uint256 internal immutable scalingFactor;
 
-    uint256 internal immutable _scalingFactor0;
-    uint256 internal immutable _scalingFactor1;
-
-    // To track how many tokens are owed to the Vault as protocol fees, we measure and store the value of the invariant
-    // after every join and exit. All invariant growth that happens between join and exit events is due to swap fees.
-    uint256 internal _lastInvariant;
-
-    // Because the invariant depends on the amplification parameter, and this value may change over time, we should only
-    // compare invariants that were computed using the same value. We therefore store it whenever we store
-    // _lastInvariant.
-    uint256 internal _lastInvariantAmp;
-
-    enum JoinKind {
-        INIT,
-        EXACT_TOKENS_IN_FOR_BPT_OUT
-    }
-    enum ExitKind {
-        EXACT_BPT_IN_FOR_TOKENS_OUT,
-        BPT_IN_FOR_EXACT_TOKENS_OUT
-    }
+    uint256 internal immutable swapFeePercentage;
 
     constructor(
-        IVault vault,
         string memory name,
         string memory symbol,
-        IPoolShare[2] memory tokens,
+        IPoolShare t0,
+        IPoolShare t1,
         uint256 amplificationStartValue,
         uint256 amplificationEndValue,
         uint256 amplificationEndTime,
-        uint256 swapFeePercentage,
-        uint256 pauseWindowDuration,
-        uint256 bufferPeriodDuration,
-        address owner
+        uint256 swapFeePerc
     )
-        BasePool(
-            vault,
-            // Because we're inheriting from both BaseGeneralPool and BaseMinimalSwapInfoPool we can choose any
-            // specialization setting. Since this Pool never registers or deregisters any tokens after construction,
-            // picking Two Token when the Pool only has two tokens is free gas savings.
-            IVault.PoolSpecialization.TWO_TOKEN,
-            name,
-            symbol,
-            _mapSharesToIERC20(tokens),
-            new address[](_TOTAL_TOKENS),
-            swapFeePercentage,
-            pauseWindowDuration,
-            bufferPeriodDuration,
-            owner
-        )
+        ERC20(name, symbol)
     {
-        assert(_TOTAL_TOKENS == 2);
+        require(amplificationStartValue >= MIN_AMPLIFICATION, "min amp");
+        require(amplificationStartValue <= MAX_AMPLIFICATION, "max amp");
 
-        _require(amplificationStartValue >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
-        _require(amplificationStartValue <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
+        swapFeePercentage = swapFeePerc;
 
-        (IPoolShare t0, IPoolShare t1) = (tokens[0], tokens[1]);
-        require(t0 < t1, "token0 < token1 address");
         (token0, token1) = (t0, t1);
 
         require(ERC20(address(t0)).decimals() == ERC20(address(t1)).decimals(), "token0 != token1 decimals");
-        _TEMPUS_SHARE_PRECISION = 10**ERC20(address(t0)).decimals();
+        TEMPUS_SHARE_PRECISION = 10**ERC20(address(t0)).decimals();
 
-        _scalingFactor0 = _computeScalingFactor(IERC20(address(t0)));
-        _scalingFactor1 = _computeScalingFactor(IERC20(address(t1)));
+        scalingFactor = FixedPoint.ONE * 10**(18 - ERC20(address(t0)).decimals());
 
         _setAmplificationData(amplificationStartValue);
 
         if (amplificationStartValue != amplificationEndValue) {
-            _require(amplificationStartValue < amplificationEndValue, Errors.MIN_AMP);
+            require(amplificationStartValue < amplificationEndValue, "min amp");
             _startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
 
-    function getLastInvariant() external view returns (uint256 lastInvariant, uint256 lastInvariantAmp) {
-        lastInvariant = _lastInvariant;
-        lastInvariantAmp = _lastInvariantAmp;
+    /// Adding liquidity
+
+    function init(uint256 amountToken0, uint256 amountToken1) external override {
+        require(amountToken0 != 0 && amountToken1 != 0, "token amounts can't be 0");
+        require(totalSupply() == 0, "Already initialised");
+
+        (uint256 amountIn0, uint256 amountIn1) = getRateAdjustedAmounts(
+            amountToken0,
+            amountToken1,
+            token0.getPricePerFullShare(),
+            token1.getPricePerFullShare()
+        );
+
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+        uint256 lpTokensOut = StableMath.invariant(currentAmp, amountIn0, amountIn1, true);
+        assert(lpTokensOut > 0);
+
+        token0.transferFrom(msg.sender, address(this), amountToken0);
+        token1.transferFrom(msg.sender, address(this), amountToken1);
+        _mint(msg.sender, lpTokensOut);
+
+        emit Join(amountToken0, amountToken1, lpTokensOut);
     }
 
-    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view returns (uint256) {
+    function join(
+        uint256 amountToken0, 
+        uint256 amountToken1, 
+        uint256 minLpTokensOut, 
+        address recipient
+    ) external override whenNotPaused {
+        require(totalSupply() > 0, "not initialised");
+        require(amountToken0 > 0 || amountToken1 > 0, "one token amount must be > 0");
+
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
+        
+        (uint256 amountIn0, uint256 amountIn1) = getRateAdjustedAmounts(
+            amountToken0,
+            amountToken1,
+            token0.getPricePerFullShare(),
+            token1.getPricePerFullShare()
+        );
+
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+
+        uint256 lpTokensOut = StableMath.bptOutGivenTokensIn(
+            currentAmp,
+            balance0,
+            balance1,
+            amountIn0,
+            amountIn1,
+            totalSupply(),
+            swapFeePercentage
+        );
+
+        require(lpTokensOut >= minLpTokensOut, "slippage");
+
+        token0.transferFrom(msg.sender, address(this), amountToken0);
+        token1.transferFrom(msg.sender, address(this), amountToken1);
+        _mint(recipient, lpTokensOut);
+
+        emit Join(amountToken0, amountToken1, lpTokensOut);
+    }
+
+    /// Removing liquidity
+
+    function exitGivenLpIn(
+        uint256 lpTokensIn, 
+        uint256 minAmountOut0, 
+        uint256 minAmountOut1, 
+        address recipient
+    ) external override {
+        // This exit function is the only one that is not disabled if the contract is paused: it remains unrestricted
+        // in an attempt to provide users with a mechanism to retrieve their tokens in case of an emergency.
+        // This particular exit function is the only one that remains available because it is the simplest one, and
+        // therefore the one with the lowest likelihood of errors.
+
+        (uint256 amountOut0, uint256 amountOut1) = StableMath.tokensOutFromBptIn(
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this)),
+            lpTokensIn, 
+            totalSupply()
+        );
+
+        require(amountOut0 > minAmountOut0 && amountOut1 > minAmountOut1, "slippage");
+
+        _burn(msg.sender, lpTokensIn);
+        token0.transfer(recipient, amountOut0);
+        token1.transfer(recipient, amountOut1);
+
+        emit Exit(lpTokensIn, amountOut0, amountOut1);
+    }
+
+    function exitGivenTokensOut(
+        uint256 token0AmountOut, 
+        uint256 token1AmountOut, 
+        uint256 maxLpTokensIn, 
+        address recipient
+    ) external override whenNotPaused {
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
+        
+        (uint256 amountOut0, uint256 amountOut1) = getRateAdjustedAmounts(
+            token0AmountOut,
+            token1AmountOut,
+            token0.getPricePerFullShare(),
+            token1.getPricePerFullShare()
+        );
+        
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+        uint256 lpTokensIn = StableMath.bptInGivenTokensOut(
+            currentAmp,
+            balance0,
+            balance1,
+            amountOut0,
+            amountOut1,
+            totalSupply(),
+            swapFeePercentage
+        );
+        require(lpTokensIn <= maxLpTokensIn, "slippage");
+
+        _burn(msg.sender, lpTokensIn);
+        token0.transfer(recipient, token0AmountOut);
+        token1.transfer(recipient, token1AmountOut);
+
+        emit Exit(lpTokensIn, token0AmountOut, token1AmountOut);
+    }
+
+    /// Swaps
+
+    function swap(
+        IPoolShare tokenIn, 
+        uint256 amount, 
+        uint256 slippageParam, 
+        SwapType swapType, 
+        uint256 deadline
+    ) external override whenNotPaused {
+        require(block.timestamp <= deadline, "deadline");
+        require(tokenIn == token0 || tokenIn == token1, "invalid tokenIn");
+        require(amount > 0, "invalid amount");
+
+        (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
+
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+
+        (uint256 amountIn, uint256 amountOut) = (swapType == SwapType.GIVEN_IN)
+            ? (amount, uint256(0))
+            : (uint256(0), amount);
+
+        if (swapType == SwapType.GIVEN_IN) {
+            uint256 rateAdjustedAmount = subtractSwapFeeAmount(amountIn).mulDown(scalingFactor).mulfV(
+                tokenIn.getPricePerFullShare(),
+                TEMPUS_SHARE_PRECISION
+            );
+
+            uint256 scaledAmountOut = StableMath.outGivenIn(
+                currentAmp, 
+                balance0, 
+                balance1, 
+                firstIn,
+                rateAdjustedAmount
+            );
+            
+            amountOut = scaledAmountOut.divfV(
+                tokenOut.getPricePerFullShare(), 
+                TEMPUS_SHARE_PRECISION
+            ).divDown(scalingFactor);
+            
+            require(amountOut >= slippageParam, "slippage");
+        } else {
+            uint256 rateAdjustedAmount = amountOut.mulDown(scalingFactor).mulfV(
+                tokenOut.getPricePerFullShare(),
+                TEMPUS_SHARE_PRECISION
+            );
+
+            uint256 scaledAmountIn = StableMath.inGivenOut(
+                currentAmp, 
+                balance0,
+                balance1, 
+                !firstIn,
+                rateAdjustedAmount
+            );
+
+            scaledAmountIn = scaledAmountIn.divfV(tokenIn.getPricePerFullShare(), TEMPUS_SHARE_PRECISION);
+            amountIn = addSwapFeeAmount(scaledAmountIn.divUp(scalingFactor));
+            
+            require(amountIn <= slippageParam, "slippage");
+        }
+        
+        tokenIn.transferFrom(msg.sender, address(this), amountIn);
+        tokenOut.transfer(msg.sender, amountOut);
+
+        emit Swap(tokenIn, amountIn, amountOut);
+    }
+ 
+    function getRate() external view override returns (uint256) {
+        // When calculating the current BPT rate, we may not have paid the protocol fees, therefore
+        // the invariant should be smaller than its current value. Then, we round down overall.
+        (uint256 currentAmp, ) = _getAmplificationParameter();
+
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
+
+        uint256 invariant = StableMath.invariant(currentAmp, balance0, balance1, false);
+        return invariant.divDown(totalSupply());
+    }
+
+    /// Query functions 
+
+    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public override view returns (uint256) {
         require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
 
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        IPoolShare tokenOut = (tokenIn == token0) ? token1 : token0;
-        (uint256 indexIn, uint256 indexOut) = tokenIn == token0 ? (0, 1) : (1, 0);
+        (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
+        
+        uint256 scaledAmount = subtractSwapFeeAmount(amount).mulDown(scalingFactor).mulfV(
+            tokenIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION
+        ); 
 
-        amount = _subtractSwapFeeAmount(amount);
-        balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedSwapAmount = (amount * tokenIn.getPricePerFullShareStored()) / _TEMPUS_SHARE_PRECISION;
-
-        uint256 amountOut = StableMath._calcOutGivenIn(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
-        amountOut = (amountOut * _TEMPUS_SHARE_PRECISION) / tokenOut.getPricePerFullShareStored();
-
-        return amountOut;
+        return StableMath.outGivenIn(
+            currentAmp, 
+            balance0, 
+            balance1, 
+            firstIn,
+            scaledAmount
+        ).divfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION).divDown(
+            scalingFactor
+        );
     }
 
-    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public view returns (uint256) {
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public override view returns (uint256) {
         IPoolShare shareIn = IPoolShare(tokenIn);
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (uint256 currentAmp, ) = _getAmplificationParameter();
         require(shareIn == token0 || shareIn == token1, "invalid tokenIn");
         IPoolShare tokenOut = (shareIn == token0) ? token1 : token0;
-        (uint256 indexIn, uint256 indexOut) = (shareIn == token0) ? (0, 1) : (1, 0);
 
-        balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedAmountOut = (amountOut * tokenOut.getPricePerFullShareStored()) / _TEMPUS_SHARE_PRECISION;
+        uint256 rateAdjustedAmountOut = amountOut.mulfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
 
-        uint256 amountIn = StableMath._calcInGivenOut(currentAmp, balances, indexIn, indexOut, rateAdjustedAmountOut);
-        amountIn = (amountIn * _TEMPUS_SHARE_PRECISION) / shareIn.getPricePerFullShareStored();
-        amountIn = _subtractSwapFeeAmount(amountIn);
-
-        return amountIn;
+        uint256 amountIn = StableMath.inGivenOut(
+            currentAmp, 
+            balance0, 
+            balance1, 
+            tokenOut == token0,
+            rateAdjustedAmountOut
+        );
+        amountIn = amountIn.divfV(shareIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
+        return addSwapFeeAmount(amountIn);
     }
 
     function getSwapAmountToEndWithEqualShares(
         uint256 token0Amount,
         uint256 token1Amount,
         uint256 threshold
-    ) external view returns (uint256 amountIn, IPoolShare tokenIn) {
+    ) external override view returns (uint256 amountIn, IPoolShare tokenIn) {
         uint256 difference;
         (difference, tokenIn) = (token0Amount > token1Amount)
             ? (token0Amount - token1Amount, token0)
@@ -199,11 +367,11 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
             uint256 token1AmountRate = token1.getPricePerFullShareStored();
 
             uint256 rate = (tokenIn == token1)
-                ? (token0AmountRate * _TEMPUS_SHARE_PRECISION) / token1AmountRate
-                : (token1AmountRate * _TEMPUS_SHARE_PRECISION) / token0AmountRate;
+                ? (token0AmountRate * TEMPUS_SHARE_PRECISION) / token1AmountRate
+                : (token1AmountRate * TEMPUS_SHARE_PRECISION) / token0AmountRate;
             for (uint256 i = 0; i < 32; i++) {
                 // if we have accurate rate this should hold
-                amountIn = (difference * _TEMPUS_SHARE_PRECISION) / (rate + _TEMPUS_SHARE_PRECISION);
+                amountIn = (difference * TEMPUS_SHARE_PRECISION) / (rate + TEMPUS_SHARE_PRECISION);
                 uint256 amountOut = getExpectedReturnGivenIn(amountIn, tokenIn);
                 uint256 newToken0Amount = (tokenIn == token1) ? (token0Amount + amountOut) : (token0Amount - amountIn);
                 uint256 newToken1Amount = (tokenIn == token1) ? (token1Amount - amountIn) : (token1Amount + amountOut);
@@ -213,7 +381,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
                 if (newDifference < threshold) {
                     return (amountIn, tokenIn);
                 } else {
-                    rate = (amountOut * _TEMPUS_SHARE_PRECISION) / amountIn;
+                    rate = (amountOut * TEMPUS_SHARE_PRECISION) / amountIn;
                 }
             }
             revert("getSwapAmountToEndWithEqualShares did not converge.");
@@ -223,536 +391,114 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
     // NOTE: Return value in AMM decimals precision (1e18)
     function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
+        override
         view
         returns (uint256 lpTokens)
     {
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
-        uint256[] memory amountsOut = new uint256[](2);
-        (amountsOut[0], amountsOut[1]) = (token0Out, token1Out);
-
-        uint256[] memory scalingFactors = _scalingFactors();
-        _upscaleArray(amountsOut, scalingFactors);
-        _upscaleArray(balances, scalingFactors);
-        uint256[] memory tokenRates = _getTokenRatesStored();
-        amountsOut.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-        balances.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        uint256 protocolSwapFeePercentage = getSwapFeePercentage();
-        if (_isNotPaused()) {
-            // Update current balances by subtracting the protocol fee amounts
-            balances.sub(_getDueProtocolFeeAmounts(balances, protocolSwapFeePercentage));
-        }
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
+        
+        (token0Out, token1Out) = getRateAdjustedAmounts(
+            token0Out,
+            token1Out,
+            token0.getPricePerFullShareStored(),
+            token1.getPricePerFullShareStored()
+        );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
-        lpTokens = StableMath._calcBptInGivenExactTokensOut(
+        lpTokens = StableMath.bptInGivenTokensOut(
             currentAmp,
-            balances,
-            amountsOut,
+            balance0,
+            balance1,
+            token0Out,
+            token1Out,
             totalSupply(),
-            protocolSwapFeePercentage
+            swapFeePercentage
         );
     }
 
-    function getExpectedTokensOutGivenBPTIn(uint256 bptAmountIn)
+    function getExpectedTokensOutGivenBPTIn(uint256 lpTokensIn)
         external
+        override
         view
         returns (uint256 token0Out, uint256 token1Out)
     {
         // We don't need to scale balances down here
         // as calculation for amounts out is based on btpAmountIn / totalSupply() ratio
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
-        uint256[] memory amountsOut = StableMath._calcTokensOutGivenExactBptIn(balances, bptAmountIn, totalSupply());
-        return (amountsOut[0], amountsOut[1]);
+        return StableMath.tokensOutFromBptIn(
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this)),
+            lpTokensIn, 
+            totalSupply()
+        );
     }
 
-    function getExpectedLPTokensForTokensIn(uint256[] memory amountsIn) external view returns (uint256) {
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
-
-        uint256[] memory tokenRates = _getTokenRatesStored();
-        balances.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-        amountsIn.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
+    function getExpectedLPTokensForTokensIn(
+        uint256 token0AmountIn, 
+        uint256 token1AmountIn
+    ) external view override returns (uint256) {
+        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
+        
+        (token0AmountIn, token1AmountIn) = getRateAdjustedAmounts(
+            token0AmountIn,
+            token1AmountIn,
+            token0.getPricePerFullShareStored(),
+            token1.getPricePerFullShareStored()
+        );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
 
         return
-            (balances[0] == 0)
-                ? StableMath._calculateInvariant(currentAmp, amountsIn, true)
-                : StableMath._calcBptOutGivenExactTokensIn(
+            (balance0 == 0)
+                ? StableMath.invariant(currentAmp, token0AmountIn, token1AmountIn, true)
+                : StableMath.bptOutGivenTokensIn(
                     currentAmp,
-                    balances,
-                    amountsIn,
+                    balance0,
+                    balance1,
+                    token0AmountIn,
+                    token1AmountIn,
                     totalSupply(),
-                    getSwapFeePercentage()
+                    swapFeePercentage
                 );
-    }
-
-    // Base Pool handlers
-
-    // Swap - Two Token Pool specialization (from BaseMinimalSwapInfoPool)
-
-    function _onSwapGivenIn(
-        SwapRequest memory swapRequest,
-        uint256 balanceTokenIn,
-        uint256 balanceTokenOut
-    ) internal virtual override whenNotPaused returns (uint256) {
-        (uint256[] memory balances, uint256 indexIn, uint256 indexOut) = _getSwapBalanceArrays(
-            swapRequest,
-            balanceTokenIn,
-            balanceTokenOut
-        );
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        uint256[] memory rates = _getTokenRates();
-        uint256 tokenInRate = rates[indexIn];
-        uint256 tokenOutRate = rates[indexOut];
-
-        balances.mul(rates, _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedSwapAmount = (swapRequest.amount * tokenInRate) / _TEMPUS_SHARE_PRECISION;
-
-        uint256 amountOut = StableMath._calcOutGivenIn(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
-        return (amountOut * _TEMPUS_SHARE_PRECISION) / tokenOutRate;
-    }
-
-    function _onSwapGivenOut(
-        SwapRequest memory swapRequest,
-        uint256 balanceTokenIn,
-        uint256 balanceTokenOut
-    ) internal virtual override whenNotPaused returns (uint256) {
-        (uint256[] memory balances, uint256 indexIn, uint256 indexOut) = _getSwapBalanceArrays(
-            swapRequest,
-            balanceTokenIn,
-            balanceTokenOut
-        );
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        uint256[] memory rates = _getTokenRates();
-        uint256 tokenInRate = rates[indexIn];
-        uint256 tokenOutRate = rates[indexOut];
-
-        balances.mul(rates, _TEMPUS_SHARE_PRECISION);
-        uint256 rateAdjustedSwapAmount = (swapRequest.amount * tokenOutRate) / _TEMPUS_SHARE_PRECISION;
-
-        uint256 amountIn = StableMath._calcInGivenOut(currentAmp, balances, indexIn, indexOut, rateAdjustedSwapAmount);
-        amountIn = (amountIn * _TEMPUS_SHARE_PRECISION) / tokenInRate;
-
-        return amountIn;
-    }
-
-    function _getSwapBalanceArrays(
-        SwapRequest memory swapRequest,
-        uint256 balanceTokenIn,
-        uint256 balanceTokenOut
-    )
-        private
-        view
-        returns (
-            uint256[] memory balances,
-            uint256 indexIn,
-            uint256 indexOut
-        )
-    {
-        balances = new uint256[](2);
-
-        if (address(token0) == address(swapRequest.tokenIn)) {
-            indexIn = 0;
-            indexOut = 1;
-
-            balances[0] = balanceTokenIn;
-            balances[1] = balanceTokenOut;
-        } else {
-            indexOut = 0;
-            indexIn = 1;
-
-            balances[0] = balanceTokenOut;
-            balances[1] = balanceTokenIn;
-        }
-    }
-
-    // Initialize
-
-    function _onInitializePool(
-        bytes32,
-        address,
-        address,
-        uint256[] memory scalingFactors,
-        bytes memory userData
-    ) internal virtual override whenNotPaused returns (uint256, uint256[] memory) {
-        // It would be strange for the Pool to be paused before it is initialized, but for consistency we prevent
-        // initialization in this case.
-        TempusAMM.JoinKind kind = userData.joinKind();
-        _require(kind == TempusAMM.JoinKind.INIT, Errors.UNINITIALIZED);
-
-        uint256[] memory amountsIn = userData.initialAmountsIn();
-        InputHelpers.ensureInputLengthMatch(amountsIn.length, _TOTAL_TOKENS);
-        _upscaleArray(amountsIn, scalingFactors);
-
-        uint256[] memory tokenRates = _getTokenRates();
-        amountsIn.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        uint256 invariantAfterJoin = StableMath._calculateInvariant(currentAmp, amountsIn, true);
-
-        // Set the initial BPT to the value of the invariant.
-        uint256 bptAmountOut = invariantAfterJoin;
-
-        _updateLastInvariant(invariantAfterJoin, currentAmp);
-
-        amountsIn.div(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        return (bptAmountOut, amountsIn);
-    }
-
-    // Join
-
-    function _onJoinPool(
-        bytes32,
-        address,
-        address,
-        uint256[] memory balances,
-        uint256,
-        uint256 protocolSwapFeePercentage,
-        uint256[] memory scalingFactors,
-        bytes memory userData
-    )
-        internal
-        virtual
-        override
-        whenNotPaused
-        returns (
-            uint256,
-            uint256[] memory,
-            uint256[] memory
-        )
-    {
-        uint256[] memory tokenRates = _getTokenRates();
-        balances.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        // Due protocol swap fee amounts are computed by measuring the growth of the invariant between the previous join
-        // or exit event and now - the invariant's growth is due exclusively to swap fees. This avoids spending gas to
-        // calculate the fee amounts during each individual swap.
-        uint256[] memory dueProtocolFeeAmounts = _getDueProtocolFeeAmounts(balances, protocolSwapFeePercentage);
-
-        // Update current balances by subtracting the protocol fee amounts
-        balances.sub(dueProtocolFeeAmounts);
-        (uint256 bptAmountOut, uint256[] memory amountsIn) = _doJoin(balances, scalingFactors, tokenRates, userData);
-
-        // Update the invariant with the balances the Pool will have after the join, in order to compute the
-        // protocol swap fee amounts due in future joins and exits.
-        _updateInvariantAfterJoin(balances, amountsIn);
-
-        amountsIn.div(tokenRates, _TEMPUS_SHARE_PRECISION);
-        dueProtocolFeeAmounts.div(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        return (bptAmountOut, amountsIn, dueProtocolFeeAmounts);
-    }
-
-    function _doJoin(
-        uint256[] memory balances,
-        uint256[] memory scalingFactors,
-        uint256[] memory tokenRates,
-        bytes memory userData
-    ) private view returns (uint256 bptAmountOut, uint256[] memory amountsIn) {
-        JoinKind kind = userData.joinKind();
-
-        if (kind == JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
-            return _joinExactTokensInForBPTOut(balances, scalingFactors, tokenRates, userData);
-        } else {
-            _revert(Errors.UNHANDLED_JOIN_KIND);
-        }
-    }
-
-    function _joinExactTokensInForBPTOut(
-        uint256[] memory balances,
-        uint256[] memory scalingFactors,
-        uint256[] memory tokenRates,
-        bytes memory userData
-    ) private view returns (uint256, uint256[] memory) {
-        (uint256[] memory amountsIn, uint256 minBPTAmountOut) = userData.exactTokensInForBptOut();
-        InputHelpers.ensureInputLengthMatch(_TOTAL_TOKENS, amountsIn.length);
-
-        _upscaleArray(amountsIn, scalingFactors);
-        amountsIn.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-
-        uint256 bptAmountOut = StableMath._calcBptOutGivenExactTokensIn(
-            currentAmp,
-            balances,
-            amountsIn,
-            totalSupply(),
-            getSwapFeePercentage()
-        );
-
-        _require(bptAmountOut >= minBPTAmountOut, Errors.BPT_OUT_MIN_AMOUNT);
-
-        return (bptAmountOut, amountsIn);
-    }
-
-    // Exit
-
-    function _onExitPool(
-        bytes32,
-        address,
-        address,
-        uint256[] memory balances,
-        uint256,
-        uint256 protocolSwapFeePercentage,
-        uint256[] memory scalingFactors,
-        bytes memory userData
-    )
-        internal
-        virtual
-        override
-        returns (
-            uint256 bptAmountIn,
-            uint256[] memory amountsOut,
-            uint256[] memory dueProtocolFeeAmounts
-        )
-    {
-        uint256[] memory tokenRates = _getTokenRates();
-        balances.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        // Exits are not completely disabled while the contract is paused: proportional exits (exact BPT in for tokens
-        // out) remain functional.
-
-        if (_isNotPaused()) {
-            // Due protocol swap fee amounts are computed by measuring the growth of the invariant between the previous
-            // join or exit event and now - the invariant's growth is due exclusively to swap fees. This avoids
-            // spending gas calculating fee amounts during each individual swap
-            dueProtocolFeeAmounts = _getDueProtocolFeeAmounts(balances, protocolSwapFeePercentage);
-
-            // Update current balances by subtracting the protocol fee amounts
-            balances.sub(dueProtocolFeeAmounts);
-        } else {
-            // If the contract is paused, swap protocol fee amounts are not charged to avoid extra calculations and
-            // reduce the potential for errors.
-            dueProtocolFeeAmounts = new uint256[](_TOTAL_TOKENS);
-        }
-
-        (bptAmountIn, amountsOut) = _doExit(balances, scalingFactors, tokenRates, userData);
-
-        // Update the invariant with the balances the Pool will have after the exit, in order to compute the
-        // protocol swap fee amounts due in future joins and exits.
-        _updateInvariantAfterExit(balances, amountsOut);
-
-        amountsOut.div(tokenRates, _TEMPUS_SHARE_PRECISION);
-        dueProtocolFeeAmounts.div(tokenRates, _TEMPUS_SHARE_PRECISION);
-    }
-
-    function _doExit(
-        uint256[] memory balances,
-        uint256[] memory scalingFactors,
-        uint256[] memory tokenRates,
-        bytes memory userData
-    ) private view returns (uint256, uint256[] memory) {
-        ExitKind kind = userData.exitKind();
-
-        if (kind == ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
-            return _exitExactBPTInForTokensOut(balances, userData);
-        } else if (kind == ExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT) {
-            return _exitBPTInForExactTokensOut(balances, scalingFactors, tokenRates, userData);
-        } else {
-            revert("Unhandled exit kind.");
-        }
-    }
-
-    function _exitExactBPTInForTokensOut(uint256[] memory balances, bytes memory userData)
-        private
-        view
-        returns (uint256, uint256[] memory)
-    {
-        // This exit function is the only one that is not disabled if the contract is paused: it remains unrestricted
-        // in an attempt to provide users with a mechanism to retrieve their tokens in case of an emergency.
-        // This particular exit function is the only one that remains available because it is the simplest one, and
-        // therefore the one with the lowest likelihood of errors.
-
-        uint256 bptAmountIn = userData.exactBptInForTokensOut();
-        // Note that there is no minimum amountOut parameter: this is handled by `IVault.exitPool`.
-
-        uint256[] memory amountsOut = StableMath._calcTokensOutGivenExactBptIn(balances, bptAmountIn, totalSupply());
-        return (bptAmountIn, amountsOut);
-    }
-
-    function _exitBPTInForExactTokensOut(
-        uint256[] memory balances,
-        uint256[] memory scalingFactors,
-        uint256[] memory tokenRates,
-        bytes memory userData
-    ) private view whenNotPaused returns (uint256, uint256[] memory) {
-        // This exit function is disabled if the contract is paused.
-
-        (uint256[] memory amountsOut, uint256 maxBPTAmountIn) = userData.bptInForExactTokensOut();
-        InputHelpers.ensureInputLengthMatch(amountsOut.length, _TOTAL_TOKENS);
-        _upscaleArray(amountsOut, scalingFactors);
-
-        amountsOut.mul(tokenRates, _TEMPUS_SHARE_PRECISION);
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        uint256 bptAmountIn = StableMath._calcBptInGivenExactTokensOut(
-            currentAmp,
-            balances,
-            amountsOut,
-            totalSupply(),
-            getSwapFeePercentage()
-        );
-        _require(bptAmountIn <= maxBPTAmountIn, Errors.BPT_IN_MAX_AMOUNT);
-
-        return (bptAmountIn, amountsOut);
-    }
-
-    // Helpers
-
-    /**
-     * @dev Stores the last measured invariant, and the amplification parameter used to compute it.
-     */
-    function _updateLastInvariant(uint256 invariant, uint256 amplificationParameter) private {
-        _lastInvariant = invariant;
-        _lastInvariantAmp = amplificationParameter;
-    }
-
-    /**
-     * @dev Returns the amount of protocol fees to pay, given the value of the last stored invariant and the current
-     * balances.
-     */
-    function _getDueProtocolFeeAmounts(uint256[] memory balances, uint256 protocolSwapFeePercentage)
-        private
-        view
-        returns (uint256[] memory)
-    {
-        // Initialize with zeros
-        uint256[] memory dueProtocolFeeAmounts = new uint256[](_TOTAL_TOKENS);
-
-        // Early return if the protocol swap fee percentage is zero, saving gas.
-        if (protocolSwapFeePercentage == 0) {
-            return dueProtocolFeeAmounts;
-        }
-
-        // Instead of paying the protocol swap fee in all tokens proportionally, we will pay it in a single one. This
-        // will reduce gas costs for single asset joins and exits, as at most only two Pool balances will change (the
-        // token joined/exited, and the token in which fees will be paid).
-
-        // The protocol fee is charged using the token with the highest balance in the pool.
-        uint256 chosenTokenIndex = balances[0] > balances[1] ? 0 : 1;
-
-        // Set the fee amount to pay in the selected token
-        dueProtocolFeeAmounts[chosenTokenIndex] = StableMath._calcDueTokenProtocolSwapFeeAmount(
-            _lastInvariantAmp,
-            balances,
-            _lastInvariant,
-            chosenTokenIndex,
-            protocolSwapFeePercentage
-        );
-
-        return dueProtocolFeeAmounts;
-    }
-
-    /**
-     * @dev Computes and stores the value of the invariant after a join, which is required to compute due protocol fees
-     * in the future.
-     */
-    function _updateInvariantAfterJoin(uint256[] memory balances, uint256[] memory amountsIn) private {
-        balances.add(amountsIn);
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        // This invariant is used only to compute the final balance when calculating the protocol fees. These are
-        // rounded down, so we round the invariant up.
-        _updateLastInvariant(StableMath._calculateInvariant(currentAmp, balances, true), currentAmp);
-    }
-
-    /**
-     * @dev Computes and stores the value of the invariant after an exit, which is required to compute due protocol fees
-     * in the future.
-     */
-    function _updateInvariantAfterExit(uint256[] memory balances, uint256[] memory amountsOut) private {
-        balances.sub(amountsOut);
-
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        // This invariant is used only to compute the final balance when calculating the protocol fees. These are
-        // rounded down, so we round the invariant up.
-        _updateLastInvariant(StableMath._calculateInvariant(currentAmp, balances, true), currentAmp);
-    }
-
-    /// @dev Creates 2 element array of token rates(pricePerFullshare)
-    /// @return rates Array of token rates
-    function _getTokenRates() private returns (uint256[] memory rates) {
-        rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = token0.getPricePerFullShare();
-        // We already did updateInterestRate, so we can use stored values
-        rates[1] = token1.getPricePerFullShareStored();
-    }
-
-    /// @dev Creates 2 element array of token rates(pricePerFullShareStored)
-    /// @return rates Array of stored token rates
-    function _getTokenRatesStored() private view returns (uint256[] memory rates) {
-        rates = new uint256[](_TOTAL_TOKENS);
-        rates[0] = token0.getPricePerFullShareStored();
-        rates[1] = token1.getPricePerFullShareStored();
-    }
-
-    function getRate() external view override returns (uint256) {
-        (, uint256[] memory balances, ) = getVault().getPoolTokens(getPoolId());
-
-        // When calculating the current BPT rate, we may not have paid the protocol fees, therefore
-        // the invariant should be smaller than its current value. Then, we round down overall.
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-
-        _upscaleArray(balances, _scalingFactors());
-
-        balances.mul(_getTokenRatesStored(), _TEMPUS_SHARE_PRECISION);
-        uint256 invariant = StableMath._calculateInvariant(currentAmp, balances, false);
-        return invariant.divDown(totalSupply());
     }
 
     // Amplification
 
-    /**
-     * @dev Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
-     * `endTime` is reached, when it will be `endValue`.
-     */
-    function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) external authenticate {
+    function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) external override onlyOwner {
         _startAmplificationParameterUpdate(endValue, endTime);
     }
 
     function _startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) private {
-        _require(endValue >= _MIN_AMPLIFICATION, Errors.MIN_AMP);
-        _require(endValue <= _MAX_AMPLIFICATION, Errors.MAX_AMP);
+        require(endValue >= MIN_AMPLIFICATION, "min amp");
+        require(endValue <= MAX_AMPLIFICATION, "max amp");
 
-        uint256 duration = Math.sub(endTime, block.timestamp);
-        _require(duration >= _MIN_UPDATE_TIME, Errors.AMP_END_TIME_TOO_CLOSE);
+        uint256 duration = endTime - block.timestamp;
+        require(duration >= MIN_UPDATE_TIME, "amp endtime too close");
 
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
-        _require(!isUpdating, Errors.AMP_ONGOING_UPDATE);
+        require(!isUpdating, "amp ongoing update");
 
         // daily rate = (endValue / currentValue) / duration * 1 day
         // We perform all multiplications first to not reduce precision, and round the division up as we want to avoid
         // large rates. Note that these are regular integer multiplications and divisions, not fixed point.
         uint256 dailyRate = endValue > currentValue
-            ? Math.divUp(Math.mul(1 days, endValue), Math.mul(currentValue, duration))
-            : Math.divUp(Math.mul(1 days, currentValue), Math.mul(endValue, duration));
-        _require(dailyRate <= _MAX_AMP_UPDATE_DAILY_RATE, Errors.AMP_RATE_TOO_HIGH);
+            ? Math.divUp(1 days * endValue, currentValue * duration)
+            : Math.divUp(1 days * currentValue, endValue * duration);
+        require(dailyRate <= MAX_AMP_UPDATE_DAILY_RATE, "amp rate too high");
 
         _setAmplificationData(currentValue, endValue, block.timestamp, endTime);
     }
 
-    /**
-     * @dev Stops the amplification parameter change process, keeping the current value.
-     */
-    function stopAmplificationParameterUpdate() external authenticate {
+    function stopAmplificationParameterUpdate() external override onlyOwner {
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
-        _require(isUpdating, Errors.AMP_NO_ONGOING_UPDATE);
+        require(isUpdating, "amp no ongoing update");
 
         _setAmplificationData(currentValue);
     }
 
-    function _isOwnerOnlyAction(bytes32 actionId) internal view virtual override returns (bool) {
-        return
-            (actionId == getActionId(TempusAMM.startAmplificationParameterUpdate.selector)) ||
-            (actionId == getActionId(TempusAMM.stopAmplificationParameterUpdate.selector)) ||
-            super._isOwnerOnlyAction(actionId);
-    }
-
     function getAmplificationParameter()
         external
+        override
         view
         returns (
             uint256 value,
@@ -761,11 +507,11 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         )
     {
         (value, isUpdating) = _getAmplificationParameter();
-        precision = _AMP_PRECISION;
+        precision = StableMath._AMP_PRECISION;
     }
 
     function _getAmplificationParameter() private view returns (uint256 value, bool isUpdating) {
-        (uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime) = _getAmplificationData();
+        (uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime) = getAmplificationData();
 
         // Note that block.timestamp >= startTime, since startTime is set to the current time when an update starts
 
@@ -789,29 +535,6 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         }
     }
 
-    function _getMaxTokens() internal pure override returns (uint256) {
-        return _TOTAL_TOKENS;
-    }
-
-    function _getTotalTokens() internal pure virtual override returns (uint256) {
-        return _TOTAL_TOKENS;
-    }
-
-    function _scalingFactor(IERC20 token) internal view virtual override returns (uint256 scalingFactor) {
-        // prettier-ignore
-        if (address(token) == address(token0)) { return _scalingFactor0; }
-        else if (address(token) == address(token1)) { return _scalingFactor1; }
-        else {
-            _revert(Errors.INVALID_TOKEN);
-        }
-    }
-
-    function _scalingFactors() internal view virtual override returns (uint256[] memory scalingFactors) {
-        scalingFactors = new uint256[](_TOTAL_TOKENS);
-        scalingFactors[0] = _scalingFactor0;
-        scalingFactors[1] = _scalingFactor1;
-    }
-
     function _setAmplificationData(uint256 value) private {
         _setAmplificationData(value, value, block.timestamp, block.timestamp);
 
@@ -829,13 +552,13 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let value := or(or(shl(192, startValue), shl(128, endValue)), or(shl(64, startTime), endTime))
-            sstore(_amplificationData.slot, value)
+            sstore(amplificationData.slot, value)
         }
 
         emit AmpUpdateStarted(startValue, endValue, startTime, endTime);
     }
 
-    function _getAmplificationData()
+    function getAmplificationData()
         private
         view
         returns (
@@ -850,7 +573,7 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             let mask := 0x000000000000000000000000000000000000000000000000000000000FFFFFFFFFFFFFFFF
-            let value := sload(_amplificationData.slot)
+            let value := sload(amplificationData.slot)
             startValue := and(shr(192, value), mask)
             endValue := and(shr(128, value), mask)
             startTime := and(shr(64, value), mask)
@@ -858,9 +581,50 @@ contract TempusAMM is BaseMinimalSwapInfoPool, StableMath, IRateProvider {
         }
     }
 
-    function _mapSharesToIERC20(IPoolShare[2] memory tokens) private pure returns (IERC20[] memory) {
-        IERC20[] memory mapped = new IERC20[](_TOTAL_TOKENS);
-        (mapped[0], mapped[1]) = (IERC20(address(tokens[0])), IERC20(address(tokens[1])));
-        return mapped;
+
+    /// Helpers 
+
+    function getRateAdjustedAmounts(
+        uint256 amount0, 
+        uint256 amount1, 
+        uint256 rate0, 
+        uint256 rate1
+    ) private view returns (uint256, uint256) {
+        return (
+            amount0.mulDown(scalingFactor).mulfV(rate0, TEMPUS_SHARE_PRECISION),
+            amount1.mulDown(scalingFactor).mulfV(rate1, TEMPUS_SHARE_PRECISION)
+        );
+    }
+
+    function getRateAdjustedBalances() private returns (uint256 balance0, uint256 balance1) {
+        (balance0, balance1) = getUpscaledBalances(); 
+        (balance0, balance1) = (
+            balance0.mulfV(token0.getPricePerFullShare(), TEMPUS_SHARE_PRECISION),
+            balance1.mulfV(token1.getPricePerFullShare(), TEMPUS_SHARE_PRECISION)
+        );
+    }
+
+    function getRateAdjustedBalancesStored() private view returns (uint256 balance0, uint256 balance1) {
+        (balance0, balance1) = getUpscaledBalances();
+        (balance0, balance1) = (
+            balance0.mulfV(token0.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION),
+            balance1.mulfV(token1.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION)
+        );
+    }
+
+    function getUpscaledBalances() private view returns (uint256 balance0, uint256 balance1) {
+        balance0 = token0.balanceOf(address(this)).mulDown(scalingFactor);
+        balance1 = token1.balanceOf(address(this)).mulDown(scalingFactor);
+    }
+
+    function addSwapFeeAmount(uint256 amount) private view returns (uint256) {
+        // This returns amount + fee amount, so we round up (favoring a higher fee amount).
+        return amount.divUp(FixedPoint.ONE - swapFeePercentage);
+    }
+
+    function subtractSwapFeeAmount(uint256 amount) private view returns (uint256) {
+        // This returns amount - fee amount, so we round up (favoring a higher fee amount).
+        uint256 feeAmount = amount.mulUp(swapFeePercentage);
+        return amount - feeAmount;
     }
 }

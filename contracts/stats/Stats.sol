@@ -118,13 +118,17 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     {
         uint256 shares = estimatedMintedShares(tempusPool, amount, isBackingToken);
 
-        (IERC20[] memory ammTokens, uint256[] memory ammBalances, ) = tempusAMM.getVault().getPoolTokens(
-            tempusAMM.getPoolId()
+        uint256 ammBalance0 = tempusAMM.token0().balanceOf(address(tempusAMM));
+        uint256 ammBalance1 = tempusAMM.token1().balanceOf(address(tempusAMM));
+        
+        (uint256 ammLPAmount0, uint256 ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(
+            ammBalance0,
+            ammBalance1,
+            shares
         );
-        uint256[] memory ammLiquidityProvisionAmounts = ammBalances.getLiquidityProvisionSharesAmounts(shares);
 
-        lpTokens = tempusAMM.getExpectedLPTokensForTokensIn(ammLiquidityProvisionAmounts);
-        (principals, yields) = (shares - ammLiquidityProvisionAmounts[0], shares - ammLiquidityProvisionAmounts[1]);
+        lpTokens = tempusAMM.getExpectedLPTokensForTokensIn(ammLPAmount0, ammLPAmount1);
+        (principals, yields) = (shares - ammLPAmount0, shares - ammLPAmount1);
     }
 
     /// Gets the estimated amount of Shares and Lp token amounts
