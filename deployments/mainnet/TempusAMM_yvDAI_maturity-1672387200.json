@@ -1,0 +1,1039 @@
+{
+  "address": "0x7cA043143C6e30bDA28dDc7322d7951F538D75e8",
+  "abi": [
+    {
+      "type": "constructor",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "vault"
+        },
+        {
+          "type": "string",
+          "name": "name"
+        },
+        {
+          "type": "string",
+          "name": "symbol"
+        },
+        {
+          "type": "address",
+          "name": "pool"
+        },
+        {
+          "type": "uint256",
+          "name": "amplificationStart"
+        },
+        {
+          "type": "uint256",
+          "name": "amplificationEnd"
+        },
+        {
+          "type": "uint256",
+          "name": "swapFeePercentage"
+        },
+        {
+          "type": "uint256",
+          "name": "pauseWindowDuration"
+        },
+        {
+          "type": "uint256",
+          "name": "bufferPeriodDuration"
+        },
+        {
+          "type": "address",
+          "name": "owner"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "AmpUpdateStarted",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "startValue",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "endValue",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "startTime",
+          "indexed": false
+        },
+        {
+          "type": "uint256",
+          "name": "endTime",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "AmpUpdateStopped",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "currentValue",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Approval",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "owner",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "spender",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "value",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "PausedStateChanged",
+      "inputs": [
+        {
+          "type": "bool",
+          "name": "paused",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "SwapFeePercentageChanged",
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "swapFeePercentage",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "anonymous": false,
+      "name": "Transfer",
+      "inputs": [
+        {
+          "type": "address",
+          "name": "from",
+          "indexed": true
+        },
+        {
+          "type": "address",
+          "name": "to",
+          "indexed": true
+        },
+        {
+          "type": "uint256",
+          "name": "value",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "DOMAIN_SEPARATOR",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "allowance",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "owner"
+        },
+        {
+          "type": "address",
+          "name": "spender"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "approve",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "spender"
+        },
+        {
+          "type": "uint256",
+          "name": "amount"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "balanceOf",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "account"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "decimals",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "decreaseAllowance",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "spender"
+        },
+        {
+          "type": "uint256",
+          "name": "amount"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getActionId",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes4",
+          "name": "selector"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getAmplificationParameter",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "value"
+        },
+        {
+          "type": "bool",
+          "name": "isUpdating"
+        },
+        {
+          "type": "uint256",
+          "name": "precision"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getAuthorizer",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getExpectedBPTInGivenTokensOut",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "principalsStaked"
+        },
+        {
+          "type": "uint256",
+          "name": "yieldsStaked"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "lpTokens"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getExpectedLPTokensForTokensIn",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256[]",
+          "name": "amountsIn"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getExpectedReturnGivenIn",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "amount"
+        },
+        {
+          "type": "bool",
+          "name": "yieldShareIn"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getExpectedTokensOutGivenBPTIn",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "bptAmountIn"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "principals"
+        },
+        {
+          "type": "uint256",
+          "name": "yields"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getLastInvariant",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "lastInvariant"
+        },
+        {
+          "type": "uint256",
+          "name": "lastInvariantAmp"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getOwner",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPausedState",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bool",
+          "name": "paused"
+        },
+        {
+          "type": "uint256",
+          "name": "pauseWindowEndTime"
+        },
+        {
+          "type": "uint256",
+          "name": "bufferPeriodEndTime"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getPoolId",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getRate",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getScalingFactors",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256[]"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getSwapAmountToEndWithEqualShares",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "principals"
+        },
+        {
+          "type": "uint256",
+          "name": "yields"
+        },
+        {
+          "type": "uint256",
+          "name": "threshold"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "amountIn"
+        },
+        {
+          "type": "bool",
+          "name": "yieldsIn"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getSwapFeePercentage",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "getVault",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "increaseAllowance",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "spender"
+        },
+        {
+          "type": "uint256",
+          "name": "addedValue"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "name",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "nonces",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "owner"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "onExitPool",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "poolId"
+        },
+        {
+          "type": "address",
+          "name": "sender"
+        },
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256[]",
+          "name": "balances"
+        },
+        {
+          "type": "uint256",
+          "name": "lastChangeBlock"
+        },
+        {
+          "type": "uint256",
+          "name": "protocolSwapFeePercentage"
+        },
+        {
+          "type": "bytes",
+          "name": "userData"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256[]"
+        },
+        {
+          "type": "uint256[]"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "onJoinPool",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "poolId"
+        },
+        {
+          "type": "address",
+          "name": "sender"
+        },
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256[]",
+          "name": "balances"
+        },
+        {
+          "type": "uint256",
+          "name": "lastChangeBlock"
+        },
+        {
+          "type": "uint256",
+          "name": "protocolSwapFeePercentage"
+        },
+        {
+          "type": "bytes",
+          "name": "userData"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256[]"
+        },
+        {
+          "type": "uint256[]"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "onSwap",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "tuple",
+          "name": "request",
+          "components": [
+            {
+              "type": "uint8",
+              "name": "kind"
+            },
+            {
+              "type": "address",
+              "name": "tokenIn"
+            },
+            {
+              "type": "address",
+              "name": "tokenOut"
+            },
+            {
+              "type": "uint256",
+              "name": "amount"
+            },
+            {
+              "type": "bytes32",
+              "name": "poolId"
+            },
+            {
+              "type": "uint256",
+              "name": "lastChangeBlock"
+            },
+            {
+              "type": "address",
+              "name": "from"
+            },
+            {
+              "type": "address",
+              "name": "to"
+            },
+            {
+              "type": "bytes",
+              "name": "userData"
+            }
+          ]
+        },
+        {
+          "type": "uint256",
+          "name": "balanceTokenIn"
+        },
+        {
+          "type": "uint256",
+          "name": "balanceTokenOut"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "permit",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "owner"
+        },
+        {
+          "type": "address",
+          "name": "spender"
+        },
+        {
+          "type": "uint256",
+          "name": "value"
+        },
+        {
+          "type": "uint256",
+          "name": "deadline"
+        },
+        {
+          "type": "uint8",
+          "name": "v"
+        },
+        {
+          "type": "bytes32",
+          "name": "r"
+        },
+        {
+          "type": "bytes32",
+          "name": "s"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "queryExit",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "poolId"
+        },
+        {
+          "type": "address",
+          "name": "sender"
+        },
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256[]",
+          "name": "balances"
+        },
+        {
+          "type": "uint256",
+          "name": "lastChangeBlock"
+        },
+        {
+          "type": "uint256",
+          "name": "protocolSwapFeePercentage"
+        },
+        {
+          "type": "bytes",
+          "name": "userData"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "bptIn"
+        },
+        {
+          "type": "uint256[]",
+          "name": "amountsOut"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "queryJoin",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bytes32",
+          "name": "poolId"
+        },
+        {
+          "type": "address",
+          "name": "sender"
+        },
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256[]",
+          "name": "balances"
+        },
+        {
+          "type": "uint256",
+          "name": "lastChangeBlock"
+        },
+        {
+          "type": "uint256",
+          "name": "protocolSwapFeePercentage"
+        },
+        {
+          "type": "bytes",
+          "name": "userData"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "uint256",
+          "name": "bptOut"
+        },
+        {
+          "type": "uint256[]",
+          "name": "amountsIn"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "setAssetManagerPoolConfig",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "token"
+        },
+        {
+          "type": "bytes",
+          "name": "poolConfig"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setPaused",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "bool",
+          "name": "paused"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "setSwapFeePercentage",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "swapFeePercentage"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "startAmplificationParameterUpdate",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "uint256",
+          "name": "rawEndValue"
+        },
+        {
+          "type": "uint256",
+          "name": "endTime"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "stopAmplificationParameterUpdate",
+      "constant": false,
+      "payable": false,
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "type": "function",
+      "name": "symbol",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "tempusPool",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "totalSupply",
+      "constant": true,
+      "stateMutability": "view",
+      "payable": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "type": "uint256"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "transfer",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256",
+          "name": "amount"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "transferFrom",
+      "constant": false,
+      "payable": false,
+      "inputs": [
+        {
+          "type": "address",
+          "name": "sender"
+        },
+        {
+          "type": "address",
+          "name": "recipient"
+        },
+        {
+          "type": "uint256",
+          "name": "amount"
+        }
+      ],
+      "outputs": [
+        {
+          "type": "bool"
+        }
+      ]
+    }
+  ]
+}

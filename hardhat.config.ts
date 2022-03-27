@@ -84,7 +84,8 @@ module.exports = {
   },
   networks: {
     localhost: {
-      url: "http://127.0.0.1:8545"
+      url: "http://127.0.0.1:8545",
+      hardfork: "london"
     },
     hardhat: {
       // process.env.HARDHAT_FORK will specify the network that the fork is made from.

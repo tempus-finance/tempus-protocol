@@ -18,6 +18,8 @@ export const DAY = HOUR * 24;
 export const WEEK = DAY * 7;
 export const MONTH = DAY * 30;
 
+export const AMP_PRECISION = 1e3;
+
 export enum TempusAMMExitKind {
   EXACT_BPT_IN_FOR_TOKENS_OUT = 0,
   BPT_IN_FOR_EXACT_TOKENS_OUT,
