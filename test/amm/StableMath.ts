@@ -103,7 +103,7 @@ export function calcOutGivenIn(
   const tokenIndexOut = firstTokenIn ? 1 : 0;
 
   balances[tokenIndexIn] = balances[tokenIndexIn].add(fromFp(fpTokenAmountIn));
-  const finalBalanceOut = _getTokenBalance(amp, balances, invariant, tokenIndexOut);
+  const finalBalanceOut = _getTokenBalance(amp, balances, invariant, tokenIndexOut == 0);
 
   return toFp(balances[tokenIndexOut].sub(finalBalanceOut));
 }
@@ -120,7 +120,7 @@ export function calcInGivenOut(
   const tokenIndexOut = firstTokenOut ? 0 : 1;
 
   balances[tokenIndexOut] = balances[tokenIndexOut].sub(fromFp(fpTokenAmountOut));
-  const finalBalanceIn = _getTokenBalance(amp, balances, invariant, tokenIndexIn);
+  const finalBalanceIn = _getTokenBalance(amp, balances, invariant, tokenIndexIn == 0);
 
   return toFp(finalBalanceIn.sub(balances[tokenIndexIn]));
 }
@@ -256,7 +256,7 @@ export function calcTokenOutGivenExactBptIn(
   const sumBalances = balances.reduce((a: Decimal, b: Decimal) => a.add(b), decimal(0));
 
   // get amountOutBeforeFee
-  const newBalanceTokenIndex = _getTokenBalance(amp, balances, newInvariant, tokenIndex);
+  const newBalanceTokenIndex = _getTokenBalance(amp, balances, newInvariant, tokenIndex == 0);
   const amountOutWithoutFee = balances[tokenIndex].sub(newBalanceTokenIndex);
 
   // We can now compute how much excess balance is being withdrawn as a result of the virtual swaps, which result
@@ -291,7 +291,7 @@ export function calculateOneTokenSwapFeeAmount(
   swapFeePercentage: BigNumberish
 ): Decimal {
   const balances = fpBalances.map(fromFp);
-  const finalBalanceFeeToken = _getTokenBalance(amp, balances, fromFp(lastInvariant), tokenIndex);
+  const finalBalanceFeeToken = _getTokenBalance(amp, balances, fromFp(lastInvariant), tokenIndex == 0);
 
   if (finalBalanceFeeToken.gt(balances[tokenIndex])) {
     return decimal(0);
@@ -301,35 +301,22 @@ export function calculateOneTokenSwapFeeAmount(
   return feeAmount.mul(fromFp(swapFeePercentage));
 }
 
-export function getTokenBalance(
-  amp: BigNumber,
-  fpBalances: BigNumber[],
-  fpInvariant: BigNumber,
-  tokenIndex: number
-): BigNumber {
+export function getTokenBalance(amp:BigNumber, fpBalances:BigNumber[], fpInvariant:BigNumber, firstToken:boolean): BigNumber {
   const invariant = fromFp(fpInvariant);
   const balances = fpBalances.map(fromFp);
-  return fp(_getTokenBalance(amp, balances, invariant, tokenIndex));
+  return fp(_getTokenBalance(amp, balances, invariant, firstToken));
 }
 
-function _getTokenBalance(amp:BigNumber, balances:Decimal[], invariant:Decimal, tokenIndex:number):Decimal {
-  let sum = decimal(0);
-  let mul = decimal(1);
+function _getTokenBalance(amp:BigNumber, balances:Decimal[], invariant:Decimal, firstToken:boolean):Decimal {
   const numTokens = balances.length;
-
-  for (let i = 0; i < numTokens; i++) {
-    if (i != tokenIndex) {
-      sum = sum.add(balances[i]);
-      mul = mul.mul(balances[i]);
-    }
-  }
+  const other = decimal(firstToken ? balances[1] : balances[0]);
 
   // const a = 1;
   const dAmp = deamp(amp);
-  const b = invariant.div(dAmp.mul(numTokens)).add(sum).sub(invariant);
+  const b = invariant.div(dAmp.mul(numTokens)).add(other).sub(invariant);
   const c = invariant.pow(numTokens + 1).mul(-1)
     .div(
-      decimal(numTokens).pow(numTokens + 1).mul(mul).mul(dAmp)
+      decimal(numTokens).pow(numTokens + 1).mul(other).mul(dAmp)
     );
 
   return b

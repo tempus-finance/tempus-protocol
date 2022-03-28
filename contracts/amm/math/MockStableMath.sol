@@ -119,8 +119,8 @@ contract MockStableMath {
         uint256 amp,
         uint256[] memory balances,
         uint256 invar,
-        uint256 tokenIndex
+        bool firstToken
     ) external pure returns (uint256) {
-        return StableMath.getTokenBalance(amp, balances[0], balances[1], invar, tokenIndex);
+        return StableMath.getTokenBalance(amp, balances[0], balances[1], invar, firstToken);
     }
 }

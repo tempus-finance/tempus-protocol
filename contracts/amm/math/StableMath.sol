@@ -97,7 +97,7 @@ library StableMath {
             firstIn ? balance0 + tokenAmountIn : balance0,
             firstIn ? balance1 : balance1 + tokenAmountIn,
             invariant(amp, balance0, balance1, true),
-            firstIn ? 1 : 0
+            !firstIn
         );
 
         uint256 balanceOut = firstIn ? balance1 : balance0;
@@ -134,7 +134,7 @@ library StableMath {
             firstOut ? balance0 - tokenAmountOut : balance0,
             firstOut ? balance1 : balance1 - tokenAmountOut,
             invariant(amp, balance0, balance1, true),
-            firstOut ? 1 : 0
+            !firstOut
         );
 
         uint256 balanceIn = firstOut ? balance1 : balance0;
@@ -279,7 +279,7 @@ library StableMath {
         uint256 newInvariant = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(currentInvariant);
 
         // Calculate amount out without fee
-        uint256 newBalanceTokenIndex = getTokenBalance(amp, balance0, balance1, newInvariant, tokenIndex);
+        uint256 newBalanceTokenIndex = getTokenBalance(amp, balance0, balance1, newInvariant, tokenIndex == 0);
 
         uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
         uint256 amountOutWithoutFee = tokenBalance - newBalanceTokenIndex;
@@ -349,7 +349,7 @@ library StableMath {
             balance0,
             balance1,
             lastInvariant,
-            tokenIndex
+            tokenIndex == 0
         );
 
         uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
@@ -366,14 +366,14 @@ library StableMath {
 
     // Private functions
 
-    // This function calculates the balance of a given token (tokenIndex)
+    // This function calculates the balance of a given token (firstToken?)
     // given all the other balances and the invariant
     function getTokenBalance(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
         uint256 invar,
-        uint256 tokenIndex
+        bool firstToken
     ) internal pure returns (uint256) {
         // Rounds result up overall
 
@@ -381,8 +381,8 @@ library StableMath {
         uint256 totalAmp = amp * _NUM_TOKENS;
         uint256 inv2 = invar * invar;
         // We remove the balance fromm c by multiplying it
-        uint256 c = Math.divUp(inv2, totalAmp * P_D) * _AMP_PRECISION * (tokenIndex == 0 ? balance0 : balance1);
-        uint256 b = (tokenIndex != 0 ? balance0 : balance1) + (Math.divDown(invar, totalAmp) * _AMP_PRECISION);
+        uint256 c = Math.divUp(inv2, totalAmp * P_D) * _AMP_PRECISION * (firstToken ? balance0 : balance1);
+        uint256 b = (firstToken ? balance1 : balance0) + (Math.divDown(invar, totalAmp) * _AMP_PRECISION);
 
         // We iterate to find the balance
         uint256 prevBalance = 0;
