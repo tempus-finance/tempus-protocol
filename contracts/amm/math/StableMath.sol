@@ -70,12 +70,11 @@ library StableMath {
 
     // Computes how many tokens can be taken out of a pool if `tokenAmountIn` are sent, given the current balances.
     // The amplification parameter equals: A n^(n-1)
-    function _calcOutGivenIn(
-        uint256 amplificationParameter,
+    function outGivenIn(
+        uint256 amp,
         uint256 balance0,
         uint256 balance1,
-        uint256 tokenIndexIn,
-        uint256 tokenIndexOut,
+        bool firstIn,
         uint256 tokenAmountIn
     ) internal pure returns (uint256) {
         /**************************************************************************************************************
@@ -93,29 +92,26 @@ library StableMath {
         // Amount out, so we round down overall.
 
         // Given that we need to have a greater final balance out, the invariant needs to be rounded up
-        uint256 inv = invariant(amplificationParameter, balance0, balance1, true);
-
         uint256 finalBalanceOut = getTokenBalance(
-            amplificationParameter,
-            tokenIndexIn == 0 ? balance0 + tokenAmountIn : balance0,
-            tokenIndexIn == 0 ? balance1 : balance1 + tokenAmountIn,
-            inv,
-            tokenIndexOut
+            amp,
+            firstIn ? balance0 + tokenAmountIn : balance0,
+            firstIn ? balance1 : balance1 + tokenAmountIn,
+            invariant(amp, balance0, balance1, true),
+            firstIn ? 1 : 0
         );
 
-        uint256 balanceOut = tokenIndexOut == 0 ? balance0 : balance1;
+        uint256 balanceOut = firstIn ? balance1 : balance0;
         return balanceOut - finalBalanceOut - 1;
     }
 
     // Computes how many tokens must be sent to a pool if `tokenAmountOut` are sent given the
     // current balances, using the Newton-Raphson approximation.
     // The amplification parameter equals: A n^(n-1)
-    function _calcInGivenOut(
-        uint256 amplificationParameter,
+    function inGivenOut(
+        uint256 amp,
         uint256 balance0,
         uint256 balance1,
-        uint256 tokenIndexIn,
-        uint256 tokenIndexOut,
+        bool firstOut,
         uint256 tokenAmountOut
     ) internal pure returns (uint256) {
         /**************************************************************************************************************
@@ -133,17 +129,15 @@ library StableMath {
         // Amount in, so we round up overall.
 
         // Given that we need to have a greater final balance in, the invariant needs to be rounded up
-        uint256 currentInvariant = invariant(amplificationParameter, balance0, balance1, true);
-
         uint256 finalBalanceIn = getTokenBalance(
-            amplificationParameter,
-            tokenIndexOut == 0 ? balance0 - tokenAmountOut : balance0,
-            tokenIndexOut == 0 ? balance1 : balance1 - tokenAmountOut,
-            currentInvariant,
-            tokenIndexIn
+            amp,
+            firstOut ? balance0 - tokenAmountOut : balance0,
+            firstOut ? balance1 : balance1 - tokenAmountOut,
+            invariant(amp, balance0, balance1, true),
+            firstOut ? 1 : 0
         );
 
-        uint256 balanceIn = tokenIndexIn == 0 ? balance0 : balance1;
+        uint256 balanceIn = firstOut ? balance1 : balance0;
         return finalBalanceIn - balanceIn + 1;
     }
 
