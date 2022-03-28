@@ -201,22 +201,37 @@ describeNonPool('StableMath', () =>
     await equal(amp(90), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
   });
 
-  it('tokenBalanceGivenInvariantAndAllOtherBalances', async () =>
+  it('getTokenBalance', async () =>
   {
     const equal = (...args:any[]) => expectEquals(mockMath.getTokenBalance, getTokenBalance, ...args);
     
-    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*tokenIndex*/0);
-    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*tokenIndex*/0);
-    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*tokenIndex*/0);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*firstToken*/true);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/true);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/true);
 
-    await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*tokenIndex*/0);
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*tokenIndex*/0);
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/true);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/true);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
 
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*tokenIndex*/0);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
+
+
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*firstToken*/false);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/false);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/false);
+
+    await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/false);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/false);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
+
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
   });
 });
