@@ -13,24 +13,22 @@ contract MockStableMath {
         return StableMath.invariant(amp, balances[0], balances[1], roundUp);
     }
 
-    function inGivenOut(
-        uint256 amp,
-        uint256[] memory balances,
-        uint256 tokenIndexIn,
-        uint256 tokenIndexOut,
-        uint256 tokenAmountOut
-    ) external pure returns (uint256) {
-        return StableMath._calcInGivenOut(amp, balances[0], balances[1], tokenIndexIn, tokenIndexOut, tokenAmountOut);
-    }
-
     function outGivenIn(
         uint256 amp,
         uint256[] memory balances,
-        uint256 tokenIndexIn,
-        uint256 tokenIndexOut,
+        bool firstTokenIn,
         uint256 tokenAmountIn
     ) external pure returns (uint256) {
-        return StableMath._calcOutGivenIn(amp, balances[0], balances[1], tokenIndexIn, tokenIndexOut, tokenAmountIn);
+        return StableMath.outGivenIn(amp, balances[0], balances[1], firstTokenIn, tokenAmountIn);
+    }
+
+    function inGivenOut(
+        uint256 amp,
+        uint256[] memory balances,
+        bool firstTokenOut,
+        uint256 tokenAmountOut
+    ) external pure returns (uint256) {
+        return StableMath.inGivenOut(amp, balances[0], balances[1], firstTokenOut, tokenAmountOut);
     }
 
     function bptOutGivenExactTokensIn(

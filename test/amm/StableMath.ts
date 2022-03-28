@@ -93,14 +93,16 @@ export function calculateAnalyticalInvariantForTwoTokens(
 export function calcOutGivenIn(
   amp: BigNumber,
   fpBalances: BigNumberish[],
-  tokenIndexIn: number,
-  tokenIndexOut: number,
+  firstTokenIn: boolean,
   fpTokenAmountIn: BigNumberish
 ): Decimal {
   const invariant = fromFp(calculateInvariant(amp, fpBalances, true));
   const balances = fpBalances.map(fromFp);
-  balances[tokenIndexIn] = balances[tokenIndexIn].add(fromFp(fpTokenAmountIn));
 
+  const tokenIndexIn = firstTokenIn ? 0 : 1;
+  const tokenIndexOut = firstTokenIn ? 1 : 0;
+
+  balances[tokenIndexIn] = balances[tokenIndexIn].add(fromFp(fpTokenAmountIn));
   const finalBalanceOut = _getTokenBalance(amp, balances, invariant, tokenIndexOut);
 
   return toFp(balances[tokenIndexOut].sub(finalBalanceOut));
@@ -109,15 +111,15 @@ export function calcOutGivenIn(
 export function calcInGivenOut(
   amp: BigNumber,
   fpBalances: BigNumberish[],
-  tokenIndexIn: number,
-  tokenIndexOut: number,
+  firstTokenOut: boolean,
   fpTokenAmountOut: BigNumberish
 ): Decimal {
   const invariant = fromFp(calculateInvariant(amp, fpBalances, true));
-
   const balances = fpBalances.map(fromFp);
-  balances[tokenIndexOut] = balances[tokenIndexOut].sub(fromFp(fpTokenAmountOut));
+  const tokenIndexIn = firstTokenOut ? 1 : 0;
+  const tokenIndexOut = firstTokenOut ? 0 : 1;
 
+  balances[tokenIndexOut] = balances[tokenIndexOut].sub(fromFp(fpTokenAmountOut));
   const finalBalanceIn = _getTokenBalance(amp, balances, invariant, tokenIndexIn);
 
   return toFp(finalBalanceIn.sub(balances[tokenIndexIn]));

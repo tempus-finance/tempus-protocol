@@ -94,52 +94,52 @@ describeNonPool('StableMath', () =>
           .to.be.revertedWith('StableMath no convergence');
   });
 
-  // Computes how many IN tokens must be sent to a pool if `tokenAmountOut` are received, given the current balances
+  it('outGivenIn', async () =>
+  {
+    const outGivenIn = (...args:any[]) => expectEquals(mockMath.outGivenIn, calcOutGivenIn, ...args);
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)], /*firstIn*/true, /*amountIn*/fp(1));
+    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*firstIn*/true, /*amountIn*/fp(10));
+
+    // balances are not close enough, and then we want them to diverge even more.
+    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
+
+    // adding more "balanced" swap by adding token which has less balance
+    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*firstIn*/true, /*amountIn*/fp(5));
+  });
+
+  // Computes how many IN tokens must be sent to a pool if `amountOut` are received, given the current balances
   it('inGivenOut', async () =>
   {
     const inGivenOut = (...args:any[]) => expectEquals(mockMath.inGivenOut, calcInGivenOut, ...args);
 
-    await inGivenOut(amp(100), /*balances*/[fp(10), fp(12)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(1));
-    await inGivenOut(amp(1), /*balances*/[fp(100), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(10));
+    await inGivenOut(amp(100), /*balances*/[fp(10), fp(12)], /*firstOut*/false, /*amountOut*/fp(1));
+    await inGivenOut(amp(1), /*balances*/[fp(100), fp(100)], /*firstOut*/false, /*amountOut*/fp(10));
 
     // balances are not close enough, and then we want them to diverge even more.
-    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
-    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
-    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
-    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
-    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
-    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountOut*/fp(5));
+    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
+    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
+    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
+    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
+    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
+    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*firstOut*/true, /*amountOut*/fp(5));
 
     // adding more "balanced" swap by adding token which has less balance
-    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountOut*/fp(50));
-  });
-
-  it('outGivenIn', async () =>
-  {
-    const outGivenIn = (...args:any[]) => expectEquals(mockMath.outGivenIn, calcOutGivenIn, ...args);
-    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(1));
-    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(10));
-
-    // balances are not close enough, and then we want them to diverge even more.
-    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/1, /*indexOut*/0, /*tokenAmountIn*/fp(50));
-
-    // adding more "balanced" swap by adding token which has less balance
-    await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
-    await outGivenIn(amp(5),  /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
-    await outGivenIn(amp(10), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
-    await outGivenIn(amp(20), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
-    await outGivenIn(amp(50), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
-    await outGivenIn(amp(90), /*balances*/[fp(10), fp(100)], /*indexIn*/0, /*indexOut*/1, /*tokenAmountIn*/fp(5));
+    await inGivenOut(amp(1),  /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
+    await inGivenOut(amp(5),  /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
+    await inGivenOut(amp(10), /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
+    await inGivenOut(amp(20), /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
+    await inGivenOut(amp(50), /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
+    await inGivenOut(amp(90), /*balances*/[fp(10), fp(100)], /*firstOut*/false, /*amountOut*/fp(50));
   });
 
   it('bptOutGivenExactTokensIn', async () =>
