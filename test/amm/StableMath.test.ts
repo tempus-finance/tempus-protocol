@@ -62,30 +62,50 @@ describeNonPool('StableMath', () =>
   it('invariant', async () =>
   {
     const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateInvariant, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(12)], true);
-    await equal(amp(100), /*balances*/[fp(10), fp(10)], true);
-    await equal(amp(100), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(100), /*balances*/[fp(100), fp(100)], true);
 
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(100), /*balances*/[fp(0), fp(0)], /*roundUp*/true);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], /*roundUp*/true);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*roundUp*/true);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(100), /*balances*/[fp(100), fp(100)], /*roundUp*/true);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+
+    await equal(amp(100), /*balances*/[fp(0), fp(0)], /*roundUp*/false);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], /*roundUp*/false);
+    await equal(amp(100), /*balances*/[fp(10), fp(10)], /*roundUp*/false);
+    await equal(amp(100), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(100), /*balances*/[fp(100), fp(100)], /*roundUp*/false);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
   });
 
   it('invariant equals analytical solution', async () =>
   {
     const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateAnalyticalInvariantForTwoTokens, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(12)], true);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], /*roundUp*/true);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
 
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], true);
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], true);
+    await equal(amp(100), /*balances*/[fp(10), fp(12)], /*roundUp*/false);
+    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*roundUp*/false);
   });
 
   it('invariant reverts if it does not converge', async () =>
@@ -97,8 +117,10 @@ describeNonPool('StableMath', () =>
   it('outGivenIn', async () =>
   {
     const outGivenIn = (...args:any[]) => expectEquals(mockMath.outGivenIn, calcOutGivenIn, ...args);
-    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)], /*firstIn*/true, /*amountIn*/fp(1));
-    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*firstIn*/true, /*amountIn*/fp(10));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)],  /*firstIn*/true,  /*amountIn*/fp(1));
+    await outGivenIn(amp(10), /*balances*/[fp(10), fp(11)],  /*firstIn*/false, /*amountIn*/fp(1));
+    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*firstIn*/true,  /*amountIn*/fp(10));
+    await outGivenIn(amp(1), /*balances*/[fp(100), fp(100)], /*firstIn*/false, /*amountIn*/fp(10));
 
     // balances are not close enough, and then we want them to diverge even more.
     await outGivenIn(amp(1),  /*balances*/[fp(10), fp(100)], /*firstIn*/false, /*amountIn*/fp(50));
@@ -122,7 +144,9 @@ describeNonPool('StableMath', () =>
   {
     const inGivenOut = (...args:any[]) => expectEquals(mockMath.inGivenOut, calcInGivenOut, ...args);
 
+    await inGivenOut(amp(100), /*balances*/[fp(10), fp(12)], /*firstOut*/true,  /*amountOut*/fp(1));
     await inGivenOut(amp(100), /*balances*/[fp(10), fp(12)], /*firstOut*/false, /*amountOut*/fp(1));
+    await inGivenOut(amp(1), /*balances*/[fp(100), fp(100)], /*firstOut*/true,  /*amountOut*/fp(10));
     await inGivenOut(amp(1), /*balances*/[fp(100), fp(100)], /*firstOut*/false, /*amountOut*/fp(10));
 
     // balances are not close enough, and then we want them to diverge even more.
@@ -204,11 +228,10 @@ describeNonPool('StableMath', () =>
   it('getTokenBalance', async () =>
   {
     const equal = (...args:any[]) => expectEquals(mockMath.getTokenBalance, getTokenBalance, ...args);
-    
+
     await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*firstToken*/true);
     await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/true);
     await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/true);
-
     await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/true);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/true);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
@@ -219,11 +242,9 @@ describeNonPool('StableMath', () =>
     await equal(amp(50), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
     await equal(amp(90), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/true);
 
-
     await equal(amp(100), /*balances*/[fp(10), fp(11)], /*invariant:*/fp(21), /*firstToken*/false);
     await equal(amp(100), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/false);
     await equal(amp(100), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/false);
-
     await equal(amp(1), /*balances*/[fp(10), fp(10)], /*invariant:*/fp(20), /*firstToken*/false);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(110), /*firstToken*/false);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*invariant:*/fp(10), /*firstToken*/false);
