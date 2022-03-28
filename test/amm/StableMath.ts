@@ -125,7 +125,7 @@ export function calcInGivenOut(
   return toFp(finalBalanceIn.sub(balances[tokenIndexIn]));
 }
 
-export function calcBptOutGivenExactTokensIn(
+export function bptOutGivenTokensIn(
   amplificationParameter: BigNumber,
   fpBalances: BigNumberish[],
   fpAmountsIn: BigNumberish[],
@@ -179,7 +179,7 @@ export function calcBptOutGivenExactTokensIn(
   }
 }
 
-export function calcBptInGivenExactTokensOut(
+export function bptInGivenTokensOut(
   amplificationParameter: BigNumber,
   fpBalances: BigNumberish[],
   fpAmountsOut: BigNumberish[],
