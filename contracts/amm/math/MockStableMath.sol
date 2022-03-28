@@ -31,7 +31,7 @@ contract MockStableMath {
         return StableMath.inGivenOut(amp, balances[0], balances[1], firstTokenOut, tokenAmountOut);
     }
 
-    function bptOutGivenExactTokensIn(
+    function bptOutGivenTokensIn(
         uint256 amp,
         uint256[] memory balances,
         uint256[] memory amountsIn,
@@ -39,7 +39,7 @@ contract MockStableMath {
         uint256 swapFeePercentage
     ) external pure returns (uint256) {
         return
-            StableMath._calcBptOutGivenExactTokensIn(
+            StableMath.bptOutGivenTokensIn(
                 amp,
                 balances[0],
                 balances[1],
@@ -50,7 +50,7 @@ contract MockStableMath {
             );
     }
 
-    function bptInGivenExactTokensOut(
+    function bptInGivenTokensOut(
         uint256 amp,
         uint256[] memory balances,
         uint256[] memory amountsOut,
@@ -58,7 +58,7 @@ contract MockStableMath {
         uint256 swapFeePercentage
     ) external pure returns (uint256) {
         return
-            StableMath._calcBptInGivenExactTokensOut(
+            StableMath.bptInGivenTokensOut(
                 amp,
                 balances[0],
                 balances[1],

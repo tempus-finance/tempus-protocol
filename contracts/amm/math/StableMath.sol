@@ -141,12 +141,12 @@ library StableMath {
         return finalBalanceIn - balanceIn + 1;
     }
 
-    function _calcBptOutGivenExactTokensIn(
+    function bptOutGivenTokensIn(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
-        uint256 amountsIn0,
-        uint256 amountsIn1,
+        uint256 amountIn0,
+        uint256 amountIn1,
         uint256 bptTotalSupply,
         uint256 swapFeePercentage
     ) internal pure returns (uint256) {
@@ -158,8 +158,8 @@ library StableMath {
         {
             // Calculate the weighted balance ratio without considering fees
             // The weighted sum of token balance ratios without fee
-            uint256 balanceRatiosWithFee0 = (balance0 + amountsIn0).divDown(balance0);
-            uint256 balanceRatiosWithFee1 = (balance1 + amountsIn1).divDown(balance1);
+            uint256 balanceRatiosWithFee0 = (balance0 + amountIn0).divDown(balance0);
+            uint256 balanceRatiosWithFee1 = (balance1 + amountIn1).divDown(balance1);
             uint256 invariantRatioWithFees = balanceRatiosWithFee0.mulDown(balance0.divDown(balance0 + balance1));
             invariantRatioWithFees += balanceRatiosWithFee1.mulDown(balance1.divDown(balance0 + balance1));
 
@@ -169,20 +169,20 @@ library StableMath {
 
             if (balanceRatiosWithFee0 > invariantRatioWithFees) {
                 uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithFees - FixedPoint.ONE);
-                uint256 taxableAmount = amountsIn0 - nonTaxableAmount;
+                uint256 taxableAmount = amountIn0 - nonTaxableAmount;
                 amountInWithoutFee = nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
             } else {
-                amountInWithoutFee = amountsIn0;
+                amountInWithoutFee = amountIn0;
             }
 
             newBalance0 = balance0 + amountInWithoutFee;
 
             if (balanceRatiosWithFee1 > invariantRatioWithFees) {
                 uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithFees - FixedPoint.ONE);
-                uint256 taxableAmount = amountsIn1 - nonTaxableAmount;
+                uint256 taxableAmount = amountIn1 - nonTaxableAmount;
                 amountInWithoutFee = nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
             } else {
-                amountInWithoutFee = amountsIn1;
+                amountInWithoutFee = amountIn1;
             }
 
             newBalance1 = balance1 + amountInWithoutFee;
@@ -206,12 +206,12 @@ library StableMath {
     amountsTokenOut -> amountsOutProportional ->
     amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountBPTIn
     */
-    function _calcBptInGivenExactTokensOut(
+    function bptInGivenTokensOut(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
-        uint256 amountsOut0,
-        uint256 amountsOut1,
+        uint256 amountOut0,
+        uint256 amountOut1,
         uint256 bptTotalSupply,
         uint256 swapFeePercentage
     ) internal pure returns (uint256) {
@@ -222,8 +222,8 @@ library StableMath {
         // additional scope to avoid stack-too-deep
         {
             // Calculate the weighted balance ratio without considering fees
-            uint256 balanceRatiosWithoutFee0 = (balance0 - amountsOut1).divUp(balance0);
-            uint256 balanceRatiosWithoutFee1 = (balance1 - amountsOut1).divUp(balance1);
+            uint256 balanceRatiosWithoutFee0 = (balance0 - amountOut1).divUp(balance0);
+            uint256 balanceRatiosWithoutFee1 = (balance1 - amountOut1).divUp(balance1);
             uint256 invariantRatioWithoutFees = balanceRatiosWithoutFee0.mulUp(balance0.divUp(balance0 + balance1));
             invariantRatioWithoutFees += balanceRatiosWithoutFee1.mulUp(balance1.divUp(balance0 + balance1));
 
@@ -233,22 +233,22 @@ library StableMath {
             uint256 amountOutWithFee;
             if (invariantRatioWithoutFees > balanceRatiosWithoutFee0) {
                 uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithoutFees.complement());
-                uint256 taxableAmount = amountsOut0 - nonTaxableAmount;
+                uint256 taxableAmount = amountOut0 - nonTaxableAmount;
                 // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
                 amountOutWithFee = nonTaxableAmount + taxableAmount.divUp(FixedPoint.ONE - swapFeePercentage);
             } else {
-                amountOutWithFee = amountsOut0;
+                amountOutWithFee = amountOut0;
             }
 
             newBalance0 = balance0 - amountOutWithFee;
 
             if (invariantRatioWithoutFees > balanceRatiosWithoutFee1) {
                 uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithoutFees.complement());
-                uint256 taxableAmount = amountsOut1 - nonTaxableAmount;
+                uint256 taxableAmount = amountOut1 - nonTaxableAmount;
                 // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
                 amountOutWithFee = nonTaxableAmount + taxableAmount.divUp(FixedPoint.ONE - swapFeePercentage);
             } else {
-                amountOutWithFee = amountsOut1;
+                amountOutWithFee = amountOut1;
             }
 
             newBalance1 = balance1 - amountOutWithFee;
