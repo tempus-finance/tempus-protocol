@@ -256,7 +256,7 @@ export class TempusController extends ContractBase {
   ): Promise<Transaction> {
     const amm = pool.amm;
     await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
-    return this.connect(user).exitTempusAMM(amm.address, pool.tempus.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
+    return this.connect(user).exitTempusAMM(amm.address, pool.tempus.address, pool.amm.toBigNum(lpTokensAmount), 1, 1);
   }
 
   async exitAmmGivenLpAndRedeem(

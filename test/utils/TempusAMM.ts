@@ -3,13 +3,9 @@ import { BigNumber, Contract, Transaction } from "ethers";
 import { NumberOrString, toWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
-import { MockProvider } from "@ethereum-waffle/provider";
-import { deployMockContract, MockContract } from "@ethereum-waffle/mock-contract";
 import { blockTimestamp, setEvmTime } from "./Utils";
 import { TempusController } from "./TempusController";
 import { PoolShare } from "./PoolShare";
-
-const WETH_ARTIFACTS = require("../../artifacts/@balancer-labs/v2-solidity-utils/contracts/misc/IWETH.sol/IWETH");
 
 export const SECOND = 1;
 export const MINUTE = SECOND * 60;
@@ -33,7 +29,6 @@ export enum TempusAMMJoinKind {
 }
 
 export class TempusAMM extends ContractBase {
-  vault: Contract;
   token0: ERC20;
   token1: ERC20;
   startAmp: number;
@@ -41,21 +36,13 @@ export class TempusAMM extends ContractBase {
   startedAmpUpdateTime: number;
   oneAmpUpdateTime: number;
 
-  constructor(tempusAmmPool: Contract, vault: Contract, token0: PoolShare, token1: PoolShare) {
+  constructor(tempusAmmPool: Contract, token0: PoolShare, token1: PoolShare) {
     super("TempusAMM", 18, tempusAmmPool);
-    this.vault = vault;
     this.token0 = token0;
     this.token1 = token1;
     if (parseInt(token0.address) >= parseInt(token1.address)) {
       throw new Error("Token0.address must be < Token1.address!");
     }
-  }
-
-
-  static async createMock(): Promise<MockContract> {
-    const [sender] = new MockProvider().getWallets();
-    const mockedWETH = await deployMockContract(sender, WETH_ARTIFACTS.abi);
-    return mockedWETH;
   }
 
   static async create(
@@ -68,37 +55,22 @@ export class TempusAMM extends ContractBase {
     amplificationEndTime: number,
     swapFeePercentage: number,
   ): Promise<TempusAMM> {
-
-    const mockedWETH = await TempusAMM.createMock();
     
-    const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
-    const vault = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Vault.sol:Vault", authorizer.address, mockedWETH.address, 3 * MONTH, MONTH);
-
     let tempusAMM = await ContractBase.deployContractBy(
       "TempusAMM",
       owner,
-      vault.address, 
       "Tempus LP token", 
       "LP",
-      [token0.address, token1.address],
+      token0.address, 
+      token1.address,
       +rawAmplificationStart * AMP_PRECISION,
       +rawAmplificationEnd * AMP_PRECISION,
       amplificationEndTime,
-      toWei(swapFeePercentage),
-      3 * MONTH, 
-      MONTH, 
-      owner.address
+      toWei(swapFeePercentage)
     );
 
     await controller.register(owner, tempusAMM.address);
-    return new TempusAMM(tempusAMM, vault, token0, token1);
-  }
-
-  async getLastInvariant(): Promise<{invariant: number, amplification: number}> {
-    let inv:BigNumber;
-    let amp: number;
-    [inv, amp] = await this.contract.getLastInvariant();
-    return {invariant: +this.fromBigNum(inv), amplification: amp};
+    return new TempusAMM(tempusAMM, token0, token1);
   }
 
   async balanceOf(user:Signer): Promise<NumberOrString> {
@@ -123,13 +95,10 @@ export class TempusAMM extends ContractBase {
   }
 
   async getExpectedLPTokensForTokensIn(token0AmountIn:NumberOrString, token1AmountIn:NumberOrString): Promise<NumberOrString> {
-    const assets = [
-      { address: this.token0.address, amount: this.token0.toBigNum(token0AmountIn) },
-      { address: this.token1.address, amount: this.token1.toBigNum(token1AmountIn) }
-    ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
-    const amountsIn = assets.map(({ amount }) => amount);
-
-    return +this.fromBigNum(await this.contract.getExpectedLPTokensForTokensIn(amountsIn));
+    return +this.fromBigNum(await this.contract.getExpectedLPTokensForTokensIn(
+      this.token0.toBigNum(token0AmountIn),
+      this.token1.toBigNum(token1AmountIn)
+    ));
   }
 
   /**
@@ -146,99 +115,37 @@ export class TempusAMM extends ContractBase {
   }
 
   async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number, joinKind: TempusAMMJoinKind) {
-    await this.token0.approve(from, this.vault.address, token0Balance);
-    await this.token1.approve(from, this.vault.address, token1Balance);
-    
-    const poolId = await this.contract.getPoolId();
-    const assets = [
-      { address: this.token0.address, amount: this.token0.toBigNum(token0Balance) },
-      { address: this.token1.address, amount: this.token1.toBigNum(token1Balance) }
-    ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
-    
-    const initialBalances = assets.map(({ amount }) => amount);
-    const initUserData = ethers.utils.defaultAbiCoder.encode(
-      ['uint256', 'uint256[]'], [joinKind, initialBalances]
-    );
-    const joinPoolRequest = {
-      assets: assets.map(({ address }) => address),
-      maxAmountsIn: initialBalances,
-      userData: initUserData,
-      fromInternalBalance: false
-    };
+    await this.token0.approve(from, this.address, token0Balance);
+    await this.token1.approve(from, this.address, token1Balance);
   
-    await this.vault.connect(from).joinPool(poolId, from.address, from.address, joinPoolRequest);
+    if (joinKind == TempusAMMJoinKind.INIT) {
+      await this.connect(from).init(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance));
+    } else {
+      await this.connect(from).join(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance), 0, from.address);
+    }
   }
 
   async exitPoolExactLpAmountIn(from: Signer, lpTokensAmount: Number) {
-    const poolId = await this.contract.getPoolId();
-    
-    const assets = [
-      { address: this.token0.address },
-      { address: this.token1.address }
-    ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
-
-    const exitUserData = ethers.utils.defaultAbiCoder.encode(
-      ['uint256', 'uint256'], 
-      [TempusAMMExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT, this.toBigNum(lpTokensAmount)]
-    );
-    
-    const exitPoolRequest = {
-      assets: assets.map(({ address }) => address),
-      minAmountsOut: [1000000, 100000],
-      userData: exitUserData,
-      toInternalBalance: false
-    };
-  
-    await this.vault.connect(from).exitPool(poolId, from.address, from.address, exitPoolRequest);
+    await this.connect(from).exitGivenLpIn(this.toBigNum(lpTokensAmount), 0, 0, from.address);
   }
 
   async exitPoolExactAmountOut(from:Signer, amountsOut:Number[], maxAmountLpIn:Number) {
-    const poolId = await this.contract.getPoolId();
-    
-    const assets = [
-      { address: this.token0.address, amountOut: this.token0.toBigNum(amountsOut[0]) },
-      { address: this.token1.address, amountOut: this.token1.toBigNum(amountsOut[1]) }
-    ].sort(( asset1, asset2 ) => parseInt(asset1.address) - parseInt(asset2.address));
-
-    const exitUserData = ethers.utils.defaultAbiCoder.encode(
-      ['uint256', 'uint256[]', 'uint256'], 
-      [TempusAMMExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT, assets.map(({ amountOut }) => amountOut), this.toBigNum(maxAmountLpIn)],
+    await this.connect(from).exitGivenTokensOut(
+      this.token0.toBigNum(amountsOut[0]), 
+      this.token1.toBigNum(amountsOut[1]), 
+      this.toBigNum(maxAmountLpIn), 
+      from.address
     );
-    
-    const exitPoolRequest = {
-      assets: assets.map(({ address }) => address),
-      minAmountsOut: [1000000, 100000],
-      userData: exitUserData,
-      toInternalBalance: false
-    };
-  
-    await this.vault.connect(from).exitPool(poolId, from.address, from.address, exitPoolRequest);
   }
 
   async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {
-    await this.token0.approve(from, this.vault.address, await this.token0.balanceOf(from));
-    await this.token1.approve(from, this.vault.address, await this.token1.balanceOf(from));
+    await this.token0.approve(from, this.address, await this.token0.balanceOf(from));
+    await this.token1.approve(from, this.address, await this.token1.balanceOf(from));
     const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;
-    const poolId = await this.contract.getPoolId();    
 
-    const singleSwap = {
-      poolId,
-      kind: SWAP_KIND,
-      assetIn: assetIn,
-      assetOut: assetOut,
-      amount: this.token0.toBigNum(amount),
-      userData: 0x0
-    };
-  
-    const fundManagement = {
-      sender: from.address,
-      fromInternalBalance: false,
-      recipient: from.address,
-      toInternalBalance: false
-    };
     const minimumReturn = (givenOut !== undefined && givenOut) ? this.token0.toBigNum(1000000000) : 1;
     const deadline = await blockTimestamp() * 2; // not anytime soon 
-    await this.vault.connect(from).swap(singleSwap, fundManagement, minimumReturn, deadline);
+    await this.connect(from).swap(assetIn, this.token0.toBigNum(amount), minimumReturn, SWAP_KIND, deadline);
   }
 
   async startAmplificationUpdate(rawTargetAmp: number, oneAmpUpdateTime: number): Promise<Transaction> {

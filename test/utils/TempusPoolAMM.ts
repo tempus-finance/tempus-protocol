@@ -13,8 +13,8 @@ export class TempusPoolAMM extends TempusAMM {
   principalShare: PoolShare;
   yieldShare: PoolShare;
 
-  constructor(tempusAmmPool: Contract, vault: Contract, principalShare: PoolShare, yieldShare: PoolShare) {
-    super(tempusAmmPool, vault, principalShare, yieldShare);
+  constructor(tempusAmmPool: Contract, principalShare: PoolShare, yieldShare: PoolShare) {
+    super(tempusAmmPool, principalShare, yieldShare);
 
     this.principalShare = principalShare;
     this.yieldShare = yieldShare;
@@ -34,29 +34,21 @@ export class TempusPoolAMM extends TempusAMM {
       throw new Error("principalShare.address must be < yieldShare.address!");
     }
 
-    const mockedWETH = await TempusAMM.createMock();
-
-    const authorizer = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Authorizer.sol:Authorizer", owner.address);
-    const vault = await ContractBase.deployContract("@balancer-labs/v2-vault/contracts/Vault.sol:Vault", authorizer.address, mockedWETH.address, 3 * MONTH, MONTH);
-
     let tempusAMM = await ContractBase.deployContractBy(
       "TempusAMM",
       owner,
-      vault.address, 
       "Tempus LP token", 
       "LP",
-      [principalShare.address, yieldShare.address],
+      principalShare.address, 
+      yieldShare.address,
       +rawAmplificationStart * AMP_PRECISION,
       +rawAmplificationEnd * AMP_PRECISION,
       amplificationEndTime,
-      toWei(swapFeePercentage),
-      3 * MONTH, 
-      MONTH, 
-      owner.address
+      toWei(swapFeePercentage)
     );
     
     await controller.register(owner, tempusAMM.address);
-    return new TempusPoolAMM(tempusAMM, vault, principalShare, yieldShare);
+    return new TempusPoolAMM(tempusAMM, principalShare, yieldShare);
   }
 
   async getExpectedPYOutGivenBPTIn(inAmount: NumberOrString): Promise<{principalsOut:number, yieldsOut:number}> {
