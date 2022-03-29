@@ -252,11 +252,11 @@ library StableMath {
         return bptTotalSupply.mulUp(invariantRatio.complement());
     }
 
-    function _calcTokenOutGivenExactBptIn(
+    function tokenOutFromBptIn(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
-        uint256 tokenIndex,
+        bool firstToken,
         uint256 bptAmountIn,
         uint256 bptTotalSupply,
         uint256 swapFeePercentage
@@ -264,19 +264,16 @@ library StableMath {
         // Token out, so we round down overall.
 
         // Get the current and new invariants. Since we need a bigger new invariant, we round the current one up.
-        uint256 currentInvariant = invariant(amp, balance0, balance1, true);
-        uint256 newInvariant = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(currentInvariant);
+        uint256 curInv = invariant(amp, balance0, balance1, true);
+        uint256 newInv = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(curInv);
 
         // Calculate amount out without fee
-        uint256 newBalanceTokenIndex = getTokenBalance(amp, balance0, balance1, newInvariant, tokenIndex == 0);
-
-        uint256 tokenBalance = tokenIndex == 0 ? balance0 : balance1;
-        uint256 amountOutWithoutFee = tokenBalance - newBalanceTokenIndex;
+        uint256 tokenBalance = firstToken ? balance0 : balance1;
+        uint256 amountOutWithoutFee = tokenBalance - getTokenBalance(amp, balance0, balance1, newInv, firstToken);
 
         // We can now compute how much excess balance is being withdrawn as a result of the virtual swaps, which result
         // in swap fees.
-        uint256 currentWeight = tokenBalance.divDown(balance0 + balance1);
-        uint256 taxablePercentage = currentWeight.complement();
+        uint256 taxablePercentage = tokenBalance.divDown(balance0 + balance1).complement();
 
         // Swap fees are typically charged on 'token in', but there is no 'token in' here, so we apply it
         // to 'token out'. This results in slightly larger price impact. Fees are rounded up.
