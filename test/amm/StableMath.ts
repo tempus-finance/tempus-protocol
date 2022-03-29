@@ -273,7 +273,7 @@ export function tokenOutFromBptIn(
   return fp(tokenOut);
 }
 
-export function calcTokensOutGivenExactBptIn(
+export function tokensOutFromBptIn(
   fpBalances: BigNumberish[],
   fpBptAmountIn: BigNumberish,
   fpBptTotalSupply: BigNumberish
