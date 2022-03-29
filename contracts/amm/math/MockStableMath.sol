@@ -97,24 +97,6 @@ contract MockStableMath {
         return StableMath.tokensOutFromBptIn(balances[0], balances[1], bptAmountIn, bptTotalSupply);
     }
 
-    function dueTokenProtocolSwapFeeAmount(
-        uint256 amp,
-        uint256[] memory balances,
-        uint256 lastInvariant,
-        uint256 tokenIndex,
-        uint256 swapFee
-    ) external pure returns (uint256) {
-        return
-            StableMath._calcDueTokenProtocolSwapFeeAmount(
-                amp,
-                balances[0],
-                balances[1],
-                lastInvariant,
-                tokenIndex,
-                swapFee
-            );
-    }
-
     function getTokenBalance(
         uint256 amp,
         uint256[] memory balances,

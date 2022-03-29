@@ -56,7 +56,7 @@ export function calculateInvariant(
   throw new Error("calculateInvariant: no convergence, delta="+delta);
 }
 
-export function calculateAnalyticalInvariantForTwoTokens(
+export function analyticalInvariantForTwoTokens(
   amplificationParameter: BigNumber,
   fpRawBalances: BigNumberish[],
   roundUp: boolean
@@ -282,24 +282,6 @@ export function tokensOutFromBptIn(
   const bptRatio = fromFp(fpBptAmountIn).div(fromFp(fpBptTotalSupply));
   const amountsOut = balances.map((balance) => balance.mul(bptRatio));
   return amountsOut.map(fp);
-}
-
-export function calculateOneTokenSwapFeeAmount(
-  amp: BigNumber,
-  fpBalances: BigNumberish[],
-  lastInvariant: BigNumberish,
-  tokenIndex: number,
-  swapFeePercentage: BigNumberish
-): Decimal {
-  const balances = fpBalances.map(fromFp);
-  const finalBalanceFeeToken = _getTokenBalance(amp, balances, fromFp(lastInvariant), tokenIndex == 0);
-
-  if (finalBalanceFeeToken.gt(balances[tokenIndex])) {
-    return decimal(0);
-  }
-
-  const feeAmount = toFp(balances[tokenIndex].sub(finalBalanceFeeToken));
-  return feeAmount.mul(fromFp(swapFeePercentage));
 }
 
 export function getTokenBalance(amp:BigNumber, fpBalances:BigNumber[], fpInvariant:BigNumber, firstToken:boolean): BigNumber {

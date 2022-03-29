@@ -7,15 +7,14 @@ import { Decimal } from 'decimal.js';
 import { describeNonPool } from '../pool-utils/MultiPoolTestSuite';
 import {
   amp,
-  calculateAnalyticalInvariantForTwoTokens,
+  analyticalInvariantForTwoTokens,
   calculateInvariant,
-  calcInGivenOut,
   calcOutGivenIn,
+  calcInGivenOut,
   bptOutGivenTokensIn,
   bptInGivenTokensOut,
   tokenOutFromBptIn,
   tokensOutFromBptIn,
-  calculateOneTokenSwapFeeAmount,
   getTokenBalance
 } from './StableMath';
 
@@ -90,7 +89,7 @@ describeNonPool('StableMath', () =>
 
   it('invariant equals analytical solution', async () =>
   {
-    const equal = (...args:any[]) => expectEquals(mockMath.invariant, calculateAnalyticalInvariantForTwoTokens, ...args);
+    const equal = (...args:any[]) => expectEquals(mockMath.invariant, analyticalInvariantForTwoTokens, ...args);
     await equal(amp(100), /*balances*/[fp(10), fp(12)], /*roundUp*/true);
     await equal(amp(1), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
     await equal(amp(5), /*balances*/[fp(10), fp(100)], /*roundUp*/true);
@@ -261,19 +260,6 @@ describeNonPool('StableMath', () =>
     await equal(/*balances*/[fp(100), fp(10)], /*bptAmountIn*/fp(1), bptSupply);
     await equal(/*balances*/[fp(0), fp(100)], /*bptAmountIn*/fp(1), bptSupply);
     await equal(/*balances*/[fp(100), fp(0)], /*bptAmountIn*/fp(1), bptSupply);
-  });
-
-  it('dueTokenProtocolSwapFeeAmount', async () =>
-  {
-    const equal = (...args:any[]) => expectEquals(mockMath.dueTokenProtocolSwapFeeAmount, calculateOneTokenSwapFeeAmount, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*lastInvariant*/fp(10), /*tokenIndex*/0, fp(0.1));
   });
 
   it('getTokenBalance', async () =>
