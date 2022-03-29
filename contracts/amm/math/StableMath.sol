@@ -284,7 +284,7 @@ library StableMath {
         return nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
     }
 
-    function _calcTokensOutGivenExactBptIn(
+    function tokensOutFromBptIn(
         uint256 balance0,
         uint256 balance1,
         uint256 bptAmountIn,
@@ -301,7 +301,6 @@ library StableMath {
 
         // Since we're computing an amount out, we round down overall. This means rounding down on both the
         // multiplication and division.
-
         uint256 bptRatio = bptAmountIn.divDown(bptTotalSupply);
         amountOut0 = balance0.mulDown(bptRatio);
         amountOut1 = balance1.mulDown(bptRatio);

@@ -14,7 +14,7 @@ import {
   bptOutGivenTokensIn,
   bptInGivenTokensOut,
   tokenOutFromBptIn,
-  calcTokensOutGivenExactBptIn,
+  tokensOutFromBptIn,
   calculateOneTokenSwapFeeAmount,
   getTokenBalance
 } from './StableMath';
@@ -246,11 +246,21 @@ describeNonPool('StableMath', () =>
     await equal(amp(90), /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
   });
 
-  it('tokensOutGivenExactBptIn', async () =>
+  it('tokensOutFromBptIn', async () =>
   {
-    const equal = (...args:any[]) => expectEquals(mockMath.tokensOutGivenExactBptIn, calcTokensOutGivenExactBptIn, ...args);
-    await equal(/*balances*/[fp(10), fp(11)], /*bptAmountIn*/fp(100), /*bptTotalSupply*/fp(100));
-    await equal(/*balances*/[fp(10), fp(100)], /*bptAmountIn*/fp(100), /*bptTotalSupply*/fp(100));
+    const bptSupply = fp(10000);
+    const equal = (...args:any[]) => expectEquals(mockMath.tokensOutFromBptIn, tokensOutFromBptIn, ...args);
+    await equal(/*balances*/[fp(10), fp(11)], /*bptAmountIn*/fp(100), bptSupply);
+
+    await equal(/*balances*/[fp(10), fp(100)], /*bptAmountIn*/fp(100), bptSupply);
+    await equal(/*balances*/[fp(100), fp(10)], /*bptAmountIn*/fp(100), bptSupply);
+    await equal(/*balances*/[fp(0), fp(100)], /*bptAmountIn*/fp(100), bptSupply);
+    await equal(/*balances*/[fp(100), fp(0)], /*bptAmountIn*/fp(100), bptSupply);
+    
+    await equal(/*balances*/[fp(10), fp(100)], /*bptAmountIn*/fp(1), bptSupply);
+    await equal(/*balances*/[fp(100), fp(10)], /*bptAmountIn*/fp(1), bptSupply);
+    await equal(/*balances*/[fp(0), fp(100)], /*bptAmountIn*/fp(1), bptSupply);
+    await equal(/*balances*/[fp(100), fp(0)], /*bptAmountIn*/fp(1), bptSupply);
   });
 
   it('dueTokenProtocolSwapFeeAmount', async () =>
