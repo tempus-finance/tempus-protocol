@@ -160,32 +160,28 @@ library StableMath {
             // The weighted sum of token balance ratios without fee
             uint256 balanceRatiosWithFee0 = (balance0 + amountIn0).divDown(balance0);
             uint256 balanceRatiosWithFee1 = (balance1 + amountIn1).divDown(balance1);
-            uint256 invariantRatioWithFees = balanceRatiosWithFee0.mulDown(balance0.divDown(balance0 + balance1));
-            invariantRatioWithFees += balanceRatiosWithFee1.mulDown(balance1.divDown(balance0 + balance1));
+            uint256 invariantRatioWithFees = balanceRatiosWithFee0.mulDown(balance0.divDown(balance0 + balance1)) +
+                balanceRatiosWithFee1.mulDown(balance1.divDown(balance0 + balance1));
 
-            // Second loop calculates new amounts in, taking into account the fee on the percentage excess
+            uint256 oneMinusFee = FixedPoint.ONE - swapFeePercentage;
+
+            // Calculates new amounts in, taking into account the fee on the percentage excess
             // Check if the balance ratio is greater than the ideal ratio to charge fees or not
-            uint256 amountInWithoutFee;
-
             if (balanceRatiosWithFee0 > invariantRatioWithFees) {
                 uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithFees - FixedPoint.ONE);
                 uint256 taxableAmount = amountIn0 - nonTaxableAmount;
-                amountInWithoutFee = nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
+                newBalance0 = balance0 + (nonTaxableAmount + taxableAmount.mulDown(oneMinusFee));
             } else {
-                amountInWithoutFee = amountIn0;
+                newBalance0 = balance0 + amountIn0;
             }
-
-            newBalance0 = balance0 + amountInWithoutFee;
 
             if (balanceRatiosWithFee1 > invariantRatioWithFees) {
                 uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithFees - FixedPoint.ONE);
                 uint256 taxableAmount = amountIn1 - nonTaxableAmount;
-                amountInWithoutFee = nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
+                newBalance1 = balance1 + (nonTaxableAmount + taxableAmount.mulDown(oneMinusFee));
             } else {
-                amountInWithoutFee = amountIn1;
+                newBalance1 = balance1 + amountIn1;
             }
-
-            newBalance1 = balance1 + amountInWithoutFee;
         }
 
         // Get current and new invariants, taking swap fees into account
@@ -193,12 +189,8 @@ library StableMath {
         uint256 newInvariant = invariant(amp, newBalance0, newBalance1, false);
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
-        // If the invariant didn't increase for any reason, we simply don't mint BPT
-        if (invariantRatio > FixedPoint.ONE) {
-            return bptTotalSupply.mulDown(invariantRatio - FixedPoint.ONE);
-        } else {
-            return 0;
-        }
+        // If the invariant didn't increase for any reason, this will revert with underflow
+        return bptTotalSupply.mulDown(invariantRatio - FixedPoint.ONE);
     }
 
     /*
@@ -222,36 +214,33 @@ library StableMath {
         // additional scope to avoid stack-too-deep
         {
             // Calculate the weighted balance ratio without considering fees
-            uint256 balanceRatiosWithoutFee0 = (balance0 - amountOut1).divUp(balance0);
+            uint256 balanceRatiosWithoutFee0 = (balance0 - amountOut0).divUp(balance0);
             uint256 balanceRatiosWithoutFee1 = (balance1 - amountOut1).divUp(balance1);
-            uint256 invariantRatioWithoutFees = balanceRatiosWithoutFee0.mulUp(balance0.divUp(balance0 + balance1));
-            invariantRatioWithoutFees += balanceRatiosWithoutFee1.mulUp(balance1.divUp(balance0 + balance1));
+            uint256 invariantRatioWithoutFees = balanceRatiosWithoutFee0.mulUp(balance0.divUp(balance0 + balance1)) +
+                balanceRatiosWithoutFee1.mulUp(balance1.divUp(balance0 + balance1));
 
-            // Second loop calculates new amounts in, taking into account the fee on the percentage excess
+            uint256 oneMinusFee = FixedPoint.ONE - swapFeePercentage;
+
+            // Calculates new amounts in, taking into account the fee on the percentage excess
             // Swap fees are typically charged on 'token in', but there is no 'token in' here, so we apply it to
             // 'token out'. This results in slightly larger price impact.
-            uint256 amountOutWithFee;
             if (invariantRatioWithoutFees > balanceRatiosWithoutFee0) {
                 uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithoutFees.complement());
                 uint256 taxableAmount = amountOut0 - nonTaxableAmount;
                 // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
-                amountOutWithFee = nonTaxableAmount + taxableAmount.divUp(FixedPoint.ONE - swapFeePercentage);
+                newBalance0 = balance0 - (nonTaxableAmount + taxableAmount.divUp(oneMinusFee));
             } else {
-                amountOutWithFee = amountOut0;
+                newBalance0 = balance0 - amountOut0;
             }
-
-            newBalance0 = balance0 - amountOutWithFee;
 
             if (invariantRatioWithoutFees > balanceRatiosWithoutFee1) {
                 uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithoutFees.complement());
                 uint256 taxableAmount = amountOut1 - nonTaxableAmount;
                 // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
-                amountOutWithFee = nonTaxableAmount + taxableAmount.divUp(FixedPoint.ONE - swapFeePercentage);
+                newBalance1 = balance1 - (nonTaxableAmount + taxableAmount.divUp(oneMinusFee));
             } else {
-                amountOutWithFee = amountOut1;
+                newBalance1 = balance1 - amountOut1;
             }
-
-            newBalance1 = balance1 - amountOutWithFee;
         }
 
         // Get current and new invariants, taking into account swap fees
