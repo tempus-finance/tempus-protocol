@@ -13,7 +13,7 @@ import {
   calcOutGivenIn,
   bptOutGivenTokensIn,
   bptInGivenTokensOut,
-  calcTokenOutGivenExactBptIn,
+  tokenOutFromBptIn,
   calcTokensOutGivenExactBptIn,
   calculateOneTokenSwapFeeAmount,
   getTokenBalance
@@ -210,17 +210,40 @@ describeNonPool('StableMath', () =>
     await equal(amp(90), /*balances*/[fp(100), fp(10)], /*amountsOut*/[fp(1), fp(2)], bptSupply, swapFee);
   });
 
-  it('tokenOutGivenExactBptIn', async () =>
+  it('tokenOutFromBptIn', async () =>
   {
-    const equal = (...args:any[]) => expectEquals(mockMath.tokenOutGivenExactBptIn, calcTokenOutGivenExactBptIn, ...args);
-    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    const bptSupply = fp(10000);
+    const swapFee = fp(0.1);
+    const equal = (...args:any[]) => expectEquals(mockMath.tokenOutFromBptIn, tokenOutFromBptIn, ...args);
+    await equal(amp(100), /*balances*/[fp(10), fp(11)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
 
-    await equal(amp(1), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
-    await equal(amp(5), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
-    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
-    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
-    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
-    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*tokenIndex*/0, fp(100), fp(10000), fp(0.1));
+    await equal(amp(1),  /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(5),  /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*firstToken*/true, /*bptIn*/fp(100), bptSupply, swapFee);
+    
+    await equal(amp(1),  /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(5),  /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(10), /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(20), /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(50), /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(90), /*balances*/[fp(100), fp(10)], /*firstToken*/true, /*bptIn*/fp(50), bptSupply, swapFee);
+
+    await equal(amp(1),  /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(5),  /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(10), /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(20), /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(50), /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    await equal(amp(90), /*balances*/[fp(10), fp(100)], /*firstToken*/false, /*bptIn*/fp(100), bptSupply, swapFee);
+    
+    await equal(amp(1),  /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(5),  /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(10), /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(20), /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(50), /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
+    await equal(amp(90), /*balances*/[fp(100), fp(10)], /*firstToken*/false, /*bptIn*/fp(50), bptSupply, swapFee);
   });
 
   it('tokensOutGivenExactBptIn', async () =>

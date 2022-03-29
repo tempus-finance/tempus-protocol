@@ -234,10 +234,10 @@ export function bptInGivenTokensOut(
   return fp(fromFp(fpBptTotalSupply).mul(invariantRatioComplement));
 }
 
-export function calcTokenOutGivenExactBptIn(
+export function tokenOutFromBptIn(
   amp: BigNumber,
   fpBalances: BigNumberish[],
-  tokenIndex: number,
+  firstToken: boolean,
   fpBptAmountIn: BigNumberish,
   fpBptTotalSupply: BigNumberish,
   fpSwapFeePercentage: BigNumberish
@@ -256,7 +256,8 @@ export function calcTokenOutGivenExactBptIn(
   const sumBalances = balances.reduce((a: Decimal, b: Decimal) => a.add(b), decimal(0));
 
   // get amountOutBeforeFee
-  const newBalanceTokenIndex = _getTokenBalance(amp, balances, newInvariant, tokenIndex == 0);
+  const tokenIndex = firstToken ? 0 : 1;
+  const newBalanceTokenIndex = _getTokenBalance(amp, balances, newInvariant, firstToken);
   const amountOutWithoutFee = balances[tokenIndex].sub(newBalanceTokenIndex);
 
   // We can now compute how much excess balance is being withdrawn as a result of the virtual swaps, which result
