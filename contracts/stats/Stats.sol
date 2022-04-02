@@ -120,7 +120,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
 
         uint256 ammBalance0 = tempusAMM.token0().balanceOf(address(tempusAMM));
         uint256 ammBalance1 = tempusAMM.token1().balanceOf(address(tempusAMM));
-        
+
         (uint256 ammLPAmount0, uint256 ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(
             ammBalance0,
             ammBalance1,

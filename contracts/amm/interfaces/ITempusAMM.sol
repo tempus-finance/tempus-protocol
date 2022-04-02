@@ -41,13 +41,18 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param amountToken0 Amount of token0 to init TempusAMM with
     /// @param amountToken1 Amount of token0 to init TempusAMM with
     function init(uint256 amountToken0, uint256 amountToken1) external;
-    
+
     /// Adds liquidity to TempusAMM
     /// @param amountToken0 Amount of token0 to add to TempusAMM
     /// @param amountToken1 Amount of token0 to add to TempusAMM
     /// @param minLpTokensOut Minimum amount of LP tokens to receive
     /// @param recipient Address to which LP tokens will be minted
-    function join(uint256 amountToken0, uint256 amountToken1, uint256 minLpTokensOut, address recipient) external;
+    function join(
+        uint256 amountToken0,
+        uint256 amountToken1,
+        uint256 minLpTokensOut,
+        address recipient
+    ) external;
 
     /// Removes liquidity from TempusAMM by burning given amount of lp tokens
     /// @param lpTokenAmount Amount of LP tokens to burn to get token0 and token1 in return
@@ -55,21 +60,21 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param minAmountOut1 Minimum amount of token1 to get in return
     /// @param recipient Address to which token0 and token1 will be transfered
     function exitGivenLpIn(
-        uint256 lpTokenAmount, 
-        uint256 minAmountOut0, 
-        uint256 minAmountOut1, 
+        uint256 lpTokenAmount,
+        uint256 minAmountOut0,
+        uint256 minAmountOut1,
         address recipient
     ) external;
 
     /// Removes liquidity from TempusAMM to get givem amount of tokens in return
-    /// @param token0AmountOut Amount of token0 to get in return 
+    /// @param token0AmountOut Amount of token0 to get in return
     /// @param token1AmountOut Amount of token1 to get in return
     /// @param maxLpTokensIn Maximum amount of LP tokens to burn
     /// @param recipient Address to which token0 and token1 will be transfered
     function exitGivenTokensOut(
-        uint256 token0AmountOut, 
-        uint256 token1AmountOut, 
-        uint256 maxLpTokensIn, 
+        uint256 token0AmountOut,
+        uint256 token1AmountOut,
+        uint256 maxLpTokensIn,
         address recipient
     ) external;
 
@@ -80,9 +85,9 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param swapType GIVEN_IN - given amount of in tokens or GIVEN_OUT - given amount of tokens to receive
     /// @param deadline Swap is valid until this timestamp, it reverts if executed after it
     function swap(
-        IPoolShare tokenIn, 
-        uint256 amount, 
-        uint256 slippageParam, 
+        IPoolShare tokenIn,
+        uint256 amount,
+        uint256 slippageParam,
         SwapType swapType,
         uint256 deadline
     ) external;
@@ -133,9 +138,9 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param token0AmountIn amount of token0 to be added to the pool
     /// @param token1AmountIn amount of token1 to be added to the pool
     /// @return amount of LP tokens that could be received
-    function getExpectedLPTokensForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn) 
-        external 
-        view 
+    function getExpectedLPTokensForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
+        external
+        view
         returns (uint256);
 
     /// Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
@@ -151,5 +156,12 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @return value Current amplification value
     /// @return isUpdating Is it currently being updated
     /// @return precision Amplification precision
-    function getAmplificationParameter() external view returns (uint256 value, bool isUpdating, uint256 precision);
+    function getAmplificationParameter()
+        external
+        view
+        returns (
+            uint256 value,
+            bool isUpdating,
+            uint256 precision
+        );
 }

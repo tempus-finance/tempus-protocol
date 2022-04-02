@@ -14,7 +14,6 @@
 
 pragma solidity 0.8.10;
 
-
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
@@ -80,9 +79,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationEndValue,
         uint256 amplificationEndTime,
         uint256 swapFeePerc
-    )
-        ERC20(name, symbol)
-    {
+    ) ERC20(name, symbol) {
         require(amplificationStartValue >= MIN_AMPLIFICATION, "min amp");
         require(amplificationStartValue <= MAX_AMPLIFICATION, "max amp");
 
@@ -128,16 +125,16 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function join(
-        uint256 amountToken0, 
-        uint256 amountToken1, 
-        uint256 minLpTokensOut, 
+        uint256 amountToken0,
+        uint256 amountToken1,
+        uint256 minLpTokensOut,
         address recipient
     ) external override whenNotPaused {
         require(totalSupply() > 0, "not initialised");
         require(amountToken0 > 0 || amountToken1 > 0, "one token amount must be > 0");
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
-        
+
         (uint256 amountIn0, uint256 amountIn1) = getRateAdjustedAmounts(
             amountToken0,
             amountToken1,
@@ -169,9 +166,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     /// Removing liquidity
 
     function exitGivenLpIn(
-        uint256 lpTokensIn, 
-        uint256 minAmountOut0, 
-        uint256 minAmountOut1, 
+        uint256 lpTokensIn,
+        uint256 minAmountOut0,
+        uint256 minAmountOut1,
         address recipient
     ) external override {
         // This exit function is the only one that is not disabled if the contract is paused: it remains unrestricted
@@ -182,7 +179,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         (uint256 amountOut0, uint256 amountOut1) = StableMath.tokensOutFromBptIn(
             token0.balanceOf(address(this)),
             token1.balanceOf(address(this)),
-            lpTokensIn, 
+            lpTokensIn,
             totalSupply()
         );
 
@@ -196,20 +193,20 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function exitGivenTokensOut(
-        uint256 token0AmountOut, 
-        uint256 token1AmountOut, 
-        uint256 maxLpTokensIn, 
+        uint256 token0AmountOut,
+        uint256 token1AmountOut,
+        uint256 maxLpTokensIn,
         address recipient
     ) external override whenNotPaused {
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
-        
+
         (uint256 amountOut0, uint256 amountOut1) = getRateAdjustedAmounts(
             token0AmountOut,
             token1AmountOut,
             token0.getPricePerFullShare(),
             token1.getPricePerFullShare()
         );
-        
+
         (uint256 currentAmp, ) = _getAmplificationParameter();
         uint256 lpTokensIn = StableMath.bptInGivenTokensOut(
             currentAmp,
@@ -232,10 +229,10 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     /// Swaps
 
     function swap(
-        IPoolShare tokenIn, 
-        uint256 amount, 
-        uint256 slippageParam, 
-        SwapType swapType, 
+        IPoolShare tokenIn,
+        uint256 amount,
+        uint256 slippageParam,
+        SwapType swapType,
         uint256 deadline
     ) external override whenNotPaused {
         require(block.timestamp <= deadline, "deadline");
@@ -258,18 +255,17 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
 
             uint256 scaledAmountOut = StableMath.outGivenIn(
-                currentAmp, 
-                balance0, 
-                balance1, 
+                currentAmp,
+                balance0,
+                balance1,
                 firstIn,
                 rateAdjustedAmount
             );
-            
-            amountOut = scaledAmountOut.divfV(
-                tokenOut.getPricePerFullShare(), 
-                TEMPUS_SHARE_PRECISION
-            ).divDown(scalingFactor);
-            
+
+            amountOut = scaledAmountOut.divfV(tokenOut.getPricePerFullShare(), TEMPUS_SHARE_PRECISION).divDown(
+                scalingFactor
+            );
+
             require(amountOut >= slippageParam, "slippage");
         } else {
             uint256 rateAdjustedAmount = amountOut.mulDown(scalingFactor).mulfV(
@@ -278,25 +274,25 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
 
             uint256 scaledAmountIn = StableMath.inGivenOut(
-                currentAmp, 
+                currentAmp,
                 balance0,
-                balance1, 
+                balance1,
                 !firstIn,
                 rateAdjustedAmount
             );
 
             scaledAmountIn = scaledAmountIn.divfV(tokenIn.getPricePerFullShare(), TEMPUS_SHARE_PRECISION);
             amountIn = addSwapFeeAmount(scaledAmountIn.divUp(scalingFactor));
-            
+
             require(amountIn <= slippageParam, "slippage");
         }
-        
+
         tokenIn.transferFrom(msg.sender, address(this), amountIn);
         tokenOut.transfer(msg.sender, amountOut);
 
         emit Swap(tokenIn, amountIn, amountOut);
     }
- 
+
     function getRate() external view override returns (uint256) {
         // When calculating the current BPT rate, we may not have paid the protocol fees, therefore
         // the invariant should be smaller than its current value. Then, we round down overall.
@@ -308,31 +304,28 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         return invariant.divDown(totalSupply());
     }
 
-    /// Query functions 
+    /// Query functions
 
-    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public override view returns (uint256) {
+    function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view override returns (uint256) {
         require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (uint256 currentAmp, ) = _getAmplificationParameter();
         (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
-        
-        uint256 scaledAmount = subtractSwapFeeAmount(amount).mulDown(scalingFactor).mulfV(
-            tokenIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION
-        ); 
 
-        return StableMath.outGivenIn(
-            currentAmp, 
-            balance0, 
-            balance1, 
-            firstIn,
-            scaledAmount
-        ).divfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION).divDown(
-            scalingFactor
+        uint256 scaledAmount = subtractSwapFeeAmount(amount).mulDown(scalingFactor).mulfV(
+            tokenIn.getPricePerFullShareStored(),
+            TEMPUS_SHARE_PRECISION
         );
+
+        return
+            StableMath
+                .outGivenIn(currentAmp, balance0, balance1, firstIn, scaledAmount)
+                .divfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION)
+                .divDown(scalingFactor);
     }
 
-    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public override view returns (uint256) {
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public view override returns (uint256) {
         IPoolShare shareIn = IPoolShare(tokenIn);
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (uint256 currentAmp, ) = _getAmplificationParameter();
@@ -342,9 +335,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 rateAdjustedAmountOut = amountOut.mulfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
 
         uint256 amountIn = StableMath.inGivenOut(
-            currentAmp, 
-            balance0, 
-            balance1, 
+            currentAmp,
+            balance0,
+            balance1,
             tokenOut == token0,
             rateAdjustedAmountOut
         );
@@ -356,7 +349,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 token0Amount,
         uint256 token1Amount,
         uint256 threshold
-    ) external override view returns (uint256 amountIn, IPoolShare tokenIn) {
+    ) external view override returns (uint256 amountIn, IPoolShare tokenIn) {
         uint256 difference;
         (difference, tokenIn) = (token0Amount > token1Amount)
             ? (token0Amount - token1Amount, token0)
@@ -391,12 +384,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // NOTE: Return value in AMM decimals precision (1e18)
     function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
-        override
         view
+        override
         returns (uint256 lpTokens)
     {
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        
+
         (token0Out, token1Out) = getRateAdjustedAmounts(
             token0Out,
             token1Out,
@@ -418,27 +411,30 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     function getExpectedTokensOutGivenBPTIn(uint256 lpTokensIn)
         external
-        override
         view
+        override
         returns (uint256 token0Out, uint256 token1Out)
     {
         // We don't need to scale balances down here
         // as calculation for amounts out is based on btpAmountIn / totalSupply() ratio
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
-        return StableMath.tokensOutFromBptIn(
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this)),
-            lpTokensIn, 
-            totalSupply()
-        );
+        return
+            StableMath.tokensOutFromBptIn(
+                token0.balanceOf(address(this)),
+                token1.balanceOf(address(this)),
+                lpTokensIn,
+                totalSupply()
+            );
     }
 
-    function getExpectedLPTokensForTokensIn(
-        uint256 token0AmountIn, 
-        uint256 token1AmountIn
-    ) external view override returns (uint256) {
+    function getExpectedLPTokensForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
+        external
+        view
+        override
+        returns (uint256)
+    {
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        
+
         (token0AmountIn, token1AmountIn) = getRateAdjustedAmounts(
             token0AmountIn,
             token1AmountIn,
@@ -498,8 +494,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     function getAmplificationParameter()
         external
-        override
         view
+        override
         returns (
             uint256 value,
             bool isUpdating,
@@ -581,13 +577,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         }
     }
 
-
-    /// Helpers 
+    /// Helpers
 
     function getRateAdjustedAmounts(
-        uint256 amount0, 
-        uint256 amount1, 
-        uint256 rate0, 
+        uint256 amount0,
+        uint256 amount1,
+        uint256 rate0,
         uint256 rate1
     ) private view returns (uint256, uint256) {
         return (
@@ -597,7 +592,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getRateAdjustedBalances() private returns (uint256 balance0, uint256 balance1) {
-        (balance0, balance1) = getUpscaledBalances(); 
+        (balance0, balance1) = getUpscaledBalances();
         (balance0, balance1) = (
             balance0.mulfV(token0.getPricePerFullShare(), TEMPUS_SHARE_PRECISION),
             balance1.mulfV(token1.getPricePerFullShare(), TEMPUS_SHARE_PRECISION)

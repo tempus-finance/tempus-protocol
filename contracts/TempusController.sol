@@ -270,15 +270,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 ammBalance1,
         uint256 sharesAmount,
         address recipient
-    ) private returns (
-        uint256 ammLPAmount0, 
-        uint256 ammLPAmount1
-    ) {
-        (ammLPAmount0, ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(
-            ammBalance0,
-            ammBalance1,
-            sharesAmount
-        );
+    ) private returns (uint256 ammLPAmount0, uint256 ammLPAmount1) {
+        (ammLPAmount0, ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(ammBalance0, ammBalance1, sharesAmount);
 
         tempusAMM.token0().approve(address(tempusAMM), ammLPAmount0);
         tempusAMM.token1().approve(address(tempusAMM), ammLPAmount1);
@@ -510,13 +503,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
                 minReturn = minReturn.mulfV(1e18 - maxSlippage, 1e18);
 
-                swap(
-                    tempusAMM,
-                    swapAmount,
-                    yieldsIn ? yieldShare : principalShare,
-                    minReturn,
-                    deadline
-                );
+                swap(tempusAMM, swapAmount, yieldsIn ? yieldShare : principalShare, minReturn, deadline);
 
                 principals = principalShare.balanceOf(address(this));
                 yields = yieldShare.balanceOf(address(this));
@@ -534,10 +521,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     function _getAMMDetailsAndEnsureInitialized(ITempusAMM tempusAMM)
         private
         view
-        returns (
-            uint256 ammBalance0,
-            uint256 ammBalance1
-        )
+        returns (uint256 ammBalance0, uint256 ammBalance1)
     {
         ammBalance0 = tempusAMM.token0().balanceOf(address(tempusAMM));
         ammBalance1 = tempusAMM.token1().balanceOf(address(tempusAMM));
