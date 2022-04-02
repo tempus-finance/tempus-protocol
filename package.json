@@ -80,11 +80,6 @@
     "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither ."
   },
   "dependencies": {
-    "@balancer-labs/v2-asset-manager-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/asset-manager-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-pool-stable": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-stable?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-pool-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-solidity-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/solidity-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-vault": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/vault?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
     "@openzeppelin/contracts": "^4.1.0"
   }
 }
