@@ -236,7 +236,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       expect(beforeExitBalanceLP).to.be.within(181000, 182000);
       await testPool.setInterestRate(1.1);
       await testPool.fastForwardToMaturity();
-      await controller.exitTempusAmm(testPool, user1, 100000);
+      await testPool.amm.exitPoolExactLpAmountIn(user1, 100000);
       const redeemPercent:number = 100000 / totalSupply;
       expect(+await testPool.amm.balanceOf(user1)).to.be.within(81000, 82000);
       expect(+await testPool.yields.balanceOf(user1)).to.be.within(0.999999 * redeemPercent * 1000000, 1.000001 * redeemPercent * 1000000);

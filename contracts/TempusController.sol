@@ -150,27 +150,6 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         _redeemToBacking(tempusPool, msg.sender, principalAmount, yieldAmount, recipient);
     }
 
-    function exitTempusAMM(
-        ITempusAMM tempusAMM,
-        ITempusPool tempusPool,
-        uint256 lpTokensAmount,
-        uint256 principalAmountOutMin,
-        uint256 yieldAmountOutMin
-    ) external override nonReentrant {
-        requireRegistered(address(tempusAMM));
-        requireRegistered(address(tempusPool));
-
-        require(lpTokensAmount > 0, "LP token amount is 0");
-
-        _exitTempusAMM(
-            tempusAMM,
-            lpTokensAmount,
-            principalAmountOutMin,
-            yieldAmountOutMin,
-            msg.sender
-        );
-    }
-
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -214,7 +193,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         requireRegistered(address(tempusPool));
 
         if (lpTokens > 0) {
-            _exitTempusAMM(tempusAMM, lpTokens, minPrincipalsStaked, minYieldsStaked, address(this));
+            require(tempusAMM.transferFrom(msg.sender, address(this), lpTokens), "LP token transfer failed");
+            tempusAMM.exitGivenLpIn(lpTokens, minPrincipalsStaked, minYieldsStaked, address(this));
         }
 
         _redeemWithEqualShares(
@@ -459,18 +439,6 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             rate,
             earlyRedeem
         );
-    }
-
-    function _exitTempusAMM(
-        ITempusAMM tempusAMM,
-        uint256 lpTokensAmount,
-        uint256 principalAmountOutMin,
-        uint256 yieldAmountOutMin,
-        address recipient
-    ) private {
-        require(tempusAMM.transferFrom(msg.sender, address(this), lpTokensAmount), "LP token transfer failed");
-
-        tempusAMM.exitGivenLpIn(lpTokensAmount, principalAmountOutMin, yieldAmountOutMin, recipient);
     }
 
     function _exitAmmGivenAmountsOutAndEarlyRedeem(
