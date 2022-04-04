@@ -96,7 +96,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         if (amplificationStartValue != amplificationEndValue) {
             require(amplificationStartValue < amplificationEndValue, "min amp");
-            _startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
+            startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
 
@@ -460,11 +460,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     // Amplification
 
-    function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) external override onlyOwner {
-        _startAmplificationParameterUpdate(endValue, endTime);
-    }
-
-    function _startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) private {
+    function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) public onlyOwner {
         require(endValue >= MIN_AMPLIFICATION, "min amp");
         require(endValue <= MAX_AMPLIFICATION, "max amp");
 
