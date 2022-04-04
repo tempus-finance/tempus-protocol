@@ -244,7 +244,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 tokenAmount,
         bool isBackingToken
     ) private {
-        (uint256 ammBalance0, uint256 ammBalance1) = _getAMMDetailsAndEnsureInitialized(tempusAMM);
+        (uint256 ammBalance0, uint256 ammBalance1) = getAMMBalancesAndEnsureInitialized(tempusAMM);
 
         uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
 
@@ -526,13 +526,13 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         }
     }
 
-    function _getAMMDetailsAndEnsureInitialized(ITempusAMM tempusAMM)
+    function getAMMBalancesAndEnsureInitialized(ITempusAMM tempusAMM)
         private
         view
-        returns (uint256 ammBalance0, uint256 ammBalance1)
+        returns (uint256 principals, uint256 yields)
     {
-        ammBalance0 = tempusAMM.token0().balanceOf(address(tempusAMM));
-        ammBalance1 = tempusAMM.token1().balanceOf(address(tempusAMM));
-        require(ammBalance0 > 0 && ammBalance1 > 0, "AMM not initialized");
+        principals = tempusAMM.token0().balanceOf(address(tempusAMM));
+        yields = tempusAMM.token1().balanceOf(address(tempusAMM));
+        require(principals > 0 && yields > 0, "AMM not initialized");
     }
 }
