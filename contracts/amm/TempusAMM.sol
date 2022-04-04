@@ -268,6 +268,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
             require(amountOut >= slippageParam, "slippage");
         } else {
+            assert(swapType == SwapType.GIVEN_OUT);
+            
             uint256 rateAdjustedAmount = amountOut.mulDown(scalingFactor).mulfV(
                 tokenOut.getPricePerFullShare(),
                 TEMPUS_SHARE_PRECISION
