@@ -56,12 +56,12 @@ export class TempusPoolAMM extends TempusAMM {
     return {principalsOut: +p.token0Out, yieldsOut: +p.token1Out};
   }
 
-  async getExpectedLPTokensForTokensIn(principalsAmountIn:NumberOrString, yieldsAmountIn:NumberOrString): Promise<NumberOrString> {
-    return super.getExpectedLPTokensForTokensIn(principalsAmountIn, yieldsAmountIn);
+  async getLPTokensOutForTokensIn(principalsAmountIn:NumberOrString, yieldsAmountIn:NumberOrString): Promise<NumberOrString> {
+    return super.getLPTokensOutForTokensIn(principalsAmountIn, yieldsAmountIn);
   }
 
-  async getExpectedBPTInGivenTokensOut(principalStaked:NumberOrString, yieldsStaked:NumberOrString): Promise<NumberOrString> {
-    return super.getExpectedBPTInGivenTokensOut(principalStaked, yieldsStaked);
+  async getLPTokensInGivenTokensOut(principalStaked:NumberOrString, yieldsStaked:NumberOrString): Promise<NumberOrString> {
+    return super.getLPTokensInGivenTokensOut(principalStaked, yieldsStaked);
   }
 
   async provideLiquidity(from: Signer, principals: Number, yields: Number, joinKind: TempusAMMJoinKind) {

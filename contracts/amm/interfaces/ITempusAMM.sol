@@ -137,7 +137,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param token0Out amount of Token0 to withdraw
     /// @param token1Out amount of Token1 to withdraw
     /// @return lpTokens Amount of Lp tokens that user would redeem
-    function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
+    function getLPTokensInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
         view
         returns (uint256 lpTokens);
@@ -146,7 +146,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param token0AmountIn amount of token0 to be added to the pool
     /// @param token1AmountIn amount of token1 to be added to the pool
     /// @return amount of LP tokens that could be received
-    function getExpectedLPTokensForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
+    function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
         external
         view
         returns (uint256);

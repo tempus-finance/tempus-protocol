@@ -150,10 +150,10 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     expect(balanceYieldsBefore + expectedReturn.yieldsOut).to.be.within(0.999999 * balanceYieldsAfter, 1.0000001 * balanceYieldsAfter);
   });
 
-  it("[getExpectedLPTokensForTokensIn] verifies the expected amount is equivilant to actual join to TempusAMM", async () => {
+  it("[getLPTokensOutForTokensIn] verifies the expected amount is equivilant to actual join to TempusAMM", async () => {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = +await testFixture.amm.getExpectedLPTokensForTokensIn(10, 100);
+    const expectedReturn = +await testFixture.amm.getLPTokensOutForTokensIn(10, 100);
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
 
@@ -171,13 +171,13 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     }
   });
 
-  it("[getExpectedBPTInGivenTokensOut] verifies predicted exit amount matches actual exit amount", async () =>
+  it("[getLPTokensInGivenTokensOut] verifies predicted exit amount matches actual exit amount", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
 
     const LpBefore = +await testFixture.amm.balanceOf(owner);
-    const LpExpectedExit = +await testFixture.amm.getExpectedBPTInGivenTokensOut(10, 100);
+    const LpExpectedExit = +await testFixture.amm.getLPTokensInGivenTokensOut(10, 100);
     const LpExpected = LpBefore - LpExpectedExit;
 
     await testFixture.amm.exitPoolExactAmountOut(owner, [10, 100], /*maxAmountLpIn*/1000);

@@ -94,8 +94,8 @@ export class TempusAMM extends ContractBase {
     return {token0Out: +this.token0.fromBigNum(p.token0Out), token1Out: +this.token1.fromBigNum(p.token1Out)};
   }
 
-  async getExpectedLPTokensForTokensIn(token0AmountIn:NumberOrString, token1AmountIn:NumberOrString): Promise<NumberOrString> {
-    return +this.fromBigNum(await this.contract.getExpectedLPTokensForTokensIn(
+  async getLPTokensOutForTokensIn(token0AmountIn:NumberOrString, token1AmountIn:NumberOrString): Promise<NumberOrString> {
+    return +this.fromBigNum(await this.contract.getLPTokensOutForTokensIn(
       this.token0.toBigNum(token0AmountIn),
       this.token1.toBigNum(token1AmountIn)
     ));
@@ -107,8 +107,8 @@ export class TempusAMM extends ContractBase {
    * @param token1Out amount of Token1 to withdraw
    * @return lpTokens Amount of Lp tokens that user would redeem
    */
-  async getExpectedBPTInGivenTokensOut(token0Out:NumberOrString, token1Out:NumberOrString): Promise<NumberOrString> {
-    return this.fromBigNum(await this.contract.getExpectedBPTInGivenTokensOut(
+  async getLPTokensInGivenTokensOut(token0Out:NumberOrString, token1Out:NumberOrString): Promise<NumberOrString> {
+    return this.fromBigNum(await this.contract.getLPTokensInGivenTokensOut(
       this.token0.toBigNum(token0Out),
       this.token1.toBigNum(token1Out)
     ));

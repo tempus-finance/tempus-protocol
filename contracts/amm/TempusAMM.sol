@@ -374,7 +374,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     // NOTE: Return value in AMM decimals precision (1e18)
-    function getExpectedBPTInGivenTokensOut(uint256 token0Out, uint256 token1Out)
+    function getLPTokensInGivenTokensOut(uint256 token0Out, uint256 token1Out)
         external
         view
         override
@@ -419,7 +419,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
     }
 
-    function getExpectedLPTokensForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
+    function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
         external
         view
         override
@@ -508,10 +508,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             //  - the value delta is bounded by the largest amplification paramater, which never causes the
             //    multiplication to overflow.
             // This also means that the following computation will never revert nor yield invalid results.
-            if (endValue > startValue) {
-                value = startValue + ((endValue - startValue) * (block.timestamp - startTime)) / (endTime - startTime);
-            } else {
-                value = startValue - ((startValue - endValue) * (block.timestamp - startTime)) / (endTime - startTime);
+            unchecked {
+                if (endValue > startValue) {
+                    value = startValue + ((endValue - startValue) * (block.timestamp - startTime)) / (endTime - startTime);
+                } else {
+                    value = startValue - ((startValue - endValue) * (block.timestamp - startTime)) / (endTime - startTime);
+                }
             }
         } else {
             isUpdating = false;

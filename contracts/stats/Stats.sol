@@ -127,7 +127,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
             shares
         );
 
-        lpTokens = tempusAMM.getExpectedLPTokensForTokensIn(ammLPAmount0, ammLPAmount1);
+        lpTokens = tempusAMM.getLPTokensOutForTokensIn(ammLPAmount0, ammLPAmount1);
         (principals, yields) = (shares - ammLPAmount0, shares - ammLPAmount1);
     }
 
@@ -272,7 +272,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         require(!tempusPool.matured(), "Pool already finalized!");
 
         if (principalsStaked > 0 || yieldsStaked > 0) {
-            lpTokensRedeemed = tempusAMM.getExpectedBPTInGivenTokensOut(principalsStaked, yieldsStaked);
+            lpTokensRedeemed = tempusAMM.getLPTokensInGivenTokensOut(principalsStaked, yieldsStaked);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
