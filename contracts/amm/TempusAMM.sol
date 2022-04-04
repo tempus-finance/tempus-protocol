@@ -87,10 +87,10 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         (token0, token1) = (t0, t1);
 
-        require(ERC20(address(t0)).decimals() == ERC20(address(t1)).decimals(), "token0 != token1 decimals");
-        TEMPUS_SHARE_PRECISION = 10**ERC20(address(t0)).decimals();
+        require(t0.decimals() == t1.decimals(), "token0 != token1 decimals");
+        TEMPUS_SHARE_PRECISION = 10**t0.decimals();
 
-        scalingFactor = FixedPoint.ONE * 10**(18 - ERC20(address(t0)).decimals());
+        scalingFactor = FixedPoint.ONE * 10**(18 - t0.decimals());
 
         _setAmplificationData(amplificationStartValue);
 
@@ -269,7 +269,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             require(amountOut >= slippageParam, "slippage");
         } else {
             assert(swapType == SwapType.GIVEN_OUT);
-            
+
             uint256 rateAdjustedAmount = amountOut.mulDown(scalingFactor).mulfV(
                 tokenOut.getPricePerFullShare(),
                 TEMPUS_SHARE_PRECISION

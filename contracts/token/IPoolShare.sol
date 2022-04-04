@@ -2,10 +2,10 @@
 pragma solidity >=0.8.0;
 
 import "../ITempusPool.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// Interface of Tokens representing the principal or yield shares of a pool.
-interface IPoolShare is IERC20 {
+interface IPoolShare is IERC20Metadata {
     enum ShareKind {
         Principal,
         Yield
