@@ -28,7 +28,6 @@ export interface DeployedPoolInfo {
   decimalsForUI: number;
   maturityDate: number;
   startDate: number;
-  poolId: string;
   tokenPrecision: {
     backingToken: number;
     yieldBearingToken: number;
@@ -40,7 +39,6 @@ export interface DeployedPoolInfo {
 
 interface DepositConfigData {
   addresses: {
-    vault: string;
     tempusController: string;
     stats: string;
     tempusPools: DeployedPoolInfo[];
@@ -58,7 +56,6 @@ interface CookiePoolInfo {
   maxLeftoverShares: string;
   showEstimatesInBackingToken: boolean;
   protocolDisplayName: string;
-  poolId: string;
   protocol: string;
   startDate: number;
   maturityDate: number;
@@ -81,7 +78,6 @@ interface CookieConfigData {
   tempusPools: CookiePoolInfo[];
   statisticsContract: string;
   tempusControllerContract: string;
-  vaultContract: string;
   networkUrl: string;
   lidoOracle: string;
   networkName: 'localhost';
@@ -116,7 +112,6 @@ interface DeployPoolParams {
 }
 
 class DeployLocalForked {
-  private readonly VAULT_ADDRESS = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
   private readonly LIDO_ORACLE_ADDRESS = '0x442af784a788a5bd6f42a01ebe9f287a871243fb';
   private readonly HOLDERS = {
     DAI: '0xE78388b4CE79068e89Bf8aA7f218eF6b9AB0e9d0',
@@ -280,17 +275,14 @@ class DeployLocalForked {
 
     let tempusAMM = await ContractBase.deployContract(
       "TempusAMM",
-      this.VAULT_ADDRESS,
       params.lpName,
       params.lpSymbol,
-      [pool.principalShare.address, pool.yieldShare.address],
+      pool.principalShare.address,
+      pool.yieldShare.address,
       /*amplifyStart*/5 * AMP_PRECISION,
       /*amplifyEnd*/95 * AMP_PRECISION,
       params.maturity,
-      toWei(0.002),
-      3 * MONTH,
-      MONTH,
-      this.owner.address
+      toWei(0.002)
     );
 
     await this.controller.register(this.owner, tempusAMM.address);
@@ -313,7 +305,6 @@ class DeployLocalForked {
       decimalsForUI: params.decimalsForUI,
       maturityDate: params.maturity,
       startDate: await pool.startTime() as number,
-      poolId: await tempusAMM.getPoolId(),
       tokenPrecision: params.tokenPrecision,
     });
   }
@@ -322,7 +313,6 @@ class DeployLocalForked {
     const depositConfig: DepositConfigData = {
       addresses: {
         tempusController: this.controller.address,
-        vault: this.VAULT_ADDRESS,
         stats: this.stats.address,
         tempusPools: this.deployedTempusPoolsInfo.map((poolInfo) => {
           return {
@@ -343,7 +333,6 @@ class DeployLocalForked {
             decimalsForUI: poolInfo.decimalsForUI,
             maturityDate: poolInfo.maturityDate,
             startDate: poolInfo.startDate,
-            poolId: poolInfo.poolId,
             yieldShareAddress: poolInfo.yieldShareAddress,
             tokenPrecision: poolInfo.tokenPrecision
           }
@@ -383,7 +372,6 @@ class DeployLocalForked {
           decimalsForUI: deployedPoolInfo.decimalsForUI,
           maturityDate: deployedPoolInfo.maturityDate * 1000, // Scale seconds to milliseconds
           startDate: deployedPoolInfo.startDate * 1000, // Scale seconds to milliseconds
-          poolId: deployedPoolInfo.poolId,
           principalsAddress: deployedPoolInfo.principalShareAddress,
           protocol: deployedPoolInfo.protocol.toLowerCase(),
           yieldBearingToken: deployedPoolInfo.yieldBearingToken,
@@ -393,7 +381,6 @@ class DeployLocalForked {
       }),
       networkUrl: local ? 'http://127.0.0.1:8545' : 'https://network.tempus.finance',
       statisticsContract: this.stats.address,
-      vaultContract: this.VAULT_ADDRESS,
       tempusControllerContract: this.controller.address,
       lidoOracle: this.LIDO_ORACLE_ADDRESS,
       networkName: 'localhost',
