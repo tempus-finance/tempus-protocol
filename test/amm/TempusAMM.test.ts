@@ -132,7 +132,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     (await expectRevert(expectedReturn)).to.equal("tokenIn must be token0 or token1");
   });
   
-  it("[getExpectedTokensOutGivenBPTIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
+  it("[getTokensOutGivenLPIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
     const inputAmount = 100;
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});

@@ -131,7 +131,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param bptAmountIn amount of LP tokens in
     /// @return token0Out Amount of Token0 that user would receive back
     /// @return token1Out Amount of Token1 that user would receive back
-    function getExpectedTokensOutGivenBPTIn(uint256 bptAmountIn)
+    function getTokensOutGivenLPIn(uint256 bptAmountIn)
         external
         view
         returns (uint256 token0Out, uint256 token1Out);

@@ -89,8 +89,8 @@ export class TempusAMM extends ContractBase {
     return tokenIn.fromBigNum(await this.contract.getExpectedReturnGivenIn(tokenIn.toBigNum(inAmount), tokenIn.address));
   }
 
-  async getExpectedTokensOutGivenBPTIn(inAmount: NumberOrString): Promise<{token0Out:number, token1Out:number}> {
-    const p = await this.contract.getExpectedTokensOutGivenBPTIn(this.toBigNum(inAmount));
+  async getTokensOutGivenLPIn(inAmount: NumberOrString): Promise<{token0Out:number, token1Out:number}> {
+    const p = await this.contract.getTokensOutGivenLPIn(this.toBigNum(inAmount));
     return {token0Out: +this.token0.fromBigNum(p.token0Out), token1Out: +this.token1.fromBigNum(p.token1Out)};
   }
 

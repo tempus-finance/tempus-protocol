@@ -171,12 +171,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         // This particular exit function is the only one that remains available because it is the simplest one, and
         // therefore the one with the lowest likelihood of errors.
 
-        (uint256 amountOut0, uint256 amountOut1) = StableMath.tokensOutFromBptIn(
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this)),
-            lpTokensIn,
-            totalSupply()
-        );
+        (uint256 amountOut0, uint256 amountOut1) = getTokensOutGivenLPIn(lpTokensIn);
 
         require(amountOut0 > minAmountOut0 && amountOut1 > minAmountOut1, "slippage");
 
@@ -406,8 +401,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         );
     }
 
-    function getExpectedTokensOutGivenBPTIn(uint256 lpTokensIn)
-        external
+    function getTokensOutGivenLPIn(uint256 lpTokensIn)
+        public
         view
         override
         returns (uint256 token0Out, uint256 token1Out)

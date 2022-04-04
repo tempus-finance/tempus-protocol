@@ -206,7 +206,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         if (lpTokens > 0) {
-            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedTokensOutGivenBPTIn(lpTokens);
+            (principalsStaked, yieldsStaked) = tempusAMM.getTokensOutGivenLPIn(lpTokens);
             principals += principalsStaked;
             yields += yieldsStaked;
         }

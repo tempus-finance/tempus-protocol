@@ -248,7 +248,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
 
-        (uint256 sharesUsed0, uint256 sharesUsed1) = _provideLiquidity(
+        (uint256 principals, uint256 yields) = _provideLiquidity(
             tempusAMM,
             ammBalance0,
             ammBalance1,
@@ -257,11 +257,11 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         );
 
         // Send remaining Shares to user
-        if (mintedShares > sharesUsed0) {
-            tempusAMM.token0().transfer(msg.sender, mintedShares - sharesUsed0);
+        if (mintedShares > principals) {
+            tempusAMM.token0().transfer(msg.sender, mintedShares - principals);
         }
-        if (mintedShares > sharesUsed1) {
-            tempusAMM.token1().transfer(msg.sender, mintedShares - sharesUsed1);
+        if (mintedShares > yields) {
+            tempusAMM.token1().transfer(msg.sender, mintedShares - yields);
         }
     }
 
@@ -283,7 +283,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             "allowance fail"
         );
 
-        // Provide TPS/TYS liquidity to TempusAMM
+        // There is no internal swap as we provide liquidity in the same ratio like in amm
+        // So we set minimum lp tokens out to 0
         tempusAMM.join(ammLPAmount0, ammLPAmount1, 0, recipient);
     }
 
