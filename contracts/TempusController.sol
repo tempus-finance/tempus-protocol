@@ -275,11 +275,11 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         (ammLPAmount0, ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(ammBalance0, ammBalance1, sharesAmount);
 
         require(
-            ERC20(address(tempusAMM.token0())).increaseAllowance(address(tempusAMM), ammLPAmount0), 
+            ERC20(address(tempusAMM.token0())).increaseAllowance(address(tempusAMM), ammLPAmount0),
             "allowance fail"
         );
         require(
-            ERC20(address(tempusAMM.token1())).increaseAllowance(address(tempusAMM), ammLPAmount1), 
+            ERC20(address(tempusAMM.token1())).increaseAllowance(address(tempusAMM), ammLPAmount1),
             "allowance fail"
         );
 

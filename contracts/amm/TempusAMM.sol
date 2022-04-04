@@ -604,10 +604,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getUpscaledBalances() private view returns (uint256 balance0, uint256 balance1) {
-        (balance0, balance1) = (
-            selfBalance0().mulDown(scalingFactor),
-            selfBalance1().mulDown(scalingFactor)
-        );
+        (balance0, balance1) = (selfBalance0().mulDown(scalingFactor), selfBalance1().mulDown(scalingFactor));
     }
 
     function addSwapFeeAmount(uint256 amount) private view returns (uint256) {

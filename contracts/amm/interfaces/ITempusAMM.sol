@@ -19,7 +19,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param startTime Timestamp of amplification update start
     /// @param endTime Timestamp of amplification update end
     event AmpUpdateStarted(uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime);
-    
+
     /// Event triggered when Amplification update is stopped
     /// @param currentValue Value of amplification at the moment of stopping
     event AmpUpdateStopped(uint256 currentValue);
@@ -131,10 +131,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param bptAmountIn amount of LP tokens in
     /// @return token0Out Amount of Token0 that user would receive back
     /// @return token1Out Amount of Token1 that user would receive back
-    function getTokensOutGivenLPIn(uint256 bptAmountIn)
-        external
-        view
-        returns (uint256 token0Out, uint256 token1Out);
+    function getTokensOutGivenLPIn(uint256 bptAmountIn) external view returns (uint256 token0Out, uint256 token1Out);
 
     /// @dev queries exiting TempusAMM with exact tokens out
     /// @param token0Out amount of Token0 to withdraw
@@ -180,5 +177,5 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     function pause() external;
 
     /// Resumes contract
-    function unpause() external; 
+    function unpause() external;
 }
