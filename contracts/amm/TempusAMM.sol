@@ -55,9 +55,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     AmplificationData private amplificationData;
 
-    event AmpUpdateStarted(uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime);
-    event AmpUpdateStopped(uint256 currentValue);
-
     IPoolShare public immutable token0;
     IPoolShare public immutable token1;
 

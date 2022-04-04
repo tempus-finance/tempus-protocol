@@ -13,6 +13,17 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
         GIVEN_OUT
     }
 
+    /// Event triggered when Amplification update is started
+    /// @param startValue Value of amplification at the beginning of update
+    /// @param endValue Value at the end of amplification update
+    /// @param startTime Timestamp of amplification update start
+    /// @param endTime Timestamp of amplification update end
+    event AmpUpdateStarted(uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime);
+    
+    /// Event triggered when Amplification update is stopped
+    /// @param currentValue Value of amplification at the moment of stopping
+    event AmpUpdateStopped(uint256 currentValue);
+
     /// Event triggered when liquidity is added to AMM
     /// @param amount0 Amount of token0 added to AMM
     /// @param amount1 Amount of token1 added to AMM
