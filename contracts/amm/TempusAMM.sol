@@ -105,7 +105,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             amountToken0,
             amountToken1,
             token0.getPricePerFullShare(),
-            token1.getPricePerFullShare()
+            token1.getPricePerFullShareStored()
         );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
@@ -134,7 +134,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             amountToken0,
             amountToken1,
             token0.getPricePerFullShare(),
-            token1.getPricePerFullShare()
+            token1.getPricePerFullShareStored()
         );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
@@ -194,7 +194,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token0AmountOut,
             token1AmountOut,
             token0.getPricePerFullShare(),
-            token1.getPricePerFullShare()
+            token1.getPricePerFullShareStored()
         );
 
         (uint256 currentAmp, ) = _getAmplificationParameter();
@@ -252,7 +252,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 rateAdjustedAmount
             );
 
-            amountOut = scaledAmountOut.divfV(tokenOut.getPricePerFullShare(), TEMPUS_SHARE_PRECISION).divDown(
+            amountOut = scaledAmountOut.divfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION).divDown(
                 scalingFactor
             );
 
@@ -273,7 +273,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 rateAdjustedAmount
             );
 
-            scaledAmountIn = scaledAmountIn.divfV(tokenIn.getPricePerFullShare(), TEMPUS_SHARE_PRECISION);
+            scaledAmountIn = scaledAmountIn.divfV(tokenIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
             amountIn = addSwapFeeAmount(scaledAmountIn.divUp(scalingFactor));
 
             require(amountIn <= slippageParam, "slippage");
@@ -583,7 +583,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         (balance0, balance1) = getUpscaledBalances();
         (balance0, balance1) = (
             balance0.mulfV(token0.getPricePerFullShare(), TEMPUS_SHARE_PRECISION),
-            balance1.mulfV(token1.getPricePerFullShare(), TEMPUS_SHARE_PRECISION)
+            balance1.mulfV(token1.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION)
         );
     }
 
