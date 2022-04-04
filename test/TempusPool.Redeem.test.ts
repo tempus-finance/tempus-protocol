@@ -52,7 +52,7 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 100]]);
     await pool.depositYBT(user, 100, /*recipient:*/user);
 
-    (await pool.expectRedeemBT(owner, 100, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+    (await pool.expectRedeemBT(owner, 100, 100, '0x0000000000000000000000000000000000000000')).to.be.equal(':ZeroAddressRecipient');
   });
 
   it("Should revert on bad recipient (address 0) with YBT", async () =>
@@ -62,7 +62,7 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 100]]);
     await pool.depositYBT(user, 100, /*recipient:*/user);
 
-    (await pool.expectRedeemYBT(owner, 100, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+    (await pool.expectRedeemYBT(owner, 100, 100, '0x0000000000000000000000000000000000000000')).to.be.equal(':ZeroAddressRecipient');
   });
 
   it("Should revert on random failure from backing pool", async () =>

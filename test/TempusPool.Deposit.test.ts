@@ -39,14 +39,14 @@ describeForEachPool("TempusPool Deposit", (pool:PoolTestFixture) =>
   {
     await pool.createDefault();
     const [owner] = pool.signers;
-    (await pool.expectDepositYBT(owner, 0)).to.be.equal('yieldTokenAmount is 0');
+    (await pool.expectDepositYBT(owner, 0)).to.be.equal(':ZeroYieldTokenAmount');
   });
 
   it("Should revert on bad recipient (address 0) with YBT", async () =>
   {
     await pool.createDefault();
     const [owner] = pool.signers;
-    (await pool.expectDepositYBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+    (await pool.expectDepositYBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal(':ZeroAddressRecipient');
   });
 
   it("Should revert on random failure on deposit", async () =>
