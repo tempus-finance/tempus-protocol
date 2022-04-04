@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./amm/interfaces/ITempusAMM.sol";
@@ -218,7 +219,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 deadline
     ) private {
         require(swapAmount > 0, "Invalid swap amount.");
-        tokenIn.approve(address(tempusAMM), swapAmount);
+        require(ERC20(address(tokenIn)).increaseAllowance(address(tempusAMM), swapAmount), "allowance fail");
 
         tempusAMM.swap(tokenIn, swapAmount, minReturn, ITempusAMM.SwapType.GIVEN_IN, deadline);
     }
@@ -232,7 +233,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) private {
         require(swapAmountOut > 0, "Invalid swap amount.");
         require(maxSpendAmount > 0, "Invalid max spend amount.");
-        tokenIn.approve(address(tempusAMM), maxSpendAmount);
+        require(ERC20(address(tokenIn)).increaseAllowance(address(tempusAMM), maxSpendAmount), "allowance fail");
 
         tempusAMM.swap(tokenIn, swapAmountOut, maxSpendAmount, ITempusAMM.SwapType.GIVEN_OUT, deadline);
     }
@@ -273,8 +274,14 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) private returns (uint256 ammLPAmount0, uint256 ammLPAmount1) {
         (ammLPAmount0, ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(ammBalance0, ammBalance1, sharesAmount);
 
-        tempusAMM.token0().approve(address(tempusAMM), ammLPAmount0);
-        tempusAMM.token1().approve(address(tempusAMM), ammLPAmount1);
+        require(
+            ERC20(address(tempusAMM.token0())).increaseAllowance(address(tempusAMM), ammLPAmount0), 
+            "allowance fail"
+        );
+        require(
+            ERC20(address(tempusAMM.token1())).increaseAllowance(address(tempusAMM), ammLPAmount1), 
+            "allowance fail"
+        );
 
         // Provide TPS/TYS liquidity to TempusAMM
         tempusAMM.join(ammLPAmount0, ammLPAmount1, 0, recipient);
@@ -452,7 +459,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         // transfer LP tokens to controller
         require(tempusAMM.transferFrom(msg.sender, address(this), maxLpTokensToRedeem), "LP token transfer failed");
 
-        tempusAMM.approve(address(tempusAMM), maxLpTokensToRedeem);
+        require(ERC20(address(tempusAMM)).increaseAllowance(address(tempusAMM), maxLpTokensToRedeem), "allowance fail");
         tempusAMM.exitGivenTokensOut(principalsStaked, yieldsStaked, maxLpTokensToRedeem, msg.sender);
 
         // transfer remainder of LP tokens back to user
