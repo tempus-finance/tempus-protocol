@@ -567,6 +567,14 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     /// Helpers
 
+    function selfBalance0() private view returns (uint256) {
+        return token0.balanceOf(address(this));
+    }
+
+    function selfBalance1() private view returns (uint256) {
+        return token1.balanceOf(address(this));
+    }
+
     function getRateAdjustedAmounts(
         uint256 amount0,
         uint256 amount1,
@@ -596,8 +604,10 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getUpscaledBalances() private view returns (uint256 balance0, uint256 balance1) {
-        balance0 = token0.balanceOf(address(this)).mulDown(scalingFactor);
-        balance1 = token1.balanceOf(address(this)).mulDown(scalingFactor);
+        (balance0, balance1) = (
+            selfBalance0().mulDown(scalingFactor),
+            selfBalance1().mulDown(scalingFactor)
+        );
     }
 
     function addSwapFeeAmount(uint256 amount) private view returns (uint256) {
