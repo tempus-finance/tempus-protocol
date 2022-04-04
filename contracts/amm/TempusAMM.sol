@@ -325,7 +325,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 .divDown(scalingFactor);
     }
 
-    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) public view override returns (uint256) {
+    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view override returns (uint256) {
         IPoolShare shareIn = IPoolShare(tokenIn);
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (uint256 currentAmp, ) = _getAmplificationParameter();
@@ -621,5 +621,15 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         // This returns amount - fee amount, so we round up (favoring a higher fee amount).
         uint256 feeAmount = amount.mulUp(swapFeePercentage);
         return amount - feeAmount;
+    }
+
+    /// Pausability
+
+    function pause() external override onlyOwner {
+        _pause();
+    }
+
+    function unpause() external override onlyOwner {
+        _unpause();
     }
 }

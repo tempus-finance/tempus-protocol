@@ -164,4 +164,10 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
             bool isUpdating,
             uint256 precision
         );
+
+    /// Pauses contract which disables all swaps joins and allows only exit with given lp in
+    function pause() external;
+
+    /// Resumes contract
+    function unpause() external; 
 }
