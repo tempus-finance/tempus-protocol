@@ -63,7 +63,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // These factors are always greater than or equal to one: tokens with more than 18 decimals are not supported.
     uint256 internal immutable scalingFactor;
 
-    uint256 internal immutable swapFeePercentage;
+    uint256 internal immutable swapFeeStragetgy;
+
+    bytes private swapFeeData;
 
     constructor(
         string memory name,
@@ -73,12 +75,14 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationStartValue,
         uint256 amplificationEndValue,
         uint256 amplificationEndTime,
-        uint256 swapFeePerc
+        uint256 feeStategy,
+        bytes memory feeData
     ) ERC20(name, symbol) {
         require(amplificationStartValue >= MIN_AMPLIFICATION, "min amp");
         require(amplificationStartValue <= MAX_AMPLIFICATION, "max amp");
 
-        swapFeePercentage = swapFeePerc;
+        swapFeeStragetgy = feeStategy;
+        swapFeeData = feeData;
 
         (token0, token1) = (t0, t1);
 
@@ -92,6 +96,16 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         if (amplificationStartValue != amplificationEndValue) {
             require(amplificationStartValue < amplificationEndValue, "min amp");
             startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
+        }
+    }
+
+    function swapFeePercentage() public view override returns (uint256) {
+        if (swapFeeStrategy < 1e18) {
+            // this means fixed swap fee
+            return swapFeeStrategy;
+        } else {
+            // here we can either call function pointer with swapFeeStrategy and swapFeeData
+            // it can also be hardcoded here if we have predefined amount of strategies
         }
     }
 
@@ -146,7 +160,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             amountIn0,
             amountIn1,
             totalSupply(),
-            swapFeePercentage
+            swapFeePercentage()
         );
 
         require(lpTokensOut >= minLpTokensOut, "slippage");
@@ -205,7 +219,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             amountOut0,
             amountOut1,
             totalSupply(),
-            swapFeePercentage
+            swapFeePercentage()
         );
         require(lpTokensIn <= maxLpTokensIn, "slippage");
 
@@ -397,7 +411,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token0Out,
             token1Out,
             totalSupply(),
-            swapFeePercentage
+            swapFeePercentage()
         );
     }
 
@@ -446,7 +460,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                     token0AmountIn,
                     token1AmountIn,
                     totalSupply(),
-                    swapFeePercentage
+                    swapFeePercentage()
                 );
     }
 
@@ -617,12 +631,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     function addSwapFeeAmount(uint256 amount) private view returns (uint256) {
         // This returns amount + fee amount, so we round up (favoring a higher fee amount).
-        return amount.divUp(FixedPoint.ONE - swapFeePercentage);
+        return amount.divUp(FixedPoint.ONE - swapFeePercentage());
     }
 
     function subtractSwapFeeAmount(uint256 amount) private view returns (uint256) {
         // This returns amount - fee amount, so we round up (favoring a higher fee amount).
-        uint256 feeAmount = amount.mulUp(swapFeePercentage);
+        uint256 feeAmount = amount.mulUp(swapFeePercentage());
         return amount - feeAmount;
     }
 
