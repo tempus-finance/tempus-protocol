@@ -42,6 +42,10 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param amountOut Amount of tokensOut received by user
     event Swap(IPoolShare tokenIn, uint256 amountIn, uint256 amountOut);
 
+    /// Calculates and returns swap fee percentage
+    /// @return Fee charged on swap at current time
+    function getSwapFeePercentage() external view returns (uint256);
+
     /// first token in TempusAMM pair
     function token0() external view returns (IPoolShare);
 
