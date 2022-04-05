@@ -410,13 +410,13 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         // We don't need to scale balances down here
         // as calculation for amounts out is based on btpAmountIn / totalSupply() ratio
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
-        return
-            StableMath.tokensOutFromBptIn(
-                token0.balanceOf(address(this)),
-                token1.balanceOf(address(this)),
-                lpTokensIn,
-                totalSupply()
-            );
+
+        (token0Out, token1Out) = StableMath.tokensOutFromBptIn(
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this)),
+            lpTokensIn,
+            totalSupply()
+        );
     }
 
     function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
@@ -510,9 +510,15 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             // This also means that the following computation will never revert nor yield invalid results.
             unchecked {
                 if (endValue > startValue) {
-                    value = startValue + ((endValue - startValue) * (block.timestamp - startTime)) / (endTime - startTime);
+                    value =
+                        startValue +
+                        ((endValue - startValue) * (block.timestamp - startTime)) /
+                        (endTime - startTime);
                 } else {
-                    value = startValue - ((startValue - endValue) * (block.timestamp - startTime)) / (endTime - startTime);
+                    value =
+                        startValue -
+                        ((startValue - endValue) * (block.timestamp - startTime)) /
+                        (endTime - startTime);
                 }
             }
         } else {

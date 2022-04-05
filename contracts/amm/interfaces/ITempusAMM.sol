@@ -127,29 +127,23 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
         uint256 threshold
     ) external view returns (uint256 amountIn, IPoolShare tokenIn);
 
-    /// @dev queries exiting TempusAMM with exact BPT tokens in
-    /// @param bptAmountIn amount of LP tokens in
+    /// @dev queries exiting TempusAMM with exact LP tokens in
+    /// @param lpTokensIn amount of LP tokens in
     /// @return token0Out Amount of Token0 that user would receive back
     /// @return token1Out Amount of Token1 that user would receive back
-    function getTokensOutGivenLPIn(uint256 bptAmountIn) external view returns (uint256 token0Out, uint256 token1Out);
+    function getTokensOutGivenLPIn(uint256 lpTokensIn) external view returns (uint256 token0Out, uint256 token1Out);
 
     /// @dev queries exiting TempusAMM with exact tokens out
     /// @param token0Out amount of Token0 to withdraw
     /// @param token1Out amount of Token1 to withdraw
     /// @return lpTokens Amount of Lp tokens that user would redeem
-    function getLPTokensInGivenTokensOut(uint256 token0Out, uint256 token1Out)
-        external
-        view
-        returns (uint256 lpTokens);
+    function getLPTokensInGivenTokensOut(uint256 token0Out, uint256 token1Out) external view returns (uint256 lpTokens);
 
     /// @dev queries joining TempusAMM with exact tokens in
     /// @param token0AmountIn amount of token0 to be added to the pool
     /// @param token1AmountIn amount of token1 to be added to the pool
     /// @return amount of LP tokens that could be received
-    function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn)
-        external
-        view
-        returns (uint256);
+    function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn) external view returns (uint256);
 
     /// Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
     /// `endTime` is reached, when it will be `endValue`
