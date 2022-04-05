@@ -8,25 +8,19 @@ library AMMBalancesHelper {
 
     uint256 internal constant ONE = 1e18;
 
-    function getLiquidityProvisionSharesAmounts(uint256[] memory ammBalances, uint256 shares)
-        internal
-        pure
-        returns (uint256[] memory)
-    {
-        uint256[2] memory ammDepositPercentages = getAMMBalancesRatio(ammBalances);
-        uint256[] memory ammLiquidityProvisionAmounts = new uint256[](2);
+    function getLPSharesAmounts(
+        uint256 ammBalance0,
+        uint256 ammBalance1,
+        uint256 sharesAmount
+    ) internal pure returns (uint256 ammLPAmount0, uint256 ammLPAmount1) {
+        (uint256 ammPerc0, uint256 ammPerc1) = getAMMBalancesRatio(ammBalance0, ammBalance1);
 
-        (ammLiquidityProvisionAmounts[0], ammLiquidityProvisionAmounts[1]) = (
-            shares.mulfV(ammDepositPercentages[0], ONE),
-            shares.mulfV(ammDepositPercentages[1], ONE)
-        );
-
-        return ammLiquidityProvisionAmounts;
+        (ammLPAmount0, ammLPAmount1) = (sharesAmount.mulfV(ammPerc0, ONE), sharesAmount.mulfV(ammPerc1, ONE));
     }
 
-    function getAMMBalancesRatio(uint256[] memory ammBalances) internal pure returns (uint256[2] memory balancesRatio) {
-        uint256 rate = ammBalances[0].divfV(ammBalances[1], ONE);
+    function getAMMBalancesRatio(uint256 ammBalance0, uint256 ammBalance1) internal pure returns (uint256, uint256) {
+        uint256 rate = ammBalance0.divfV(ammBalance1, ONE);
 
-        (balancesRatio[0], balancesRatio[1]) = rate > ONE ? (ONE, ONE.divfV(rate, ONE)) : (rate, ONE);
+        return rate > ONE ? (ONE, ONE.divfV(rate, ONE)) : (rate, ONE);
     }
 }

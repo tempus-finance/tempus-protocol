@@ -68,14 +68,6 @@ interface ITempusController {
         bool isBackingToken
     ) external payable;
 
-    /// @dev Adds liquidity to tempusAMM with ratio of shares that is equal to ratio in AMM
-    /// @param tempusAMM Tempus AMM to provide liquidity to
-    /// @param sharesAmount Amount of shares to be used to provide liquidity, one of the sahres will be partially used
-    /// @notice If sharesAmount is 100 and amm balances ratio is 1 principal : 10 yields 90 principal will be "unused"
-    ///         So, liquidity will be provided with 10 principals and 100 yields
-    /// @notice msg.sender needs to approve Controller for both Principals and Yields for @param sharesAmount
-    function provideLiquidity(ITempusAMM tempusAMM, uint256 sharesAmount) external;
-
     /// @dev Atomically deposits YBT/BT to TempusPool and swaps TYS for TPS to get fixed yield
     ///      See https://docs.balancer.fi/developers/guides/single-swaps#swap-overview
     /// @param tempusAMM Tempus AMM to use to swap TYS for TPS
@@ -163,24 +155,6 @@ interface ITempusController {
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
-    ) external;
-
-    /// @dev Withdraws liquidity from TempusAMM
-    /// @notice `msg.sender` needs to approve controller for @param lpTokensAmount of LP tokens
-    /// @notice Transfers LP tokens to controller and exiting tempusAmm with `msg.sender` as recipient
-    /// @param tempusAMM Tempus AMM instance
-    /// @param tempusPool Tempus Pool instance
-    /// @param lpTokensAmount Amount of LP tokens to be withdrawn
-    /// @param principalAmountOutMin Minimal amount of TPS to be withdrawn
-    /// @param yieldAmountOutMin Minimal amount of TYS to be withdrawn
-    /// @param toInternalBalances Withdrawing liquidity to internal balances
-    function exitTempusAMM(
-        ITempusAMM tempusAMM,
-        ITempusPool tempusPool,
-        uint256 lpTokensAmount,
-        uint256 principalAmountOutMin,
-        uint256 yieldAmountOutMin,
-        bool toInternalBalances
     ) external;
 
     /// @dev Withdraws liquidity from TempusAMM and redeems Shares to Yield Bearing or Backing Tokens

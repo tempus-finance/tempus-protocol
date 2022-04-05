@@ -81,7 +81,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     const postSwapTokenInBalance:BigNumber = await tokenIn.contract.balanceOf(owner.address);
     const postSwapTokenOutBalance:BigNumber = await tokenOut.contract.balanceOf(owner.address);
-    
+
     expect(+tokenIn.fromBigNum(preSwapTokenInBalance.sub(postSwapTokenInBalance))).to.be.within(+swapTest.swapAmountIn * 0.97, +swapTest.swapAmountIn * 1.03);
     expect(+tokenIn.fromBigNum(postSwapTokenOutBalance.sub(preSwapTokenOutBalance))).to.be.within(+swapTest.swapAmountOut * 0.97, +swapTest.swapAmountOut * 1.03);
   }
@@ -132,7 +132,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     (await expectRevert(expectedReturn)).to.equal("tokenIn must be token0 or token1");
   });
   
-  it("[getExpectedTokensOutGivenBPTIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
+  it("[getTokensOutGivenLPIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
     const inputAmount = 100;
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
@@ -150,10 +150,10 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     expect(balanceYieldsBefore + expectedReturn.yieldsOut).to.be.within(0.999999 * balanceYieldsAfter, 1.0000001 * balanceYieldsAfter);
   });
 
-  it("[getExpectedLPTokensForTokensIn] verifies the expected amount is equivilant to actual join to TempusAMM", async () => {
+  it("[getLPTokensOutForTokensIn] verifies the expected amount is equivilant to actual join to TempusAMM", async () => {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = +await testFixture.amm.getExpectedLPTokensForTokensIn(10, 100);
+    const expectedReturn = +await testFixture.amm.getLPTokensOutForTokensIn(10, 100);
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
 
@@ -171,31 +171,19 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     }
   });
 
-  it("[getExpectedBPTInGivenTokensOut] verifies predicted exit amount matches actual exit amount", async () =>
+  it("[getLPTokensInGivenTokensOut] verifies predicted exit amount matches actual exit amount", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
 
     const LpBefore = +await testFixture.amm.balanceOf(owner);
-    const LpExpectedExit = +await testFixture.amm.getExpectedBPTInGivenTokensOut(10, 100);
+    const LpExpectedExit = +await testFixture.amm.getLPTokensInGivenTokensOut(10, 100);
     const LpExpected = LpBefore - LpExpectedExit;
 
     await testFixture.amm.exitPoolExactAmountOut(owner, [10, 100], /*maxAmountLpIn*/1000);
     const LpAfter = +await testFixture.amm.balanceOf(owner);
 
     expect(LpAfter).to.be.within(0.999999 * LpExpected, 1.0000001 * LpExpected);
-  });
-
-  it("checks amplification and invariant in multiple stages", async () =>
-  {
-    await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});
-    let ampInv = await testFixture.amm.getLastInvariant();
-    expect(ampInv.invariant).to.equal(0);
-    expect(ampInv.amplification).to.equal(0);
-    await testFixture.amm.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
-    ampInv = await testFixture.amm.getLastInvariant();
-    expect(ampInv.invariant).to.be.within(181, 182);
-    expect(ampInv.amplification).to.equal(5000);
   });
 
   it("checks amplification moving over time (after little more then a half time of pool passed)", async () =>
@@ -216,18 +204,8 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd: 95, oneAmpUpdate: (ONE_MONTH / 90)});
     await testFixture.amm.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
-    let ampInv = await testFixture.amm.getLastInvariant();
     const amplificationParams = await testFixture.amm.getAmplificationParam();
-    expect(amplificationParams.value).to.be.equal(ampInv.amplification);
     expect(amplificationParams.isUpdating).to.be.true;
-    expect(ampInv.invariant).to.be.within(200 / 1.11, 200 / 1.09);
-    
-    // move half period of pool duration
-    await testFixture.setTimeRelativeToPoolStart(0.5);
-    await testFixture.setInterestRate(1.05);
-    await testFixture.amm.provideLiquidity(owner, 100, 1000, 1);
-    ampInv = await testFixture.amm.getLastInvariant();
-    expect(ampInv.invariant).to.be.within(400 / (1.1 / 1.049), 400 / (1.1 / 1.051));
   });
 
   it("checks amplification update reverts with invalid args", async () =>
@@ -236,32 +214,30 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     // min amp 
     let invalidAmpUpdate = tempusAMM.startAmplificationUpdate(0, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("BAL#300");
+    (await expectRevert(invalidAmpUpdate)).to.equal("min amp");
 
     // max amp 
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(1000000, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("BAL#301");
+    (await expectRevert(invalidAmpUpdate)).to.equal("max amp");
 
     // min duration
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(65, 1);
-    (await expectRevert(invalidAmpUpdate)).to.equal("BAL#317");
+    (await expectRevert(invalidAmpUpdate)).to.equal("amp endtime too close");
 
     // stop update no ongoing update
     invalidAmpUpdate = tempusAMM.stopAmplificationUpdate();
-    (await expectRevert(invalidAmpUpdate)).to.equal("BAL#320");
+    (await expectRevert(invalidAmpUpdate)).to.equal("amp no ongoing update");
 
     // there is ongoing update
     await tempusAMM.startAmplificationUpdate(65, 60*60*12);
     await increaseTime(60*60*24*15);
     testFixture.setInterestRate(1.05);
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(95, 60*60*24);
-    (await expectRevert(invalidAmpUpdate)).to.equal("BAL#318");
+    (await expectRevert(invalidAmpUpdate)).to.equal("amp ongoing update");
 
     // stop update
     await tempusAMM.stopAmplificationUpdate();
     await tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
-    const ampInv = await tempusAMM.getLastInvariant();
-    expect(ampInv.amplification).to.equal(35000);
   });
 
   it("revert on invalid join kind", async () =>

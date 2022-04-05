@@ -35,12 +35,9 @@ interface PoolConfig {
 
 interface AMMConfig {
   address?: string;
-  vault: string;
   lp: TokenNameSymbol;
   owner: string;
   swapFee: number;
-  pauseWindowDuration: number;
-  bufferPeriodDuration: number;
   initialAmplificationFactor: number;
   finalAmplificationFactor: number;
 }
@@ -191,16 +188,12 @@ async function deployAmm(config:Config, deployerPrivateKey:string): Promise<Conf
   validateRange(config.amm.swapFee, 0, 0.03);
 
   const ammConstructorArgs = [
-    config.amm.vault,
     config.amm.lp.name,
     config.amm.lp.symbol,
     config.pool.address,
     config.amm.initialAmplificationFactor,
     config.amm.finalAmplificationFactor,
-    parseDecimal(config.amm.swapFee, 18),
-    config.amm.pauseWindowDuration,
-    config.amm.bufferPeriodDuration,
-    config.amm.owner
+    parseDecimal(config.amm.swapFee, 18)
   ];
 
   const ybtSymbol = config.ybt.symbol;

@@ -26,7 +26,7 @@ abstract contract PoolShare is IPoolShare, ERC20OwnerMintableToken {
         tokenDecimals = _decimals;
     }
 
-    function decimals() public view virtual override returns (uint8) {
+    function decimals() public view virtual override(ERC20, IERC20Metadata) returns (uint8) {
         return tokenDecimals;
     }
 }

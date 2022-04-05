@@ -23,68 +23,6 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@balancer-labs/v2-asset-manager-utils@0.1.0", "@balancer-labs/v2-asset-manager-utils@https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/asset-manager-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2":
-  version "0.1.0"
-  resolved "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/asset-manager-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2#fba58b0215165aa744f83e8e0d01750aedad1637"
-  dependencies:
-    "@balancer-labs/v2-solidity-utils" "workspace:*"
-    "@balancer-labs/v2-vault" "workspace:*"
-
-"@balancer-labs/v2-asset-manager-utils@workspace:*":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-asset-manager-utils/-/v2-asset-manager-utils-0.1.0.tgz#ced4e3a1265fabbfd2c63c30ed415c396a688711"
-  integrity sha512-TbBXKp+laIbjMqzJUqibNtJHG6Fsq51BfSxqwr6BWQc0Ysif2drRx9nbF3OCY5DNvM1J+c5LZ6mYno/uqSbgGw==
-  dependencies:
-    "@balancer-labs/v2-solidity-utils" "1.0.0"
-    "@balancer-labs/v2-vault" "1.0.0"
-
-"@balancer-labs/v2-pool-stable@https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-stable?ccb2d594a893cd4b7ce79698e373cb100b28aaa2":
-  version "0.1.0"
-  resolved "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-stable?ccb2d594a893cd4b7ce79698e373cb100b28aaa2#661f7cd5dda18b87848fd30cfef098c10f96898a"
-  dependencies:
-    "@balancer-labs/v2-pool-utils" "workspace:*"
-    "@balancer-labs/v2-solidity-utils" "workspace:*"
-    "@balancer-labs/v2-vault" "workspace:*"
-
-"@balancer-labs/v2-pool-utils@https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2":
-  version "1.0.0"
-  resolved "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2#41ab14c4e4bf516276d0ef066a2c0b2bb5bb94a0"
-  dependencies:
-    "@balancer-labs/v2-asset-manager-utils" "workspace:*"
-    "@balancer-labs/v2-solidity-utils" "workspace:*"
-    "@balancer-labs/v2-vault" "workspace:*"
-
-"@balancer-labs/v2-pool-utils@workspace:*":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-pool-utils/-/v2-pool-utils-1.0.0.tgz#58316ac48ee0f5574777491cafe0b3fa1e7f0d22"
-  integrity sha512-7CSdHuWqSiEsK+/v+xgnn/Bc+9qNOvCF1T0UDidlxCfa1L2djpYz8P/J+ouITcGaz/330yGTEsrkd94ZOoLE2w==
-  dependencies:
-    "@balancer-labs/v2-asset-manager-utils" "0.1.0"
-    "@balancer-labs/v2-solidity-utils" "1.0.0"
-    "@balancer-labs/v2-vault" "1.0.0"
-
-"@balancer-labs/v2-solidity-utils@1.0.0", "@balancer-labs/v2-solidity-utils@workspace:*":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-solidity-utils/-/v2-solidity-utils-1.0.0.tgz#992b31b8c3398b1d89db6ee0c043dbad07293919"
-  integrity sha512-nTmxPRhErmNTIsSU18wX0sbm6CbVEs3FYpbQDw1QUzPaqg+ono+lYkqExrlf63OBJGE60QPbjTybQaLW1MNoqQ==
-
-"@balancer-labs/v2-solidity-utils@https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/solidity-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2":
-  version "1.0.0"
-  resolved "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/solidity-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2#c5bff4752c1a1b27da0e413b8c26240ddcf5ed0c"
-
-"@balancer-labs/v2-vault@1.0.0", "@balancer-labs/v2-vault@workspace:*":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-vault/-/v2-vault-1.0.0.tgz#d783e5019f36ecf556c65becc541514a97cac291"
-  integrity sha512-md5ri4sGamvg2K3914HMailkhcyo6PhYJmd6k8AMJvTnKG3gr2jNNBuRygtoKGRqT6hrty46/EXQG/Nn/Fk9+g==
-  dependencies:
-    "@balancer-labs/v2-solidity-utils" "1.0.0"
-
-"@balancer-labs/v2-vault@https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/vault?ccb2d594a893cd4b7ce79698e373cb100b28aaa2":
-  version "1.0.0"
-  resolved "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/vault?ccb2d594a893cd4b7ce79698e373cb100b28aaa2#e455b7e3b3c9b289413ab5acfe744602215daee2"
-  dependencies:
-    "@balancer-labs/v2-solidity-utils" "workspace:*"
-
 "@ensdomains/ens@^0.4.4":
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/@ensdomains/ens/-/ens-0.4.5.tgz#e0aebc005afdc066447c6e22feb4eda89a5edbfc"
