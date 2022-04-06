@@ -23,8 +23,9 @@ export class LidoTestPool extends PoolTestFixture {
   async forceFailNextDepositOrRedeem(): Promise<void> {
     await this.lido.contract.setFailNextDepositOrRedeem(true);
   }
-  async getSigners(): Promise<[Signer,Signer,Signer]> {
+  async getSigners(): Promise<Signer[]> {
     if (this.integration) {
+      // TODO: implement for other protocols
       // TODO: implement `owner` for Lido integration tests
       const [owner] = await ethers.getSigners();
       const [account1,account2] = await getUnnamedAccounts();
@@ -34,8 +35,7 @@ export class LidoTestPool extends PoolTestFixture {
         await ethers.getSigner(account2)
       ]
     } else {
-      const [owner,user,user2] = await ethers.getSigners();
-      return [owner,user,user2];
+      return await ethers.getSigners();
     }
   }
   async deposit(user:Signer, amount:number): Promise<void> {

@@ -70,7 +70,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       const { major, minor, patch } = await controller.version();
       expect(major).to.equal(1);
       expect(minor).to.equal(1);
-      expect(patch).to.equal(0);
+      expect(patch).to.equal(1);
     });
 
     it("Owner is correct", async () =>
@@ -84,7 +84,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("unauthorized contracts are not allowed", async () =>
     {
       await controller.register(owner, pool.address, /*isValid:*/false);
-      (await testPool.expectDepositBT(user1, 1.0)).to.equal("Unauthorized contract address");
+      (await testPool.expectDepositBT(user1, 1.0)).to.equal(":UnauthorizedContract");
     });
 
     it("deposit YBT and provide liquidity to a pre-initialized AMM", async () =>
@@ -131,20 +131,20 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("verifies depositing YBT and providing liquidity to a non initialized AMM reverts", async () =>
     {
       const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, false);
-      (await expectRevert(invalidAction)).to.equal("AMM not initialized");
+      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
     });
 
     it("verifies depositing ERC20 BT and providing liquidity to a non initialized AMM reverts", async () =>
     {
       const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, true);
-      (await expectRevert(invalidAction)).to.equal("AMM not initialized");
+      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
     });
 
     it("verifies depositing 0 YBT and providing liquidity reverts", async () =>
     {
       await initAMM(user1, /*ybtDeposit*/2000, /*principals*/12.34567, /*yields*/1234.567891);
       const invalidAction = controller.depositAndProvideLiquidity(testPool, user2, 0, false);
-      (await expectRevert(invalidAction)).to.equal("yieldTokenAmount is 0");
+      (await expectRevert(invalidAction)).to.equal(":ZeroYieldTokenAmount");
     });
   });
 
@@ -318,7 +318,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         false
       ))).to.equal(
-        "Pool already finalized"
+        ":PoolAlreadyFinalized"
       );
     });
   });
@@ -339,7 +339,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0, // yields
         false,
         await testPool.principals.balanceOf(owner)
-      ))).to.equal("maxLeftoverShares too big");
+      ))).to.equal(":MaxLeftoverSharesTooBig");
     });
 
     it("Complete exit before maturity", async () => 
@@ -477,7 +477,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await testPool.controller.depositYieldBearing(owner, testPool.tempus, 100);
 
       const yieldsRate = 0;
-      await expect(controller.exitAmmGivenLpAndRedeem(
+      (await expectRevert(controller.exitAmmGivenLpAndRedeem(
         testPool, 
         owner, 
         0, 
@@ -487,15 +487,15 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         yieldsRate,
         "0.001"
-      )).to.be.revertedWith("yieldsRate must be greater than 0");
+      ))).to.equal(":ZeroYieldsRate");
     });
 
     it("Should fail with maxSlippage > 1e18", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await testPool.controller.depositYieldBearing(owner, testPool.tempus, 100);
-
-      await expect(controller.exitAmmGivenLpAndRedeem(
+      
+      (await expectRevert(controller.exitAmmGivenLpAndRedeem(
         testPool, 
         owner, 
         0, 
@@ -505,7 +505,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "1.000000000000000001"
-      )).to.be.revertedWith("maxSlippage can not be greater than 1e18");
+      ))).to.equal(":MaxSlippageTooBig");
     });
 
     it("Complete exit to yield bearing", async () => 

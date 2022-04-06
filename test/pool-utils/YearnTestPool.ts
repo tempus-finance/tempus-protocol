@@ -20,14 +20,6 @@ export class YearnTestPool extends PoolTestFixture {
   async forceFailNextDepositOrRedeem(): Promise<void> {
     await this.yearn.contract.setFailNextDepositOrRedeem(true);
   }
-  async getSigners(): Promise<[Signer,Signer,Signer]> {
-    if (this.integration) {
-      // TODO: implement for integration tests
-    } else {
-      const [owner,user,user2] = await ethers.getSigners();
-      return [owner,user,user2];
-    }
-  }
   async deposit(user:Signer, amount:number): Promise<void> {
     await this.yearn.deposit(user, amount);
   }

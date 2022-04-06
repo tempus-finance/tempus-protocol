@@ -115,7 +115,7 @@ export async function waitForContractToBeDeployed(contractAddress: string): Prom
     
     if (contractCode !== '0x0' && contractCode !== '0x') {
       console.log(chalk.green(`YES! ${contractAddress} was successfully deployed!`));
-      await wait(2);
+      await wait(15);
       break;
     }
     

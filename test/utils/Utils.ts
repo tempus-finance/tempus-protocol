@@ -79,6 +79,11 @@ export function getRevertMessage(e:Error): string {
   }
   let msgStart = e.message.indexOf('\'');
   if (msgStart !== -1) {
+    let braceIdx = e.message.indexOf("(");
+
+    if (braceIdx !== -1) {
+      return ":" + e.message.substring(msgStart + 1, braceIdx);
+    }
     return e.message.substr(msgStart + 1, e.message.length - msgStart - 2);
   }
   return e.message; // something else failed
