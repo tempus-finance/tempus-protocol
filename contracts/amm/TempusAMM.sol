@@ -20,13 +20,13 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/ITempusAMM.sol";
 import "./../token/IPoolShare.sol";
 
-import "./math/FixedPoint.sol";
 import "./math/StableMath.sol";
 import "../utils/Ownable.sol";
+import "../math/Fixed256x18.sol";
 import "../math/Fixed256xVar.sol";
 
 contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
-    using FixedPoint for uint256;
+    using Fixed256x18 for uint256;
     using Fixed256xVar for uint256;
 
     // This contract uses timestamps to slowly update its Amplification parameter over time. These changes must occur
@@ -85,7 +85,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         require(t0.decimals() == t1.decimals(), "token0 != token1 decimals");
         TEMPUS_SHARE_PRECISION = 10**t0.decimals();
 
-        scalingFactor = FixedPoint.ONE * 10**(18 - t0.decimals());
+        scalingFactor = Fixed256x18.ONE * 10**(18 - t0.decimals());
 
         _setAmplificationData(amplificationStartValue);
 
@@ -628,7 +628,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     function addSwapFeeAmount(uint256 amount) private view returns (uint256) {
         // This returns amount + fee amount, so we round up (favoring a higher fee amount).
-        return amount.divUp(FixedPoint.ONE - swapFeePercentage);
+        return amount.divUp(Fixed256x18.ONE - swapFeePercentage);
     }
 
     function subtractSwapFeeAmount(uint256 amount) private view returns (uint256) {
