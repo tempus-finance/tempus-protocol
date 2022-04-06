@@ -106,6 +106,6 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
     let [owner, user] = pool.signers;
     await pool.setupAccounts(owner, [[user, 500]]);
     
-    (await expectRevert(pool.tempus.onDepositBacking(user, 1, user))).to.equal("Only callable by TempusController");
+    (await expectRevert(pool.tempus.onDepositBacking(user, 1, user))).to.equal(":OnlyControllerAuthorized");
   });
 });

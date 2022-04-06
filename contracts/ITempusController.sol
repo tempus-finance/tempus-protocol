@@ -102,7 +102,7 @@ interface ITempusController {
 
     /// @dev Error thrown when the pool has already matured
     /// @param tempusPool The address of the pool that has already matured
-    error PoolAlreadyFinalized(address tempusPool);
+    error PoolAlreadyMatured(ITempusPool tempusPool);
 
     /// @dev Error thrown when trying to exit AMM before maturity but pricipal and yield token amounts are not equal
     /// @param principalTokenAmount The amount of principal tokens
@@ -113,13 +113,13 @@ interface ITempusController {
     /// @param sender The transfer sender
     /// @param recipient The transfer recipient
     /// @param amount The principal tokens amount
-    error FailedPrincipalTokensTransfer(address sender, address recipient, uint256 amount);
+    error FailedPrincipalTokensTransfer(address sender, ITempusController recipient, uint256 amount);
 
     /// @dev Error thrown when a yield tokens transfer fails
     /// @param sender The transfer sender
     /// @param recipient The transfer recipient
     /// @param amount The yield tokens amount
-    error FailedYieldTokensTransfer(address sender, address recipient, uint256 amount);
+    error FailedYieldTokensTransfer(address sender, ITempusController recipient, uint256 amount);
 
     /// @dev Error thrown when the yields rate is zero
     error ZeroYieldsRate();

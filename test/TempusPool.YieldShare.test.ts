@@ -35,7 +35,7 @@ describeForEachPool("TempusPool YieldShare", (pool:PoolTestFixture) =>
     await pool.fastForwardToMaturity();
 
     const expectedReturn = pool.tempus.getSharesAmountForExactTokensOut(10, /*BT*/false);
-    (await expectRevert(expectedReturn)).to.equal("Should run only before maturity");
+    (await expectRevert(expectedReturn)).to.equal(":PoolAlreadyMatured");
   });
 
   it("getPricePerFullShare() must equal TempusPool::pricePerShare", async () =>

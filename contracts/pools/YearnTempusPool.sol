@@ -40,7 +40,11 @@ contract YearnTempusPool is TempusPool {
             maxFeeSetup
         )
     {
-        require(vault.decimals() == IERC20Metadata(vault.token()).decimals(), "Decimals precision mismatch");
+        uint256 vaultDecimals = vault.decimals();
+        uint256 vaultTokenDecimals = IERC20Metadata(vault.token()).decimals();
+        if (vaultDecimals != vaultTokenDecimals) {
+            revert DecimalsPrecisionMismatch(address(vault), vaultDecimals, vaultTokenDecimals);
+        }
 
         yearnVault = vault;
     }

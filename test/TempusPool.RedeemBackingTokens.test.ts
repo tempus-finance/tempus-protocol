@@ -53,7 +53,7 @@ describeForEachPool("TempusPool Redeem", (pool: PoolTestFixture) =>
     let [owner, user] = pool.signers;
     await pool.setupAccounts(owner, [[user, 500]]);
     
-    (await expectRevert(pool.tempus.redeemToBacking(user, 1, 1))).to.equal("Only callable by TempusController");
+    (await expectRevert(pool.tempus.redeemToBacking(user, 1, 1))).to.equal(":OnlyControllerAuthorized");
   });
 });
 
@@ -67,6 +67,6 @@ describeForEachPool.type("TempusPool Redeem", [PoolType.Lido], (pool:PoolTestFix
     await pool.asset.approve(user, pool.tempus.controller.address, 100);
     (await pool.expectDepositBT(user, 100)).to.equal('success');
 
-    (await pool.expectRedeemBT(user, 100, 100)).to.equal('LidoTempusPool.withdrawFromUnderlyingProtocol not supported');
+    (await pool.expectRedeemBT(user, 100, 100)).to.equal(':LidoWithdrawNotSupported');
   });
 });

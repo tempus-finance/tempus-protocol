@@ -92,10 +92,10 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 100]]);
     await deposit(user, { ybtAmount:100, pegged:{tps:100, tys:100, ybt:0}, unpegged:{tps:100, tys:100, ybt:0} }, "deposit 100 with rate 1");
 
-    (await pool.expectRedeemYBT(user, 150, 100)).to.equal("Insufficient principals.");
-    (await pool.expectRedeemYBT(user, 100, 150)).to.equal("Insufficient yields.");
+    (await pool.expectRedeemYBT(user, 150, 100)).to.equal(":InsufficientPrincipalTokenBalance");
+    (await pool.expectRedeemYBT(user, 100, 150)).to.equal(":InsufficientYieldTokenBalance");
     // We're checking principal first.
-    (await pool.expectRedeemYBT(user, 150, 150)).to.equal("Insufficient principals.");
+    (await pool.expectRedeemYBT(user, 150, 150)).to.equal(":InsufficientPrincipalTokenBalance");
   });
 
   it.includeIntegration("Should fail before maturity with unequal shares", async () =>
@@ -105,7 +105,7 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 200]]);
     await deposit(user, { ybtAmount:100, pegged:{tps:100, tys:100, ybt:100}, unpegged:{tps:100, tys:100, ybt:100} }, "deposit 100 with rate 1");
 
-    (await pool.expectRedeemYBT(user, 50, 100)).to.equal("Inequal redemption not allowed before maturity.");
+    (await pool.expectRedeemYBT(user, 50, 100)).to.equal(":NotEqualPrincipalAndYieldTokenAmounts");
   });
 
   it.includeIntegration("Should work before maturity with equal shares, without yield", async () =>
@@ -325,7 +325,7 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     let [owner, user] = pool.signers;
     await pool.setupAccounts(owner, [[user, 500]]);
     
-    (await expectRevert(pool.tempus.redeem(user, 1, 1))).to.equal("Only callable by TempusController");
+    (await expectRevert(pool.tempus.redeem(user, 1, 1))).to.equal(":OnlyControllerAuthorized");
   });
 
 });

@@ -295,7 +295,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         true
       );
       if (testPool.type === PoolType.Lido) {
-        (await expectRevert(reedemAction)).to.equal("LidoTempusPool.withdrawFromUnderlyingProtocol not supported");
+        (await expectRevert(reedemAction)).to.equal(":LidoWithdrawNotSupported");
       }
       else {
         await reedemAction;
@@ -320,7 +320,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         false
       ))).to.equal(
-        ":PoolAlreadyFinalized"
+        ":PoolAlreadyMatured"
       );
     });
   });
@@ -570,7 +570,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           true,
           getDefaultLeftoverShares()
         ))).to.equal(
-          "LidoTempusPool.withdrawFromUnderlyingProtocol not supported"
+          ":LidoWithdrawNotSupported"
         );
       }
       else
