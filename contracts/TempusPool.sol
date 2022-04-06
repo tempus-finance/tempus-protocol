@@ -498,9 +498,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     function estimatedMintedShares(uint256 amount, bool isBackingToken) external view override returns (uint256) {
-        uint256 currentRate = currentInterestRate();
-        uint256 depositedBT = isBackingToken ? amount : numAssetsPerYieldToken(amount, currentRate);
-        return numSharesToMint(depositedBT, currentRate);
+        return sharesToMintBurnForTokensInOut(amount, isBackingToken);
     }
 
     function estimatedRedeem(
@@ -511,6 +509,22 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         uint256 currentRate = currentInterestRate();
         (uint256 yieldTokens, uint256 backingTokens, , ) = getRedemptionAmounts(principals, yields, currentRate);
         return toBackingToken ? backingTokens : yieldTokens;
+    }
+
+    function getSharesAmountForExactTokensOut(uint256 amountOut, bool isBackingToken)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        require(!matured(), "Should run only before maturity");
+        return sharesToMintBurnForTokensInOut(amountOut, isBackingToken);
+    }
+
+    function sharesToMintBurnForTokensInOut(uint256 amount, bool isBackingToken) private view returns (uint256) {
+        uint256 currentRate = currentInterestRate();
+        uint256 depositedBT = isBackingToken ? amount : numAssetsPerYieldToken(amount, currentRate);
+        return numSharesToMint(depositedBT, currentRate);
     }
 
     /// @dev This updates the internal tracking of negative yield periods,

@@ -5,7 +5,7 @@ import * as utils from './utils';
 import * as chalk from "chalk";
 import { parseDecimal } from "../test/utils/Decimal";
 import { ERC20 } from "../test/utils/ERC20";
-import { AbstractSigner } from "../test/utils/ContractBase";
+import { AMP_PRECISION } from '../test/utils/TempusAMM';
 
 interface YBTConfig {
   address: string;
@@ -14,7 +14,8 @@ interface YBTConfig {
   symbol: string;
 }
 
-interface TokenNameSymbol {
+interface TokenInfo {
+  address:string,
   name: string;
   symbol: string;
 }
@@ -35,7 +36,7 @@ interface PoolConfig {
 
 interface AMMConfig {
   address?: string;
-  lp: TokenNameSymbol;
+  lp: TokenInfo;
   owner: string;
   swapFee: number;
   initialAmplificationFactor: number;
@@ -57,8 +58,8 @@ interface Config {
   decimals: number;
   ybt: YBTConfig;
   controller: string;
-  principal: TokenNameSymbol;
-  yield: TokenNameSymbol;
+  principal: TokenInfo;
+  yield: TokenInfo;
   pool: PoolConfig;
   amm: AMMConfig;
 }
@@ -112,8 +113,7 @@ async function confirmAndDeploy(contractName:string, directory:string, label:str
 }
 
 async function deployPool(config:Config, deployerPrivateKey:string): Promise<Config> {
-  const provider = ethers.getDefaultProvider();
-  const signer = new ethers.Wallet(deployerPrivateKey).connect(provider);
+  const signer = new ethers.Wallet(deployerPrivateKey).connect(ethers.provider);
 
   await validateYBT(config.ybt, signer);
 
@@ -179,6 +179,10 @@ async function deployPool(config:Config, deployerPrivateKey:string): Promise<Con
 
   config.pool.address = tempusPoolContract.address;
   config.pool.owner = await tempusPoolContract.owner();
+
+  config.principal.address = await tempusPoolContract.principalShare();
+  config.yield.address = await tempusPoolContract.yieldShare();
+
   return config;
 }
 
@@ -187,17 +191,19 @@ async function deployAmm(config:Config, deployerPrivateKey:string): Promise<Conf
   validateRange(config.amm.finalAmplificationFactor, 0, 1000);
   validateRange(config.amm.swapFee, 0, 0.03);
 
+  const maturityTimestamp = Date.parse(config.pool.maturity) / 1000;
+
   const ammConstructorArgs = [
     config.amm.lp.name,
     config.amm.lp.symbol,
-    config.pool.address,
-    config.amm.initialAmplificationFactor,
-    config.amm.finalAmplificationFactor,
-    parseDecimal(config.amm.swapFee, 18)
+    [config.principal.address, config.yield.address],
+    config.amm.initialAmplificationFactor * AMP_PRECISION,
+    config.amm.finalAmplificationFactor * AMP_PRECISION,
+    maturityTimestamp,
+    parseDecimal(config.amm.swapFee, 18),
   ];
 
   const ybtSymbol = config.ybt.symbol;
-  const maturityTimestamp = Date.parse(config.pool.maturity) / 1000;
   // Deploy AMM with a hardcoded 5.5M gas limit because otherwise gas estimation fails sometimes for some reason
   const tempusAmmContract = await confirmAndDeploy(
     "TempusAMM",

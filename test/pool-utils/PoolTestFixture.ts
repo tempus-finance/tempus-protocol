@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { Transaction } from "ethers";
-import { deployments } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { ContractBase, Signer, SignerOrAddress } from "../utils/ContractBase";
 import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../utils/TempusPool";
 import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
@@ -196,14 +196,16 @@ export abstract class PoolTestFixture {
   abstract forceFailNextDepositOrRedeem(): Promise<void>;
 
   /**
-   * Gets the owner, user and user2 for testing
-   */
-  abstract getSigners(): Promise<[Signer,Signer,Signer]>;
-
-  /**
    * Deposit BackingTokens into the UNDERLYING pool and receive YBT
    */
   abstract deposit(user:Signer, amount:number): Promise<void>;
+
+  /**
+   * Gets the owner and users for testing
+   */
+   async getSigners(): Promise<Signer[]> {
+    return ethers.getSigners();
+  }
 
   /**
    * Deposit YieldBearingTokens into TempusPool
@@ -462,7 +464,7 @@ export abstract class PoolTestFixture {
       {
         await deployments.fixture(undefined, { keepExistingDeployments: true, });
         // Note: for fixtures, all contracts must be initialized inside this callback
-        const [owner,user,user2] = await this.getSigners();
+        const [owner, ...users] = await this.getSigners();
         const pool = await newPool(); // calls Aave.create
         const asset = (pool as any).asset;
         const ybt = (pool as any).yieldToken;
@@ -478,7 +480,7 @@ export abstract class PoolTestFixture {
         );
 
         return {
-          signers: { owner:owner, user:user, user2:user2 },
+          signers: { owner, users },
           contracts: { pool:pool, tempus:tempus, amm: amm },
         };
       }));
@@ -489,7 +491,7 @@ export abstract class PoolTestFixture {
     const s = await f.getInitialContractState();
     this.maturityTime = f.maturityTime;
     this.names = f.names;
-    this.signers = [s.signers.owner, s.signers.user, s.signers.user2];
+    this.signers = [s.signers.owner, ...s.signers.users];
 
     this.pool = s.contracts.pool;
     setPool(this.pool);

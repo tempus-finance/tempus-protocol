@@ -44,7 +44,7 @@ Run `yarn run start-local:fork:mainnet`
 # Deploy local pools
 
 In another terminal run `yarn run deploy-local:fork:mainnet`. It may fail due to network error, so please try until it works.
--Once done, it generates 2 cookie configs: AWS and Local.
+- Once done, it generates 2 cookie configs: AWS and Local.
 
 - copy the local value (`javascript:(function() {document.cookie = "TEMPUS_OVERRIDING_CONFIG=....})()`)
 - in Chrome open Bookmarks and then Bookmark Manager
@@ -56,5 +56,5 @@ In another terminal run `yarn run deploy-local:fork:mainnet`. It may fail due to
 # Set MetaMask
 
 - set up MetaMask chain id to `31337` and URL to `http://127.0.0.1:8545/`
-- to get tokens in MetaMask`yarn run deposit-local:fork:mainnet`
+- to get tokens in MetaMask `yarn run deposit-local:fork:mainnet`
 - add tokens to MetaMask if not present

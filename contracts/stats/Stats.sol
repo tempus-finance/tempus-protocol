@@ -66,7 +66,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     }
 
     /// Gets the estimated amount of Principals and Yields after a successful deposit
-    /// @param tempusPool Which tempus tempusPool
+    /// @param tempusPool Tempus Pool instance
     /// @param amount Amount of BackingTokens or YieldBearingTokens that would be deposited
     /// @param isBackingToken If true, @param amount is in BackingTokens, otherwise YieldBearingTokens
     /// @return Amount of Principals (TPS) and Yields (TYS) in Principal/YieldShare decimal precision.
@@ -80,7 +80,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     }
 
     /// Gets the estimated amount of YieldBearingTokens or BackingTokens received when calling `redeemXXX()` functions
-    /// @param tempusPool Which tempus tempusPool
+    /// @param tempusPool Tempus Pool instance
     /// @param principals Amount of Principals (TPS)
     /// @param yields Amount of Yields (TYS)
     /// @param toBackingToken If true, redeem amount is estimated in BackingTokens instead of YieldBearingTokens

@@ -50,6 +50,92 @@ interface ITempusController {
         bool isEarlyRedeem
     );
 
+    /// @dev Error thrown when an unregistered contract is provided to the controller
+    /// @param deniedContract The address of the unregistered contract
+    error UnauthorizedContract(address deniedContract);
+
+    /// @dev Error thrown when an invalid leverage multiplier is provided on deposit
+    /// @param leverageMultiplier The invalid leverage multiplier amount
+    error InvalidLeverageMultiplier(uint256 leverageMultiplier);
+
+    /// @dev Error thrown when the recipient is the zero address
+    error ZeroAddressRecipient();
+
+    /// @dev Error thrown when the swap amount is zero
+    error ZeroSwapAmount();
+
+    /// @dev Error thrown when the maximum spend amount is zero
+    error ZeroMaxSpendAmount();
+
+    /// @dev Error thrown when the yield token amount is zero
+    error ZeroYieldTokenAmount();
+
+    /// @dev Error thrown when the backing token amount is zero
+    error ZeroBackingTokenAmount();
+
+    /// @dev Error thrown when the address of the backing token is the zero address
+    error ZeroAddressBackingToken();
+
+    /// @dev Error thrown when the address of the backing token is not the zero address
+    ///     In the case of Lido which expects deposits in Ether the code expects `backingToken = address(0)`
+    error NonZeroAddressBackingToken();
+
+    /// @dev Error thrown when the Ether value sent does not match the backing token amount provided
+    /// @param ethValue The value sent in Ether
+    /// @param backingTokenAmount The backing token amount provided
+    error EtherValueAndBackingTokenAmountMismatch(uint256 ethValue, uint256 backingTokenAmount);
+
+    /// @dev Error thrown when the principal amount and the yield amount are both zero
+    error ZeroPrincipalAndYieldAmounts();
+
+    /// @dev Error thrown when an increase allowance fails on a token
+    /// @param token The affected token
+    /// @param recipient The allowance recipient
+    /// @param amount The allowance amount
+    error FailedIncreaseAllowance(address token, address recipient, uint256 amount);
+
+    /// @dev Error thrown when an LP tokens transfer fails
+    /// @param sender The transfer sender
+    /// @param recipient The transfer recipient
+    /// @param amount The LP tokens amount
+    error FailedLPTokensTransfer(address sender, address recipient, uint256 amount);
+
+    /// @dev Error thrown when the pool has already matured
+    /// @param tempusPool The address of the pool that has already matured
+    error PoolAlreadyFinalized(address tempusPool);
+
+    /// @dev Error thrown when trying to exit AMM before maturity but pricipal and yield token amounts are not equal
+    /// @param principalTokenAmount The amount of principal tokens
+    /// @param yieldTokenAmount The amount of yield tokens
+    error NotEqualPrincipalAndYieldTokenAmounts(uint256 principalTokenAmount, uint256 yieldTokenAmount);
+
+    /// @dev Error thrown when a principal tokens transfer fails
+    /// @param sender The transfer sender
+    /// @param recipient The transfer recipient
+    /// @param amount The principal tokens amount
+    error FailedPrincipalTokensTransfer(address sender, address recipient, uint256 amount);
+
+    /// @dev Error thrown when a yield tokens transfer fails
+    /// @param sender The transfer sender
+    /// @param recipient The transfer recipient
+    /// @param amount The yield tokens amount
+    error FailedYieldTokensTransfer(address sender, address recipient, uint256 amount);
+
+    /// @dev Error thrown when the yields rate is zero
+    error ZeroYieldsRate();
+
+    /// @dev Error thrown when the maximum slippage is greater than 1e18
+    /// @param maxSlippage The maximum slippage provided
+    error MaxSlippageTooBig(uint256 maxSlippage);
+
+    /// @dev Error thrown when maximum leftover shares are bigger or equal to both principal and yield token amounts
+    /// @param maxLeftoverShares The maximum leftover shares provided
+    error MaxLeftoverSharesTooBig(uint256 maxLeftoverShares);
+
+    /// @dev Error thrown when the Tempus AMM has not been initialized yet
+    /// @param tempusAMM The address of the Tempus AMM
+    error AMMNotInitializedYet(address tempusAMM);
+
     /// @dev Registers a POOL or an AMM as valid or invalid to use with this Controller
     /// @param authorizedContract Contract which will be allowed to be used inside this Controller
     /// @param isValid If true, contract is valid to be used, if false, it's not allowed anymore
@@ -136,12 +222,13 @@ interface ITempusController {
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
+    /// @return Amount of Yield Bearing Tokens that were imbursed as a result of the redemption
     function redeemToYieldBearing(
         ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Redeem TPS+TYS held by msg.sender into Backing Tokens
     /// @notice `recipient` will receive the backing tokens
@@ -150,12 +237,13 @@ interface ITempusController {
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
     /// @param recipient Address of user that will receive yield bearing tokens
+    /// @return Amount of Backing Tokens that were imbursed as a result of the redemption
     function redeemToBacking(
         ITempusPool tempusPool,
         uint256 principalAmount,
         uint256 yieldAmount,
         address recipient
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Withdraws liquidity from TempusAMM and redeems Shares to Yield Bearing or Backing Tokens
     ///      Checks user's balance of principal shares and yield shares
@@ -173,6 +261,8 @@ interface ITempusController {
     /// @param yieldsStaked Amount of staked yields (in TempusAMM) to redeem
     /// @param maxLpTokensToRedeem Maximum amount of LP tokens to spend for staked shares redemption
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
+    /// @return Amount of Yield Bearing Tokens (if `toBackingToken == false`) or
+    ///         Backing Tokens (if `toBackingToken == true`) that were imbursed as a result of the redemption
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -182,7 +272,7 @@ interface ITempusController {
         uint256 yieldsStaked,
         uint256 maxLpTokensToRedeem,
         bool toBackingToken
-    ) external;
+    ) external returns (uint256);
 
     /// @dev Withdraws ALL liquidity from TempusAMM and redeems Shares to Yield Bearing or Backing Tokens
     /// @notice `msg.sender` needs to approve controller for whole balance of LP token
@@ -200,6 +290,8 @@ interface ITempusController {
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
     /// @param deadline A timestamp by which, if a swap is necessary, the transaction must be completed,
     ///    otherwise it would revert
+    /// @return Amount of Yield Bearing Tokens (if `toBackingToken == false`) or
+    ///         Backing Tokens (if `toBackingToken == true`) that were imbursed as a result of the redemption
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -213,5 +305,5 @@ interface ITempusController {
         uint256 maxSlippage,
         bool toBackingToken,
         uint256 deadline
-    ) external;
+    ) external returns (uint256);
 }

@@ -158,8 +158,19 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         emit Join(amountToken0, amountToken1, lpTokensOut);
     }
 
-    /// Removing liquidity
+    function compositionBalanceOf(address account)
+        external
+        view
+        override
+        returns (uint256 token0Balance, uint256 token1Balance)
+    {
+        uint256 supply = totalSupply();
+        uint256 accountBalance = balanceOf(account);
+        token0Balance = (accountBalance * token0.balanceOf(address(this))) / supply;
+        token1Balance = (accountBalance * token1.balanceOf(address(this))) / supply;
+    }
 
+    /// Removing liquidity
     function exitGivenLpIn(
         uint256 lpTokensIn,
         uint256 minAmountOut0,

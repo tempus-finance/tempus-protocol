@@ -13,3 +13,6 @@ mythxOutput.json
 deposit.local.config.ts
 .history
 .DS_Store
+#echidna folders
+crytic-export
+echidna-corpus

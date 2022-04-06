@@ -49,7 +49,7 @@
   },
   "scripts": {
     "build": "npx hardhat compile",
-    "clean": "rm -rf ./cache && rm -rf ./artifacts",
+    "clean": "rm -rf ./cache && rm -rf ./artifacts crytic-export echidna-corpus",
     "test": "yarn build && bash run_tests.sh",
     "test:yearn": "yarn build && bash run_tests.sh Yearn",
     "test:integration:lido": "yarn build && bash run_tests.sh integration-suite Lido",
@@ -60,6 +60,7 @@
     "lint": "prettier --write \"contracts/**/*.sol\"",
     "lint-check": "prettier --check \"contracts/**/*.sol\"",
     "start-local": "npx hardhat node",
+    "start-local:fork:fantom": "cross-env HARDHAT_FORK=fantom npx hardhat node",
     "start-local:fork:mainnet": "cross-env HARDHAT_FORK=mainnet npx hardhat node",
     "deploy-local:fork:mainnet": "cross-env HARDHAT_FORK=mainnet npx hardhat run scripts/deploy.local.fork.ts --network localhost",
     "deposit-local:fork:mainnet": "cross-env HARDHAT_FORK=mainnet npx hardhat run scripts/deposit.local.fork.ts --network localhost",
@@ -67,6 +68,7 @@
     "deploy-local": "npx hardhat run scripts/deploy.local.ts --network localhost",
     "deploy-ci": "npx hardhat run scripts/deploy.local.ts",
     "deploy:controller": "npx hardhat run scripts/deploy.controller.ts",
+    "deploy:pool:config": "npx hardhat run scripts/deploy.pool.config.ts",
     "deploy:stats": "npx hardhat run scripts/deploy.stats.ts",
     "deploy:vault": "npx hardhat run scripts/deploy.vault.ts",
     "verify:pool:lido": "cross-env TEMPUS_POOL_CONTRACT=LidoTempusPool npx hardhat run scripts/verify.pool.ts",
@@ -77,7 +79,11 @@
     "mythx-amm": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/amm/TempusAMM.sol",
     "mythx-pool": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/pools/AaveTempusPool.sol contracts/pools/CompoundTempusPool.sol contracts/pools/LidoTempusPool.sol",
     "mythx-misc": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/stats/Stats.sol contracts/token/TempusToken.sol contracts/token/vesting/ERC20Vesting.sol",
-    "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither ."
+    "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither .",
+    "echidna-test:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --format text",
+    "echidna-test:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --format text",
+    "echidna-test-assertion:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --test-mode assertion --format text",
+    "echidna-test-assertion:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --test-mode assertion --format text"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.1.0"

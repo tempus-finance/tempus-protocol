@@ -9,7 +9,7 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
   {
     await pool.createDefault();
     const [owner] = pool.signers;
-    (await pool.expectDepositBT(owner, 0)).to.be.equal('backingTokenAmount is 0');
+    (await pool.expectDepositBT(owner, 0)).to.be.equal(':ZeroBackingTokenAmount');
   });
 
   it("Should revert on bad recipient (address 0) with BT", async () =>
@@ -17,7 +17,7 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
     await pool.createDefault();
     const [owner] = pool.signers;
     await pool.asset.approve(owner, pool.tempus.controller.address, 100);
-    (await pool.expectDepositBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal('recipient can not be 0x0');
+    (await pool.expectDepositBT(owner, 100, '0x0000000000000000000000000000000000000000')).to.be.equal(':ZeroAddressRecipient');
   });
 
   it("Should revert on Eth transfer as BT when not accepted", async () =>
@@ -26,7 +26,7 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
       await pool.createDefault();
       const [owner] = pool.signers;
 
-      (await pool.expectDepositBT(owner, 100, owner, /*ethValue*/ 1)).to.equal("given TempusPool's Backing Token is not ETH");
+      (await pool.expectDepositBT(owner, 100, owner, /*ethValue*/ 1)).to.equal(":NonZeroAddressBackingToken");
     }
   });
 
@@ -39,7 +39,7 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
       // These two amounts are expected to be equal, but in this case they are deliberately different.
       const depositAmount = 100;
       const ethValue = 1;
-      (await pool.expectDepositBT(owner, depositAmount, owner, ethValue)).to.equal("ETH value does not match provided amount");
+      (await pool.expectDepositBT(owner, depositAmount, owner, ethValue)).to.equal(":EtherValueAndBackingTokenAmountMismatch");
     }
   });
 
@@ -52,7 +52,7 @@ describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
       // These two amounts are expected to be equal, but in this case they are deliberately different.
       const depositAmount = 100;
       const ethValue = 0;
-      (await pool.expectDepositBT(owner, depositAmount, owner, ethValue)).to.equal("Pool requires ETH deposits");
+      (await pool.expectDepositBT(owner, depositAmount, owner, ethValue)).to.equal(":ZeroAddressBackingToken");
     }
   });
 
