@@ -9,7 +9,6 @@ import "./amm/interfaces/ITempusAMM.sol";
 import "./ITempusController.sol";
 import "./ITempusPool.sol";
 import "./math/Fixed256xVar.sol";
-import "./utils/AMMBalancesHelper.sol";
 import "./utils/UntrustedERC20.sol";
 import "./utils/Ownable.sol";
 import "./utils/Versioned.sol";
@@ -19,7 +18,6 @@ import "./utils/Versioned.sol";
 contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versioned {
     using Fixed256xVar for uint256;
     using UntrustedERC20 for IERC20;
-    using AMMBalancesHelper for uint256[];
 
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
@@ -273,17 +271,9 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 tokenAmount,
         bool isBackingToken
     ) private {
-        (uint256 ammBalance0, uint256 ammBalance1) = getAMMBalancesAndEnsureInitialized(tempusAMM);
-
         uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
 
-        (uint256 principals, uint256 yields) = _provideLiquidity(
-            tempusAMM,
-            ammBalance0,
-            ammBalance1,
-            mintedShares,
-            msg.sender
-        );
+        (uint256 principals, uint256 yields) = _provideLiquidity(tempusAMM, mintedShares, msg.sender);
 
         // Send remaining Shares to user
         if (mintedShares > principals) {
@@ -296,12 +286,10 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
     function _provideLiquidity(
         ITempusAMM tempusAMM,
-        uint256 ammBalance0,
-        uint256 ammBalance1,
         uint256 sharesAmount,
         address recipient
     ) private returns (uint256 ammLPAmount0, uint256 ammLPAmount1) {
-        (ammLPAmount0, ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(ammBalance0, ammBalance1, sharesAmount);
+        (ammLPAmount0, ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(sharesAmount);
 
         if (!ERC20(address(tempusAMM.token0())).increaseAllowance(address(tempusAMM), ammLPAmount0)) {
             revert FailedIncreaseAllowance(address(tempusAMM.token0()), address(tempusAMM), ammLPAmount0);
@@ -590,18 +578,6 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             return _redeemToBacking(tempusPool, address(this), principals, yields, msg.sender);
         } else {
             return _redeemToYieldBearing(tempusPool, address(this), principals, yields, msg.sender);
-        }
-    }
-
-    function getAMMBalancesAndEnsureInitialized(ITempusAMM tempusAMM)
-        private
-        view
-        returns (uint256 principals, uint256 yields)
-    {
-        principals = tempusAMM.token0().balanceOf(address(tempusAMM));
-        yields = tempusAMM.token1().balanceOf(address(tempusAMM));
-        if (principals == 0 || yields == 0) {
-            revert AMMNotInitializedYet(address(tempusAMM));
         }
     }
 }

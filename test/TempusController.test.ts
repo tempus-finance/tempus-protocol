@@ -131,13 +131,15 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("verifies depositing YBT and providing liquidity to a non initialized AMM reverts", async () =>
     {
       const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, false);
-      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
+      (await expectRevert(invalidAction)).to.equal("not initialised");
     });
 
-    it("verifies depositing ERC20 BT and providing liquidity to a non initialized AMM reverts", async () =>
+    it("verifies depositing (ERC20) BT and providing liquidity to a non initialized AMM reverts", async () =>
     {
-      const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, true);
-      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
+      const amount = 123;
+      const ethValue = testPool.type == PoolType.Lido ? amount : 0;
+      const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, amount, true, ethValue);
+      (await expectRevert(invalidAction)).to.equal("not initialised");
     });
 
     it("verifies depositing 0 YBT and providing liquidity reverts", async () =>

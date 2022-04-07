@@ -451,6 +451,24 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 );
     }
 
+    function getTokensInGivenMaximum(uint256 maxAmount)
+        external
+        view
+        override
+        returns (uint256 token0Amount, uint256 token1Amount)
+    {
+        require(totalSupply() > 0, "not initialised");
+        uint256 token0Balance = selfBalance0();
+        uint256 token1Balance = selfBalance1();
+
+        (uint256 token0Scale, uint256 token1Scale) = (token0Balance > token1Balance)
+            ? (Fixed256x18.ONE, token1Balance.divDown(token0Balance))
+            : (token0Balance.divDown(token1Balance), Fixed256x18.ONE);
+
+        token0Amount = maxAmount.mulDown(token0Scale);
+        token1Amount = maxAmount.mulDown(token1Scale);
+    }
+
     // Amplification
 
     function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) public onlyOwner {
