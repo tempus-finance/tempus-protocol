@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 pragma solidity ^0.8.0;
 
-library FixedPoint {
+library Fixed256x18 {
     uint256 internal constant ONE = 1e18; // 18 decimal places
 
     function mulDown(uint256 a, uint256 b) internal pure returns (uint256) {

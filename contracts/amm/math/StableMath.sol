@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 import "./Math.sol";
-import "./FixedPoint.sol";
+import "../../math/Fixed256x18.sol";
 
 library StableMath {
-    using FixedPoint for uint256;
+    using Fixed256x18 for uint256;
 
     uint256 internal constant _MIN_AMP = 1;
     uint256 internal constant _MAX_AMP = 5000;
@@ -163,12 +163,12 @@ library StableMath {
             uint256 invariantRatioWithFees = balanceRatiosWithFee0.mulDown(balance0.divDown(balance0 + balance1)) +
                 balanceRatiosWithFee1.mulDown(balance1.divDown(balance0 + balance1));
 
-            uint256 oneMinusFee = FixedPoint.ONE - swapFeePercentage;
+            uint256 oneMinusFee = Fixed256x18.ONE - swapFeePercentage;
 
             // Calculates new amounts in, taking into account the fee on the percentage excess
             // Check if the balance ratio is greater than the ideal ratio to charge fees or not
             if (balanceRatiosWithFee0 > invariantRatioWithFees) {
-                uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithFees - FixedPoint.ONE);
+                uint256 nonTaxableAmount = balance0.mulDown(invariantRatioWithFees - Fixed256x18.ONE);
                 uint256 taxableAmount = amountIn0 - nonTaxableAmount;
                 newBalance0 = balance0 + (nonTaxableAmount + taxableAmount.mulDown(oneMinusFee));
             } else {
@@ -176,7 +176,7 @@ library StableMath {
             }
 
             if (balanceRatiosWithFee1 > invariantRatioWithFees) {
-                uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithFees - FixedPoint.ONE);
+                uint256 nonTaxableAmount = balance1.mulDown(invariantRatioWithFees - Fixed256x18.ONE);
                 uint256 taxableAmount = amountIn1 - nonTaxableAmount;
                 newBalance1 = balance1 + (nonTaxableAmount + taxableAmount.mulDown(oneMinusFee));
             } else {
@@ -190,7 +190,7 @@ library StableMath {
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
         // If the invariant didn't increase for any reason, this will revert with underflow
-        return bptTotalSupply.mulDown(invariantRatio - FixedPoint.ONE);
+        return bptTotalSupply.mulDown(invariantRatio - Fixed256x18.ONE);
     }
 
     /*
@@ -219,7 +219,7 @@ library StableMath {
             uint256 invariantRatioWithoutFees = balanceRatiosWithoutFee0.mulUp(balance0.divUp(balance0 + balance1)) +
                 balanceRatiosWithoutFee1.mulUp(balance1.divUp(balance0 + balance1));
 
-            uint256 oneMinusFee = FixedPoint.ONE - swapFeePercentage;
+            uint256 oneMinusFee = Fixed256x18.ONE - swapFeePercentage;
 
             // Calculates new amounts in, taking into account the fee on the percentage excess
             // Swap fees are typically charged on 'token in', but there is no 'token in' here, so we apply it to
@@ -281,7 +281,7 @@ library StableMath {
         uint256 nonTaxableAmount = amountOutWithoutFee - taxableAmount;
 
         // No need to use checked arithmetic for the swap fee, it is guaranteed to be lower than 50%
-        return nonTaxableAmount + taxableAmount.mulDown(FixedPoint.ONE - swapFeePercentage);
+        return nonTaxableAmount + taxableAmount.mulDown(Fixed256x18.ONE - swapFeePercentage);
     }
 
     function tokensOutFromBptIn(
