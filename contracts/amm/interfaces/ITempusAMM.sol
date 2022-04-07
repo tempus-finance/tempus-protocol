@@ -103,6 +103,13 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
         uint256 deadline
     ) external;
 
+    /// @dev Returns the balances the given account controlers in terms of token0/token1
+    /// via the LP tokens they have.
+    /// @param account The account to check the balance of
+    /// @return token0Balance Amount of Token0 corresponding to the LP tokens
+    /// @return token1Balance Amount of Token1 corresponding to the LP tokens
+    function compositionBalanceOf(address account) external view returns (uint256 token0Balance, uint256 token1Balance);
+
     /// Calculates the expected returned swap amount
     /// @param amount The given input amount of tokens
     /// @param tokenIn Specifies which token [token0 or token1] that @param amount refers to
@@ -144,13 +151,6 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param token1AmountIn amount of token1 to be added to the pool
     /// @return amount of LP tokens that could be received
     function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn) external view returns (uint256);
-
-    /// @dev Returns the balances the given account controlers in terms of token0/token1
-    /// via the LP tokens they have.
-    /// @param account The account to check the balance of
-    /// @return token0Balance Amount of Token0 corresponding to the LP tokens
-    /// @return token1Balance Amount of Token1 corresponding to the LP tokens
-    function compositionBalanceOf(address account) external view returns (uint256 token0Balance, uint256 token1Balance);
 
     /// Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
     /// `endTime` is reached, when it will be `endValue`

@@ -95,7 +95,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         }
     }
 
-    /// Adding liquidity
+    // Adding liquidity
 
     function init(uint256 amountToken0, uint256 amountToken1) external override {
         require(amountToken0 != 0 && amountToken1 != 0, "token amounts can't be 0");
@@ -155,19 +155,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         emit Join(amountToken0, amountToken1, lpTokensOut);
     }
 
-    function compositionBalanceOf(address account)
-        external
-        view
-        override
-        returns (uint256 token0Balance, uint256 token1Balance)
-    {
-        uint256 supply = totalSupply();
-        uint256 accountBalance = balanceOf(account);
-        token0Balance = (accountBalance * token0.balanceOf(address(this))) / supply;
-        token1Balance = (accountBalance * token1.balanceOf(address(this))) / supply;
-    }
+    // Removing liquidity
 
-    /// Removing liquidity
     function exitGivenLpIn(
         uint256 lpTokensIn,
         uint256 minAmountOut0,
@@ -223,7 +212,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         emit Exit(lpTokensIn, token0AmountOut, token1AmountOut);
     }
 
-    /// Swaps
+    // Swaps
 
     function swap(
         IPoolShare tokenIn,
@@ -298,7 +287,19 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         return invariant.divDown(totalSupply());
     }
 
-    /// Query functions
+    // Query functions
+
+    function compositionBalanceOf(address account)
+        external
+        view
+        override
+        returns (uint256 token0Balance, uint256 token1Balance)
+    {
+        uint256 supply = totalSupply();
+        uint256 accountBalance = balanceOf(account);
+        token0Balance = (accountBalance * token0.balanceOf(address(this))) / supply;
+        token1Balance = (accountBalance * token1.balanceOf(address(this))) / supply;
+    }
 
     function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view override returns (uint256) {
         require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
@@ -578,7 +579,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         }
     }
 
-    /// Helpers
+    // Helpers
 
     function selfBalance0() private view returns (uint256) {
         return token0.balanceOf(address(this));
@@ -631,7 +632,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         return amount - feeAmount;
     }
 
-    /// Pausability
+    // Pausability
 
     function pause() external override onlyOwner {
         _pause();
