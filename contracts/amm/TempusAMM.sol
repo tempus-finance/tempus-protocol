@@ -297,8 +297,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     {
         uint256 supply = totalSupply();
         uint256 accountBalance = balanceOf(account);
-        token0Balance = (accountBalance * token0.balanceOf(address(this))) / supply;
-        token1Balance = (accountBalance * token1.balanceOf(address(this))) / supply;
+        token0Balance = (accountBalance * selfBalance0()) / supply;
+        token1Balance = (accountBalance * selfBalance1()) / supply;
     }
 
     function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view override returns (uint256) {
@@ -412,8 +412,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
 
         (token0Out, token1Out) = StableMath.tokensOutFromBptIn(
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this)),
+            selfBalance0(),
+            selfBalance1(),
             lpTokensIn,
             totalSupply()
         );

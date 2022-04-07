@@ -103,7 +103,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
         uint256 deadline
     ) external;
 
-    /// @dev Returns the balances the given account controlers in terms of token0/token1
+    /// @dev Returns the balances the given account controls in terms of token0/token1
     /// via the LP tokens they have.
     /// @param account The account to check the balance of
     /// @return token0Balance Amount of Token0 corresponding to the LP tokens
