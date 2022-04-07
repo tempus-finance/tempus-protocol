@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity >=0.8.0;
+pragma solidity 0.8.10;
+
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "../ITempusPool.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// Interface of Tokens representing the principal or yield shares of a pool.
 interface IPoolShare is IERC20Metadata {
