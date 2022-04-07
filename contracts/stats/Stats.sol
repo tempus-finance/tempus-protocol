@@ -164,10 +164,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         uint256 mintedShares = estimatedMintedShares(tempusPool, amount, isBackingToken);
         yields = mintedShares.mulfV(leverage, 1e18);
 
-        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(
-            yields - mintedShares,
-            address(tempusPool.principalShare())
-        );
+        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(yields - mintedShares, tempusPool.principalShare());
         assert(mintedShares > expectedIn);
         principals = mintedShares - expectedIn;
     }

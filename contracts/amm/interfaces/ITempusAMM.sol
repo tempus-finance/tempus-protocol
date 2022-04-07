@@ -120,7 +120,7 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param amountOut The given amount out of tokens
     /// @param tokenIn Specifies which token we are swapping
     /// @return The expected returned amount of tokenIn to be swapped
-    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view returns (uint256);
+    function getExpectedInGivenOut(uint256 amountOut, IPoolShare tokenIn) external view returns (uint256);
 
     /// @dev Returns amount that user needs to swap to end up with almost the same amounts of Token0 and Token1
     /// @param token0Amount Desired token0 amount after swap()

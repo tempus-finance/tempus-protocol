@@ -319,11 +319,10 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 .divDown(scalingFactor);
     }
 
-    function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view override returns (uint256) {
-        IPoolShare shareIn = IPoolShare(tokenIn);
+    function getExpectedInGivenOut(uint256 amountOut, IPoolShare tokenIn) external view override returns (uint256) {
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        require(shareIn == token0 || shareIn == token1, "invalid tokenIn");
-        IPoolShare tokenOut = (shareIn == token0) ? token1 : token0;
+        require(tokenIn == token0 || tokenIn == token1, "invalid tokenIn");
+        IPoolShare tokenOut = (tokenIn == token0) ? token1 : token0;
 
         uint256 rateAdjustedAmountOut = amountOut.mulfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
 
@@ -334,7 +333,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             tokenOut == token0,
             rateAdjustedAmountOut
         );
-        amountIn = amountIn.divfV(shareIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
+        amountIn = amountIn.divfV(tokenIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
         return addSwapFeeAmount(amountIn);
     }
 
