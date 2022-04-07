@@ -43,6 +43,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     uint256 private constant MIN_AMPLIFICATION = 1000;
     uint256 private constant MAX_AMPLIFICATION = 5000000;
 
+    // Maximum swap fee is set to 5%
+    uint256 private constant MAX_SWAP_FEE_PERCENTAGE = 0.05e18;
+
     // fixed point precision of TempusShare tokens
     uint256 private immutable TEMPUS_SHARE_PRECISION;
 
@@ -75,8 +78,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationEndTime,
         uint256 swapFeePerc
     ) ERC20(name, symbol) {
-        require(amplificationStartValue >= MIN_AMPLIFICATION, "min amp");
-        require(amplificationStartValue <= MAX_AMPLIFICATION, "max amp");
+        require(amplificationStartValue >= MIN_AMPLIFICATION, "min start amp");
+        require(amplificationStartValue <= MAX_AMPLIFICATION, "max start amp");
+        require(swapFeePerc <= MAX_SWAP_FEE_PERCENTAGE, "max swap fee");
 
         swapFeePercentage = swapFeePerc;
 
@@ -90,7 +94,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         _setAmplificationData(amplificationStartValue);
 
         if (amplificationStartValue != amplificationEndValue) {
-            require(amplificationStartValue < amplificationEndValue, "min amp");
+            require(amplificationStartValue < amplificationEndValue, "invalid amp");
             startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
@@ -450,8 +454,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // Amplification
 
     function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) public onlyOwner {
-        require(endValue >= MIN_AMPLIFICATION, "min amp");
-        require(endValue <= MAX_AMPLIFICATION, "max amp");
+        require(endValue >= MIN_AMPLIFICATION, "min end amp");
+        require(endValue <= MAX_AMPLIFICATION, "max end amp");
 
         uint256 duration = endTime - block.timestamp;
         require(duration >= MIN_UPDATE_TIME, "amp endtime too close");
