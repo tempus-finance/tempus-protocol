@@ -108,8 +108,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-        uint256 lpTokensOut = StableMath.invariant(currentAmp, amountIn0, amountIn1, true);
+        uint256 lpTokensOut = StableMath.invariant(_getAmplificationValue(), amountIn0, amountIn1, true);
         assert(lpTokensOut > 0);
 
         token0.transferFrom(msg.sender, address(this), amountToken0);
@@ -137,10 +136,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-
         uint256 lpTokensOut = StableMath.bptOutGivenTokensIn(
-            currentAmp,
+            _getAmplificationValue(),
             balance0,
             balance1,
             amountIn0,
@@ -208,9 +205,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        (uint256 currentAmp, ) = _getAmplificationParameter();
         uint256 lpTokensIn = StableMath.bptInGivenTokensOut(
-            currentAmp,
+            _getAmplificationValue(),
             balance0,
             balance1,
             amountOut0,
@@ -243,7 +239,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
-        (uint256 currentAmp, ) = _getAmplificationParameter();
 
         (uint256 amountIn, uint256 amountOut) = (swapType == SwapType.GIVEN_IN)
             ? (amount, uint256(0))
@@ -256,7 +251,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
 
             uint256 scaledAmountOut = StableMath.outGivenIn(
-                currentAmp,
+                _getAmplificationValue(),
                 balance0,
                 balance1,
                 firstIn,
@@ -277,7 +272,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
 
             uint256 scaledAmountIn = StableMath.inGivenOut(
-                currentAmp,
+                _getAmplificationValue(),
                 balance0,
                 balance1,
                 !firstIn,
@@ -297,13 +292,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getRate() external view override returns (uint256) {
-        // When calculating the current BPT rate, we may not have paid the protocol fees, therefore
-        // the invariant should be smaller than its current value. Then, we round down overall.
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
 
-        uint256 invariant = StableMath.invariant(currentAmp, balance0, balance1, false);
+        uint256 invariant = StableMath.invariant(_getAmplificationValue(), balance0, balance1, false);
         return invariant.divDown(totalSupply());
     }
 
@@ -313,7 +304,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        (uint256 currentAmp, ) = _getAmplificationParameter();
         (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
 
         uint256 scaledAmount = subtractSwapFeeAmount(amount).mulDown(scalingFactor).mulfV(
@@ -323,7 +313,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         return
             StableMath
-                .outGivenIn(currentAmp, balance0, balance1, firstIn, scaledAmount)
+                .outGivenIn(_getAmplificationValue(), balance0, balance1, firstIn, scaledAmount)
                 .divfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION)
                 .divDown(scalingFactor);
     }
@@ -331,14 +321,13 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     function getExpectedInGivenOut(uint256 amountOut, address tokenIn) external view override returns (uint256) {
         IPoolShare shareIn = IPoolShare(tokenIn);
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        (uint256 currentAmp, ) = _getAmplificationParameter();
         require(shareIn == token0 || shareIn == token1, "invalid tokenIn");
         IPoolShare tokenOut = (shareIn == token0) ? token1 : token0;
 
         uint256 rateAdjustedAmountOut = amountOut.mulfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
 
         uint256 amountIn = StableMath.inGivenOut(
-            currentAmp,
+            _getAmplificationValue(),
             balance0,
             balance1,
             tokenOut == token0,
@@ -400,9 +389,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        (uint256 currentAmp, ) = _getAmplificationParameter();
         lpTokens = StableMath.bptInGivenTokensOut(
-            currentAmp,
+            _getAmplificationValue(),
             balance0,
             balance1,
             token0Out,
@@ -445,13 +433,11 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        (uint256 currentAmp, ) = _getAmplificationParameter();
-
         return
             (balance0 == 0)
-                ? StableMath.invariant(currentAmp, token0AmountIn, token1AmountIn, true)
+                ? StableMath.invariant(_getAmplificationValue(), token0AmountIn, token1AmountIn, true)
                 : StableMath.bptOutGivenTokensIn(
-                    currentAmp,
+                    _getAmplificationValue(),
                     balance0,
                     balance1,
                     token0AmountIn,
@@ -509,10 +495,23 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         (uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime) = getAmplificationData();
 
         // Note that block.timestamp >= startTime, since startTime is set to the current time when an update starts
+        isUpdating = block.timestamp < endTime;
 
+        value = _calculateAmplification(startValue, endValue, startTime, endTime);
+    }
+
+    function _getAmplificationValue() private view returns (uint256) {
+        (uint256 startValue, uint256 endValue, uint256 startTime, uint256 endTime) = getAmplificationData();
+        return _calculateAmplification(startValue, endValue, startTime, endTime);
+    }
+
+    function _calculateAmplification(
+        uint256 startValue,
+        uint256 endValue,
+        uint256 startTime,
+        uint256 endTime
+    ) private view returns (uint256) {
         if (block.timestamp < endTime) {
-            isUpdating = true;
-
             // We can skip checked arithmetic as:
             //  - block.timestamp is always larger or equal to startTime
             //  - endTime is always larger than startTime
@@ -521,20 +520,15 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             // This also means that the following computation will never revert nor yield invalid results.
             unchecked {
                 if (endValue > startValue) {
-                    value =
-                        startValue +
-                        ((endValue - startValue) * (block.timestamp - startTime)) /
-                        (endTime - startTime);
+                    return
+                        startValue + ((endValue - startValue) * (block.timestamp - startTime)) / (endTime - startTime);
                 } else {
-                    value =
-                        startValue -
-                        ((startValue - endValue) * (block.timestamp - startTime)) /
-                        (endTime - startTime);
+                    return
+                        startValue - ((startValue - endValue) * (block.timestamp - startTime)) / (endTime - startTime);
                 }
             }
         } else {
-            isUpdating = false;
-            value = endValue;
+            return endValue;
         }
     }
 
