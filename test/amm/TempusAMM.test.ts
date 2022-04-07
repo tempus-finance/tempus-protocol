@@ -1,14 +1,16 @@
 import { expect } from "chai";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, Contract, ethers } from "ethers";
 import { NumberOrString } from "../utils/Decimal";
 import { Signer } from "../utils/ContractBase";
 import { TempusPool } from "../utils/TempusPool";
-import { evmMine, evmSetAutomine, expectRevert, increaseTime } from "../utils/Utils";
+import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
 import { TempusAMMJoinKind } from "../utils/TempusAMM";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
+import { TempusAMM } from "../utils/TempusAMM";
 import { PoolShare, ShareKind } from "../utils/PoolShare";
+import { ContractBase } from "../utils/ContractBase";
 
 interface SwapTestRun {
   amplification:number;
@@ -85,6 +87,62 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     expect(+tokenIn.fromBigNum(preSwapTokenInBalance.sub(postSwapTokenInBalance))).to.be.within(+swapTest.swapAmountIn * 0.97, +swapTest.swapAmountIn * 1.03);
     expect(+tokenIn.fromBigNum(postSwapTokenOutBalance.sub(preSwapTokenOutBalance))).to.be.within(+swapTest.swapAmountOut * 0.97, +swapTest.swapAmountOut * 1.03);
   }
+
+  it("Revert with checks in constructor", async () => {
+    (await expectRevert(testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:SWAP_FEE_PERC,
+      ammAmplifyStart: 0.5,
+      ammAmplifyEnd: 10
+    }))).to.equal("min start amp");
+
+    (await expectRevert(testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:SWAP_FEE_PERC,
+      ammAmplifyStart: 1000000,
+      ammAmplifyEnd: 10
+    }))).to.equal("max start amp");
+
+    (await expectRevert(testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:SWAP_FEE_PERC,
+      ammAmplifyStart: 5,
+      ammAmplifyEnd: 1000000
+    }))).to.equal("max end amp");
+
+    (await expectRevert(testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:SWAP_FEE_PERC,
+      ammAmplifyStart: 95,
+      ammAmplifyEnd: 5
+    }))).to.equal("invalid amp");
+
+    (await expectRevert(testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:0.051,
+      ammAmplifyStart: 5,
+      ammAmplifyEnd: 95
+    }))).to.equal("max swap fee");
+
+    tempusPool = await testFixture.createWithAMM({
+      initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
+      ammSwapFee:SWAP_FEE_PERC,
+      ammAmplifyStart: 5,
+      ammAmplifyEnd: 95
+    });
+
+    (await expectRevert(ContractBase.deployContract(
+      "TempusAMM",
+      "Tempus LP token", 
+      "LP",
+      tempusPool.principalShare.address, 
+      (await ContractBase.deployContract("PrincipalShare", tempusPool.address, "name", "symbol", tempusPool.principalShare.decimals + 1)).address,
+      5000,
+      95000,
+      await blockTimestamp() + ONE_MONTH,
+      0
+    ))).to.equal("token0 != token1 decimals");
+  });
 
   it("[getExpectedReturnGivenIn] verifies the expected amount is equivilant to actual amount returned from swapping (TYS to TPS)", async () => {
     const inputAmount = 1;
@@ -214,11 +272,11 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     // min amp 
     let invalidAmpUpdate = tempusAMM.startAmplificationUpdate(0, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("min amp");
+    (await expectRevert(invalidAmpUpdate)).to.equal("min end amp");
 
     // max amp 
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(1000000, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("max amp");
+    (await expectRevert(invalidAmpUpdate)).to.equal("max end amp");
 
     // min duration
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(65, 1);
