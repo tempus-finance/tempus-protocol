@@ -273,23 +273,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     ) private {
         uint256 mintedShares = _deposit(tempusPool, tokenAmount, isBackingToken);
 
-        (uint256 principals, uint256 yields) = _provideLiquidity(tempusAMM, mintedShares, msg.sender);
-
-        // Send remaining Shares to user
-        if (mintedShares > principals) {
-            tempusAMM.token0().transfer(msg.sender, mintedShares - principals);
-        }
-        if (mintedShares > yields) {
-            tempusAMM.token1().transfer(msg.sender, mintedShares - yields);
-        }
-    }
-
-    function _provideLiquidity(
-        ITempusAMM tempusAMM,
-        uint256 sharesAmount,
-        address recipient
-    ) private returns (uint256 ammLPAmount0, uint256 ammLPAmount1) {
-        (ammLPAmount0, ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(sharesAmount);
+        (uint256 ammLPAmount0, uint256 ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(mintedShares);
 
         if (!ERC20(address(tempusAMM.token0())).increaseAllowance(address(tempusAMM), ammLPAmount0)) {
             revert FailedIncreaseAllowance(address(tempusAMM.token0()), address(tempusAMM), ammLPAmount0);
@@ -300,7 +284,15 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         // There is no internal swap as we provide liquidity in the same ratio like in amm
         // So we set minimum lp tokens out to 0
-        tempusAMM.join(ammLPAmount0, ammLPAmount1, 0, recipient);
+        tempusAMM.join(ammLPAmount0, ammLPAmount1, 0, msg.sender);
+
+        // Send remaining Shares to user
+        if (mintedShares > ammLPAmount0) {
+            tempusAMM.token0().transfer(msg.sender, mintedShares - ammLPAmount0);
+        }
+        if (mintedShares > ammLPAmount1) {
+            tempusAMM.token1().transfer(msg.sender, mintedShares - ammLPAmount1);
+        }
     }
 
     function _deposit(
