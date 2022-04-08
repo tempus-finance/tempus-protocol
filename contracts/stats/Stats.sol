@@ -8,12 +8,10 @@ import "../ITempusPool.sol";
 import "../math/Fixed256xVar.sol";
 import "../token/PoolShare.sol";
 import "../amm/interfaces/ITempusAMM.sol";
-import "../utils/AMMBalancesHelper.sol";
 import "../utils/Versioned.sol";
 
 contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     using Fixed256xVar for uint256;
-    using AMMBalancesHelper for uint256[];
 
     constructor() Versioned(2, 0, 0) {}
 
@@ -117,16 +115,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         uint256 shares = estimatedMintedShares(tempusPool, amount, isBackingToken);
-
-        uint256 ammBalance0 = tempusAMM.token0().balanceOf(address(tempusAMM));
-        uint256 ammBalance1 = tempusAMM.token1().balanceOf(address(tempusAMM));
-
-        (uint256 ammLPAmount0, uint256 ammLPAmount1) = AMMBalancesHelper.getLPSharesAmounts(
-            ammBalance0,
-            ammBalance1,
-            shares
-        );
-
+        (uint256 ammLPAmount0, uint256 ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(shares);
         lpTokens = tempusAMM.getLPTokensOutForTokensIn(ammLPAmount0, ammLPAmount1);
         (principals, yields) = (shares - ammLPAmount0, shares - ammLPAmount1);
     }

@@ -132,10 +132,6 @@ interface ITempusController {
     /// @param maxLeftoverShares The maximum leftover shares provided
     error MaxLeftoverSharesTooBig(uint256 maxLeftoverShares);
 
-    /// @dev Error thrown when the Tempus AMM has not been initialized yet
-    /// @param tempusAMM The address of the Tempus AMM
-    error AMMNotInitializedYet(address tempusAMM);
-
     /// @dev Registers a POOL or an AMM as valid or invalid to use with this Controller
     /// @param authorizedContract Contract which will be allowed to be used inside this Controller
     /// @param isValid If true, contract is valid to be used, if false, it's not allowed anymore

@@ -152,6 +152,15 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @return amount of LP tokens that could be received
     function getLPTokensOutForTokensIn(uint256 token0AmountIn, uint256 token1AmountIn) external view returns (uint256);
 
+    /// @dev queries the amount of tokens to deposit (out of a maximum) to maintain the balance of AMM
+    /// @param maxAmount maximum amount of tokens to deposit
+    /// @return token0Amount actual amount of token0 to deposit
+    /// @return token1Amount actual amount of token1 to deposit
+    function getTokensInGivenMaximum(uint256 maxAmount)
+        external
+        view
+        returns (uint256 token0Amount, uint256 token1Amount);
+
     /// Begins changing the amplification parameter to `endValue` over time. The value will change linearly until
     /// `endTime` is reached, when it will be `endValue`
     /// @param endValue end value of amplification parameter
