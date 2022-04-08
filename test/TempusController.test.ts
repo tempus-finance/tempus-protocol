@@ -11,7 +11,7 @@ import Decimal from "decimal.js";
 import { TempusPoolAMM } from "./utils/TempusPoolAMM";
 import { NumberOrString } from "./utils/Decimal";
 
-const SWAP_LIMIT_ERROR_MESSAGE = "BAL#507";
+const SWAP_LIMIT_ERROR_MESSAGE = "slippage";
 
 describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 {
@@ -32,8 +32,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
   async function getAMMBalancesRatio(): Promise<BigNumber>
   {
-    const principals = await pool.principalShare.balanceOf(amm.vault.address);
-    const yields = await pool.yieldShare.balanceOf(amm.vault.address);
+    const principals = await pool.principalShare.balanceOf(amm.address);
+    const yields = await pool.yieldShare.balanceOf(amm.address);
     return amm.toBigNum(1.0).mul(amm.toBigNum(principals)).div(amm.toBigNum(yields));
   }
 
@@ -131,13 +131,15 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("verifies depositing YBT and providing liquidity to a non initialized AMM reverts", async () =>
     {
       const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, false);
-      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
+      (await expectRevert(invalidAction)).to.equal("not initialised");
     });
 
-    it("verifies depositing ERC20 BT and providing liquidity to a non initialized AMM reverts", async () =>
+    it("verifies depositing (ERC20) BT and providing liquidity to a non initialized AMM reverts", async () =>
     {
-      const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, 123, true);
-      (await expectRevert(invalidAction)).to.equal(":AMMNotInitializedYet");
+      const amount = 123;
+      const ethValue = testPool.type == PoolType.Lido ? amount : 0;
+      const invalidAction = controller.depositAndProvideLiquidity(testPool, user1, amount, true, ethValue);
+      (await expectRevert(invalidAction)).to.equal("not initialised");
     });
 
     it("verifies depositing 0 YBT and providing liquidity reverts", async () =>
@@ -226,18 +228,6 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     });
   });
 
-  describe("provideLiquidity", () =>
-  {
-    it("check lp provided", async () =>
-    {
-      await initAMM(user1, /*ybtDeposit*/2000, /*principals*/100, /*yields*/1000); // 10% rate
-      await controller.provideLiquidity(testPool, user1, 1000);
-      expect(+await pool.principalShare.balanceOf(user1)).to.be.greaterThan(0, "Some Principals should be returned to user");
-      expect(+await pool.yieldShare.balanceOf(user1)).to.be.equal(0, "ALL Yields should be deposited to AMM");
-      expect(+await testPool.amm.balanceOf(user1)).to.be.greaterThan(0, "Should have some LP tokens");
-    });
-  });
-
   describe("Exit AMM", () =>
   {
     it("ExitAMM after maturity", async () =>
@@ -248,7 +238,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       expect(beforeExitBalanceLP).to.be.within(181000, 182000);
       await testPool.setInterestRate(1.1);
       await testPool.fastForwardToMaturity();
-      await controller.exitTempusAmm(testPool, user1, 100000);
+      await testPool.amm.exitPoolExactLpAmountIn(user1, 100000);
       const redeemPercent:number = 100000 / totalSupply;
       expect(+await testPool.amm.balanceOf(user1)).to.be.within(81000, 82000);
       expect(+await testPool.yields.balanceOf(user1)).to.be.within(0.999999 * redeemPercent * 1000000, 1.000001 * redeemPercent * 1000000);
@@ -426,7 +416,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         0.03
-      )).to.emit(testPool.amm.vault, 'Swap');;
+      )).to.emit(testPool.amm.contract, 'Swap');
     });
     
     it("Should successfully swap Principals --> Yields w/ 3% Maximum Slippage", async () => 
@@ -444,7 +434,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         0.03
-      )).to.emit(testPool.amm.vault, 'Swap');
+      )).to.emit(testPool.amm.contract, 'Swap');
     });
 
     it("Should fail swap due to minimum return Principals --> Yields w/ 0.1% Maximum Slippage", async () => 
@@ -462,7 +452,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "0.001"
-      )).to.be.revertedWith("BAL#507");
+      )).to.be.revertedWith("slippage");
     });
 
     it("Should fail swap due to minimum return Yields --> Principals w/ 0.1% Maximum Slippage", async () => 
@@ -480,7 +470,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares(),
         await calculateCurrentYieldsRate(),
         "0.001"
-      )).to.be.revertedWith("BAL#507");
+      )).to.be.revertedWith("slippage");
     });
 
     it("Should fail with yieldsRate = 0", async () => 

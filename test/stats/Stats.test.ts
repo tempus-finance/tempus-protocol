@@ -99,7 +99,7 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
     await initAMM(user1, /*ybtDeposit*/1200, /*principals*/120, /*yields*/1200);
     await testPool.setNextBlockTimestampRelativeToPoolStart(0.1);
     const result = await stats.estimatedDepositAndLeverage(testPool, 1, /*BT*/false, /*leverage*/2);
-    expect(+result[0]).to.be.within(0.9, 0.91);
+    expect(+result[0]).to.be.within(0.89, 0.91);
     expect(+result[1]).to.be.within(1.9, 2);
   });
 
@@ -125,11 +125,11 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
 
     const r2 = await stats.estimateExitAndRedeemGivenStakedOut(testPool, 4,2, 3,2, /*backingToken:*/true);
     expect(+r2.tokenAmount).to.equal(9, "With 1.5 rate, 4Pr,2Yi + staked 3Pr,2Yi gives (4+3) + (2*0.5+2*0.5) = 7+2 = 9");
-    expect(+r2.lpTokensRedeemed).to.be.within(1.572, 1.578);
+    expect(+r2.lpTokensRedeemed).to.be.within(1.56, 1.57);
 
     const r3 = await stats.estimateExitAndRedeemGivenStakedOut(testPool, 0,0, 2,2, /*backingToken:*/true);
     expect(+r3.tokenAmount).to.equal(3, "With 1.5 rate, 0Pr,0Yi + staked 2Pr,2Yi gives 0 + (2 + 2*0.5) = 3 BT");
-    expect(+r3.lpTokensRedeemed).to.be.within(1.135, 1.145);
+    expect(+r3.lpTokensRedeemed).to.be.within(1.13, 1.14);
 
     const r4 = await stats.estimateExitAndRedeemGivenStakedOut(testPool, 0,10, 0,0, /*backingToken:*/true);
     expect(+r4.tokenAmount).to.equal(5, "With 1.5 rate, 10Yi gives 5 BT");

@@ -8,12 +8,10 @@ import "../ITempusPool.sol";
 import "../math/Fixed256xVar.sol";
 import "../token/PoolShare.sol";
 import "../amm/interfaces/ITempusAMM.sol";
-import "../utils/AMMBalancesHelper.sol";
 import "../utils/Versioned.sol";
 
 contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     using Fixed256xVar for uint256;
-    using AMMBalancesHelper for uint256[];
 
     constructor() Versioned(2, 0, 0) {}
 
@@ -117,14 +115,9 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         uint256 shares = estimatedMintedShares(tempusPool, amount, isBackingToken);
-
-        (IERC20[] memory ammTokens, uint256[] memory ammBalances, ) = tempusAMM.getVault().getPoolTokens(
-            tempusAMM.getPoolId()
-        );
-        uint256[] memory ammLiquidityProvisionAmounts = ammBalances.getLiquidityProvisionSharesAmounts(shares);
-
-        lpTokens = tempusAMM.getExpectedLPTokensForTokensIn(ammLiquidityProvisionAmounts);
-        (principals, yields) = (shares - ammLiquidityProvisionAmounts[0], shares - ammLiquidityProvisionAmounts[1]);
+        (uint256 ammLPAmount0, uint256 ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(shares);
+        lpTokens = tempusAMM.getLPTokensOutForTokensIn(ammLPAmount0, ammLPAmount1);
+        (principals, yields) = (shares - ammLPAmount0, shares - ammLPAmount1);
     }
 
     /// Gets the estimated amount of Shares and Lp token amounts
@@ -160,10 +153,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         uint256 mintedShares = estimatedMintedShares(tempusPool, amount, isBackingToken);
         yields = mintedShares.mulfV(leverage, 1e18);
 
-        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(
-            yields - mintedShares,
-            address(tempusPool.principalShare())
-        );
+        uint256 expectedIn = tempusAMM.getExpectedInGivenOut(yields - mintedShares, tempusPool.principalShare());
         assert(mintedShares > expectedIn);
         principals = mintedShares - expectedIn;
     }
@@ -202,7 +192,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         )
     {
         if (lpTokens > 0) {
-            (principalsStaked, yieldsStaked) = tempusAMM.getExpectedTokensOutGivenBPTIn(lpTokens);
+            (principalsStaked, yieldsStaked) = tempusAMM.getTokensOutGivenLPIn(lpTokens);
             principals += principalsStaked;
             yields += yieldsStaked;
         }
@@ -268,7 +258,7 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
         require(!tempusPool.matured(), "Pool already finalized!");
 
         if (principalsStaked > 0 || yieldsStaked > 0) {
-            lpTokensRedeemed = tempusAMM.getExpectedBPTInGivenTokensOut(principalsStaked, yieldsStaked);
+            lpTokensRedeemed = tempusAMM.getLPTokensInGivenTokensOut(principalsStaked, yieldsStaked);
             principals += principalsStaked;
             yields += yieldsStaked;
         }

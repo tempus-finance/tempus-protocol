@@ -249,16 +249,6 @@ export class TempusController extends ContractBase {
     );
   }
 
-  async exitTempusAmm(
-    pool: PoolTestFixture,
-    user: SignerOrAddress,
-    lpTokensAmount: Number
-  ): Promise<Transaction> {
-    const amm = pool.amm;
-    await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
-    return this.connect(user).exitTempusAMM(amm.address, pool.tempus.address, pool.amm.toBigNum(lpTokensAmount), 1, 1, false);
-  }
-
   async exitAmmGivenLpAndRedeem(
     pool:PoolTestFixture, 
     user: SignerOrAddress, 

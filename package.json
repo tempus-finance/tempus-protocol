@@ -76,7 +76,7 @@
     "verify:pool:rari": "cross-env TEMPUS_POOL_CONTRACT=RariTempusPool npx hardhat run scripts/verify.pool.ts",
     "increase-time": "npx hardhat run scripts/increaseTime.local.ts --network localhost",
     "mythx-install": "pip install mythx-cli",
-    "mythx-amm": "mythx --ci --yes analyze --wait --solc-version 0.7.6 contracts/amm/TempusAMM.sol contracts/amm/TempusAMMUserDataHelpers.sol",
+    "mythx-amm": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/amm/TempusAMM.sol",
     "mythx-pool": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/pools/AaveTempusPool.sol contracts/pools/CompoundTempusPool.sol contracts/pools/LidoTempusPool.sol",
     "mythx-misc": "mythx --ci --yes analyze --wait --solc-version 0.8.10 contracts/stats/Stats.sol contracts/token/TempusToken.sol contracts/token/vesting/ERC20Vesting.sol",
     "slither": "rm -rf contracts/amm contracts/TempusController.sol && slither .",
@@ -86,11 +86,6 @@
     "echidna-test-assertion:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --test-mode assertion --format text"
   },
   "dependencies": {
-    "@balancer-labs/v2-asset-manager-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/asset-manager-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-pool-stable": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-stable?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-pool-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/pool-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-solidity-utils": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/solidity-utils?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
-    "@balancer-labs/v2-vault": "https://gitpkg.now.sh/balancer-labs/balancer-v2-monorepo/pkg/vault?ccb2d594a893cd4b7ce79698e373cb100b28aaa2",
     "@openzeppelin/contracts": "^4.1.0"
   }
 }

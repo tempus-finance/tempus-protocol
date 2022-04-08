@@ -36,12 +36,9 @@ interface PoolConfig {
 
 interface AMMConfig {
   address?: string;
-  vault: string;
   lp: TokenInfo;
   owner: string;
   swapFee: number;
-  pauseWindowDuration: number;
-  bufferPeriodDuration: number;
   initialAmplificationFactor: number;
   finalAmplificationFactor: number;
 }
@@ -197,7 +194,6 @@ async function deployAmm(config:Config, deployerPrivateKey:string): Promise<Conf
   const maturityTimestamp = Date.parse(config.pool.maturity) / 1000;
 
   const ammConstructorArgs = [
-    config.amm.vault,
     config.amm.lp.name,
     config.amm.lp.symbol,
     [config.principal.address, config.yield.address],
@@ -205,9 +201,6 @@ async function deployAmm(config:Config, deployerPrivateKey:string): Promise<Conf
     config.amm.finalAmplificationFactor * AMP_PRECISION,
     maturityTimestamp,
     parseDecimal(config.amm.swapFee, 18),
-    config.amm.pauseWindowDuration,
-    config.amm.bufferPeriodDuration,
-    config.amm.owner
   ];
 
   const ybtSymbol = config.ybt.symbol;
