@@ -64,9 +64,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // All token balances are normalized to behave as if the token had 18 decimals. We assume a token's decimals will
     // not change throughout its lifetime, and store the corresponding scaling factor for each at construction time.
     // These factors are always greater than or equal to one: tokens with more than 18 decimals are not supported.
-    uint256 internal immutable scalingFactor;
+    uint256 private immutable scalingFactor;
 
-    uint256 internal immutable swapFeePercentage;
+    uint256 private immutable swapFeePercentage;
 
     constructor(
         string memory name,

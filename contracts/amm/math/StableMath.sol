@@ -192,11 +192,9 @@ library StableMath {
         return lpTotalSupply.mulDown(invariantRatio - Fixed256x18.ONE);
     }
 
-    /*
-    Flow of calculations:
-    amountsTokenOut -> amountsOutProportional ->
-    amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountLPIn
-    */
+    // Flow of calculations:
+    // amountsTokenOut -> amountsOutProportional ->
+    // amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountLPIn
     function lpInGivenTokensOut(
         uint256 amp,
         uint256 balance0,
