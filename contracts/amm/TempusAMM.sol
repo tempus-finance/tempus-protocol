@@ -140,7 +140,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        uint256 lpTokensOut = StableMath.bptOutGivenTokensIn(
+        uint256 lpTokensOut = StableMath.lpOutGivenTokensIn(
             _getAmplificationValue(),
             balance0,
             balance1,
@@ -198,7 +198,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        uint256 lpTokensIn = StableMath.bptInGivenTokensOut(
+        uint256 lpTokensIn = StableMath.lpInGivenTokensOut(
             _getAmplificationValue(),
             balance0,
             balance1,
@@ -393,7 +393,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        lpTokens = StableMath.bptInGivenTokensOut(
+        lpTokens = StableMath.lpInGivenTokensOut(
             _getAmplificationValue(),
             balance0,
             balance1,
@@ -414,7 +414,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         // as calculation for amounts out is based on btpAmountIn / totalSupply() ratio
         // Adjusting balances with rate, and then undoing it would just cause additional calculations
 
-        (token0Out, token1Out) = StableMath.tokensOutFromBptIn(
+        (token0Out, token1Out) = StableMath.tokensOutFromLPIn(
             selfBalance0(),
             selfBalance1(),
             lpTokensIn,
@@ -440,7 +440,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         return
             (balance0 == 0)
                 ? StableMath.invariant(_getAmplificationValue(), token0AmountIn, token1AmountIn, true)
-                : StableMath.bptOutGivenTokensIn(
+                : StableMath.lpOutGivenTokensIn(
                     _getAmplificationValue(),
                     balance0,
                     balance1,

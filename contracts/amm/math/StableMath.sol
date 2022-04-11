@@ -140,16 +140,16 @@ library StableMath {
         return finalBalanceIn - balanceIn + 1;
     }
 
-    function bptOutGivenTokensIn(
+    function lpOutGivenTokensIn(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
         uint256 amountIn0,
         uint256 amountIn1,
-        uint256 bptTotalSupply,
+        uint256 lpTotalSupply,
         uint256 swapFeePercentage
     ) internal pure returns (uint256) {
-        // BPT out, so we round down overall.
+        // LP out, so we round down overall.
         uint256 newBalance0;
         uint256 newBalance1;
 
@@ -189,24 +189,24 @@ library StableMath {
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
         // If the invariant didn't increase for any reason, this will revert with underflow
-        return bptTotalSupply.mulDown(invariantRatio - Fixed256x18.ONE);
+        return lpTotalSupply.mulDown(invariantRatio - Fixed256x18.ONE);
     }
 
     /*
     Flow of calculations:
     amountsTokenOut -> amountsOutProportional ->
-    amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountBPTIn
+    amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountLPIn
     */
-    function bptInGivenTokensOut(
+    function lpInGivenTokensOut(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
         uint256 amountOut0,
         uint256 amountOut1,
-        uint256 bptTotalSupply,
+        uint256 lpTotalSupply,
         uint256 swapFeePercentage
     ) internal pure returns (uint256) {
-        // BPT in, so we round up overall.
+        // LP in, so we round up overall.
         uint256 newBalance0;
         uint256 newBalance1;
 
@@ -247,24 +247,24 @@ library StableMath {
         uint256 newInvariant = invariant(amp, newBalance0, newBalance1, false);
         uint256 invariantRatio = newInvariant.divDown(currentInvariant);
 
-        // return amountBPTIn
-        return bptTotalSupply.mulUp(invariantRatio.complement());
+        // return amountLPIn
+        return lpTotalSupply.mulUp(invariantRatio.complement());
     }
 
-    function tokenOutFromBptIn(
+    function tokenOutFromLPIn(
         uint256 amp,
         uint256 balance0,
         uint256 balance1,
         bool firstToken,
-        uint256 bptAmountIn,
-        uint256 bptTotalSupply,
+        uint256 lpAmountIn,
+        uint256 lpTotalSupply,
         uint256 swapFeePercentage
     ) internal pure returns (uint256) {
         // Token out, so we round down overall.
 
         // Get the current and new invariants. Since we need a bigger new invariant, we round the current one up.
         uint256 curInv = invariant(amp, balance0, balance1, true);
-        uint256 newInv = (bptTotalSupply - bptAmountIn).divUp(bptTotalSupply).mulUp(curInv);
+        uint256 newInv = (lpTotalSupply - lpAmountIn).divUp(lpTotalSupply).mulUp(curInv);
 
         // Calculate amount out without fee
         uint256 tokenBalance = firstToken ? balance0 : balance1;
@@ -283,26 +283,26 @@ library StableMath {
         return nonTaxableAmount + taxableAmount.mulDown(Fixed256x18.ONE - swapFeePercentage);
     }
 
-    function tokensOutFromBptIn(
+    function tokensOutFromLPIn(
         uint256 balance0,
         uint256 balance1,
-        uint256 bptAmountIn,
-        uint256 bptTotalSupply
+        uint256 lpAmountIn,
+        uint256 lpTotalSupply
     ) internal pure returns (uint256 amountOut0, uint256 amountOut1) {
         /**********************************************************************************************
-        // exactBPTInForTokensOut                                                                    //
+        // exactLPInForTokensOut                                                                     //
         // (per token)                                                                               //
-        // aO = tokenAmountOut             /        bptIn         \                                  //
-        // b = tokenBalance      a0 = b * | ---------------------  |                                 //
-        // bptIn = bptAmountIn             \     bptTotalSupply    /                                 //
-        // bpt = bptTotalSupply                                                                      //
+        // aO = tokenAmountOut            /        lpIn         \                                    //
+        // b = tokenBalance      a0 = b * | ------------------- |                                    //
+        // lpIn = lpAmountIn              \     lpTotalSupply   /                                    //
+        // lp = lpTotalSupply                                                                        //
         **********************************************************************************************/
 
         // Since we're computing an amount out, we round down overall. This means rounding down on both the
         // multiplication and division.
-        uint256 bptRatio = bptAmountIn.divDown(bptTotalSupply);
-        amountOut0 = balance0.mulDown(bptRatio);
-        amountOut1 = balance1.mulDown(bptRatio);
+        uint256 lpRatio = lpAmountIn.divDown(lpTotalSupply);
+        amountOut0 = balance0.mulDown(lpRatio);
+        amountOut1 = balance1.mulDown(lpRatio);
     }
 
     // Private functions
