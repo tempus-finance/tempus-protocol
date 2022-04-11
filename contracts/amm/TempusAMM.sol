@@ -566,6 +566,13 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 startTime,
         uint256 endTime
     ) private {
+        assert(
+            startValue <= type(uint64).max &&
+                endValue <= type(uint64).max &&
+                startTime <= type(uint64).max &&
+                endTime <= type(uint64).max
+        );
+
         // Here we use inline assembly to save amount of sstores
         // AmplificationData fits one storage slot, so we use inline assembly to update it with only one sstore
         // solhint-disable-next-line no-inline-assembly
