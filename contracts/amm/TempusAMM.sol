@@ -78,10 +78,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationEndTime,
         uint256 swapFeePerc
     ) ERC20(name, symbol) {
-        require(amplificationStartValue >= MIN_AMPLIFICATION, "min start amp");
-        require(amplificationStartValue <= MAX_AMPLIFICATION, "max start amp");
         require(swapFeePerc <= MAX_SWAP_FEE_PERCENTAGE, "max swap fee");
-
         swapFeePercentage = swapFeePerc;
 
         (token0, token1) = (t0, t1);
@@ -91,8 +88,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         scalingFactor = Fixed256x18.ONE * 10**(18 - t0.decimals());
 
-        _setAmplificationData(amplificationStartValue);
-
+        setInitialAmplification(amplificationStartValue);
         if (amplificationStartValue != amplificationEndValue) {
             require(amplificationStartValue < amplificationEndValue, "invalid amp");
             startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
@@ -471,6 +467,16 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     // Amplification
 
+    // NOTE: this function MUST be called in the constructor
+    function setInitialAmplification(uint256 startValue) private {
+        require(startValue >= MIN_AMPLIFICATION, "min start amp");
+        require(startValue <= MAX_AMPLIFICATION, "max start amp");
+
+        _setAmplificationData(startValue, startValue, block.timestamp, block.timestamp);
+        emit AmpUpdateStarted(startValue, startValue, block.timestamp, block.timestamp);
+        emit AmpUpdateStopped(startValue);
+    }
+
     function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) public onlyOwner {
         require(endValue >= MIN_AMPLIFICATION, "min end amp");
         require(endValue <= MAX_AMPLIFICATION, "max end amp");
@@ -490,13 +496,17 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         require(dailyRate <= MAX_AMP_UPDATE_DAILY_RATE, "amp rate too high");
 
         _setAmplificationData(currentValue, endValue, block.timestamp, endTime);
+
+        emit AmpUpdateStarted(currentValue, endValue, block.timestamp, endTime);
     }
 
     function stopAmplificationParameterUpdate() external override onlyOwner {
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
         require(isUpdating, "amp no ongoing update");
 
-        _setAmplificationData(currentValue);
+        _setAmplificationData(currentValue, currentValue, block.timestamp, block.timestamp);
+
+        emit AmpUpdateStopped(currentValue);
     }
 
     function getAmplificationParameter()
@@ -554,12 +564,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         }
     }
 
-    function _setAmplificationData(uint256 value) private {
-        _setAmplificationData(value, value, block.timestamp, block.timestamp);
-
-        emit AmpUpdateStopped(value);
-    }
-
     function _setAmplificationData(
         uint256 startValue,
         uint256 endValue,
@@ -580,8 +584,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             let value := or(or(shl(192, startValue), shl(128, endValue)), or(shl(64, startTime), endTime))
             sstore(amplificationData.slot, value)
         }
-
-        emit AmpUpdateStarted(startValue, endValue, startTime, endTime);
     }
 
     function getAmplificationData()
