@@ -40,8 +40,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // rapidly: for example, by doubling the value every day it can increase by a factor of 8 over three days (2^3).
     uint256 private constant MIN_UPDATE_TIME = 1 days;
     uint256 private constant MAX_AMP_UPDATE_DAILY_RATE = 2;
-    uint256 private constant MIN_AMPLIFICATION = 1000;
-    uint256 private constant MAX_AMPLIFICATION = 5000000;
+    uint256 private constant MIN_AMPLIFICATION = 1 * 1000; // StableMath._MIN_AMP * StableMath._AMP_PRECISION;
+    uint256 private constant MAX_AMPLIFICATION = 5000 * 1000; // StableMath._MAX_AMP * StableMath._AMP_PRECISION;
 
     // Maximum swap fee is set to 5%
     uint256 private constant MAX_SWAP_FEE_PERCENTAGE = 0.05e18;
