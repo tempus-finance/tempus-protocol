@@ -51,7 +51,7 @@ export class TempusPoolAMM extends TempusAMM {
     return new TempusPoolAMM(tempusAMM, principalShare, yieldShare);
   }
 
-  async getExpectedPYOutGivenBPTIn(inAmount: NumberOrString): Promise<{principalsOut:number, yieldsOut:number}> {
+  async getExpectedPYOutGivenLPIn(inAmount: NumberOrString): Promise<{principalsOut:number, yieldsOut:number}> {
     const p = await super.getTokensOutGivenLPIn(inAmount);
     return {principalsOut: +p.token0Out, yieldsOut: +p.token1Out};
   }

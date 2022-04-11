@@ -255,7 +255,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
 
       await controller.depositYieldBearing(user2, pool, 10000, user2);
-      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.JOIN);
       
       const userP:number = +await testPool.principals.balanceOf(user2);
       const userY:number = +await testPool.yields.balanceOf(user2);
@@ -280,7 +280,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await controller.depositYieldBearing(user2, pool, 10000, user2);
-      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.JOIN);
       const userP:number = +await testPool.principals.balanceOf(user2);
       const userY:number = +await testPool.yields.balanceOf(user2);
       const userPRedeem:number = userP < 9999 ? userP : 9999;

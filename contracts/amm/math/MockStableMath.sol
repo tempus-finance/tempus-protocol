@@ -77,15 +77,7 @@ contract MockStableMath {
         uint256 swapFee
     ) external pure returns (uint256) {
         return
-            StableMath.tokenOutFromLPIn(
-                amp,
-                balances[0],
-                balances[1],
-                firstToken,
-                lpAmountIn,
-                lpTotalSupply,
-                swapFee
-            );
+            StableMath.tokenOutFromLPIn(amp, balances[0], balances[1], firstToken, lpAmountIn, lpTotalSupply, swapFee);
     }
 
     function tokensOutFromLPIn(

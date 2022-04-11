@@ -195,7 +195,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
-    const expectedReturn = await testFixture.amm.getExpectedPYOutGivenBPTIn(inputAmount);
+    const expectedReturn = await testFixture.amm.getExpectedPYOutGivenLPIn(inputAmount);
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setNextBlockTimestampRelativeToPoolStart(0.5);
     
@@ -219,7 +219,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     
     try {
       const balanceLpBefore = +await testFixture.amm.balanceOf(owner);
-      await testFixture.amm.provideLiquidity(owner, 10, 100, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+      await testFixture.amm.provideLiquidity(owner, 10, 100, TempusAMMJoinKind.JOIN);
       await evmMine();
       const balanceLpAfter = +await testFixture.amm.balanceOf(owner);
       await evmMine();
@@ -356,7 +356,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     expect(+underlyingBalanceOwner.token1).to.be.within(999.99, 1000);
     await tempusAMM.principalShare.transfer(owner, user.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user.address, 1000);
-    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.JOIN);
 
     balanceUser = +await tempusAMM.balanceOf(user);
     balanceOwner = +await tempusAMM.balanceOf(owner);
@@ -380,7 +380,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     await tempusAMM.principalShare.transfer(owner, user.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user.address, 1000);
-    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.JOIN);
 
     expect(+await tempusAMM.balanceOf(user)).to.be.within(181, 182);
     expect(+await tempusAMM.getRate()).to.be.within(1.0019, 1.002);
@@ -398,7 +398,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     // provide more liquidity with different user
     await tempusAMM.principalShare.transfer(owner, user1.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user1.address, 1000);
-    await tempusAMM.provideLiquidity(user1, 100, 1000, TempusAMMJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT);
+    await tempusAMM.provideLiquidity(user1, 100, 1000, TempusAMMJoinKind.JOIN);
     
     expect(+await tempusAMM.balanceOf(user1)).to.be.within(180, 181);
     expect(+await tempusAMM.getRate()).to.be.within(1.005975, 1.0060);

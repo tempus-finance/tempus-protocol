@@ -16,16 +16,10 @@ export const MONTH = DAY * 30;
 
 export const AMP_PRECISION = 1e3;
 
-export enum TempusAMMExitKind {
-  EXACT_BPT_IN_FOR_TOKENS_OUT = 0,
-  BPT_IN_FOR_EXACT_TOKENS_OUT,
-  INVALID
-}
-
 export enum TempusAMMJoinKind {
   INIT = 0,  // first join to the pool, needs to pick token balances
-  EXACT_TOKENS_IN_FOR_BPT_OUT,  // joining with exact amounts of both tokens
-  INVALID  // used to test invalid join type
+  JOIN = 1,  // joining with exact amounts of both tokens
+  INVALID = -1,  // used to test invalid join type
 }
 
 export class TempusAMM extends ContractBase {
