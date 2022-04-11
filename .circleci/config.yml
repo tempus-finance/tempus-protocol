@@ -3,7 +3,7 @@ orbs:
   node: circleci/node@4.6.0
   coveralls: coveralls/coveralls@1.0.6
 jobs:
-  unit_tests_coverage:
+  job-unit_tests_coverage:
     executor:
       name: node/default
       tag: '15.11'
@@ -17,7 +17,7 @@ jobs:
       - coveralls/upload:
           parallel: true
 
-  integration_tests_coverage:
+  job-integration_tests_coverage:
     executor:
       name: node/default
       tag: '15.11'
@@ -31,7 +31,7 @@ jobs:
       - coveralls/upload:
           parallel: true
 
-  unit_tests:
+  job-unit_tests:
     executor:
       name: node/default
       tag: '15.11'
@@ -44,7 +44,7 @@ jobs:
           name: "Run unit tests"
           command: yarn test
 
-  solhint:
+  job-solhint:
     executor:
       name: node/default
       tag: '15.11'
@@ -58,7 +58,7 @@ jobs:
             yarn solhint
             yarn lint-check
 
-  coverage:
+  job-coverage:
     executor:
       name: node/default
       tag: '15.11'
@@ -74,7 +74,7 @@ jobs:
           path: coverage
           prefix: coverage
 
-  integration_tests:
+  job-integration_tests:
     executor:
       name: node/default
       tag: '15.11'
@@ -86,7 +86,7 @@ jobs:
           name: "Run integration tests"
           command: yarn test:integration
 
-  save_and_upload_coverage_artifacts:
+  job-save_and_upload_coverage_artifacts:
     executor:
       name: node/default
       tag: '15.11'
@@ -97,7 +97,7 @@ jobs:
           path: coverage
           prefix: coverage
 
-  localDeployment:
+  job-localDeployment:
     executor:
       name: node/default
       tag: '15.11'
@@ -109,7 +109,7 @@ jobs:
           name: "Deploy on local network"
           command: yarn deploy-ci
 
-  localDeploymentForkMainnet:
+  job-localDeploymentForkMainnet:
     executor:
       name: node/default
       tag: '15.11'
@@ -121,7 +121,7 @@ jobs:
           name: "Deploy on forked mainnet"
           command: yarn deploy-ci:fork:mainnet
 
-  runMythX-Pool:
+  job-MythX-Pool:
     docker:
       - image: tempusfinance/tempus-mythx:latest
     steps:
@@ -133,7 +133,7 @@ jobs:
           no_output_timeout: 30m
           command: yarn mythx-pool
 
-  runMythX-AMM:
+  job-MythX-AMM:
     docker:
       - image: tempusfinance/tempus-mythx:latest
     steps:
@@ -145,7 +145,7 @@ jobs:
           no_output_timeout: 30m
           command: yarn mythx-amm
 
-  runMythX-Misc:
+  job-MythX-Misc:
     docker:
       - image: tempusfinance/tempus-mythx:latest
     steps:
@@ -157,7 +157,7 @@ jobs:
           no_output_timeout: 30m
           command: yarn mythx-misc
 
-  echidna-lido-pool:
+  job-echidna-lido-pool:
     docker:
       - image: tempusfinance/tempus-echidna:latest
     steps:
@@ -170,7 +170,7 @@ jobs:
           command: |
             yarn echidna-test:pool:lido
   
-  echidna-yearn-pool:
+  job-echidna-yearn-pool:
     docker:
       - image: tempusfinance/tempus-echidna:latest
     steps:
@@ -183,7 +183,7 @@ jobs:
           command: |
             yarn echidna-test:pool:yearn
 
-  echidna-assertion-lido-pool:
+  job-echidna-assertion-lido-pool:
     docker:
       - image: tempusfinance/tempus-echidna:latest
     steps:
@@ -196,7 +196,7 @@ jobs:
           command: |
             yarn echidna-test-assertion:pool:lido
 
-  echidna-assertion-yearn-pool:
+  job-echidna-assertion-yearn-pool:
     docker:
       - image: tempusfinance/tempus-echidna:latest
     steps:
@@ -212,48 +212,48 @@ jobs:
 workflows:
   code_coverage:
     jobs:
-      - unit_tests_coverage:
+      - job-unit_tests_coverage:
           context: 
             - Coveralls
-      - integration_tests_coverage:
+      - job-integration_tests_coverage:
           context: 
             - Coveralls
-      - save_and_upload_coverage_artifacts:
+      - job-save_and_upload_coverage_artifacts:
           context: 
             - Coveralls
           requires:
-              - unit_tests_coverage
-              - integration_tests_coverage
+              - job-unit_tests_coverage
+              - job-integration_tests_coverage
   unit_tests:
     jobs:
-      - unit_tests
+      - job-unit_tests
   integration_tests:
     jobs:
-      - integration_tests
+      - job-integration_tests
   solhint:
     jobs:
-      - solhint
+      - job-solhint
   test_local_deployment:
     jobs:
-      - localDeployment
+      - job-localDeployment
   test_local_deployment_fork_mainnet:
     jobs:
-      - localDeploymentForkMainnet
+      - job-localDeploymentForkMainnet
   mythx_pool:
     jobs:
-      - runMythX-Pool
+      - job-MythX-Pool
   mythx_amm:
     jobs:
-      - runMythX-AMM
+      - job-MythX-AMM
   mythx_misc:
     jobs:
-      - runMythX-Misc
+      - job-MythX-Misc
   echidna:
     jobs:
-      - echidna-lido-pool
-      - echidna-yearn-pool
-      - echidna-assertion-lido-pool
-      - echidna-assertion-yearn-pool
+      - job-echidna-lido-pool
+      - job-echidna-yearn-pool
+      - job-echidna-assertion-lido-pool
+      - job-echidna-assertion-yearn-pool
 
 notify:
   webhooks:
