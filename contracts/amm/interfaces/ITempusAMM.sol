@@ -3,11 +3,10 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./IRateProvider.sol";
 import "../../token/IPoolShare.sol";
 import "../../utils/IOwnable.sol";
 
-interface ITempusAMM is IERC20, IRateProvider, IOwnable {
+interface ITempusAMM is IERC20, IOwnable {
     enum SwapType {
         GIVEN_IN,
         GIVEN_OUT
@@ -188,6 +187,8 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @return token0Balance Amount of Token0 corresponding to the LP tokens
     /// @return token1Balance Amount of Token1 corresponding to the LP tokens
     function compositionBalanceOf(address account) external view returns (uint256 token0Balance, uint256 token1Balance);
+
+    function getRate() external view returns (uint256);
 
     /// Calculates the expected returned swap amount
     /// @param amount The given input amount of tokens
