@@ -9,7 +9,7 @@ library StableMath {
 
     uint256 internal constant _MIN_AMP = 1;
     uint256 internal constant _MAX_AMP = 5000;
-    uint256 internal constant _AMP_PRECISION = 1e3;
+    uint256 internal constant _AMP_PRECISION = 1000;
     uint256 internal constant _NUM_TOKENS = 2;
 
     // Note on unchecked arithmetic:
