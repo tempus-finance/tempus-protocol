@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./amm/interfaces/ITempusAMM.sol";
+import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
 
 /// @dev The Position Manager's purpose is to allow depositing funds to a Tempus Pool

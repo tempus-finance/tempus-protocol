@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "./amm/interfaces/ITempusAMM.sol";
+import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
 
 interface ITempusController {
