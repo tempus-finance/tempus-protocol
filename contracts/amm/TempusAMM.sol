@@ -97,38 +97,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     // Adding liquidity
 
-    function init(uint256 amountToken0, uint256 amountToken1) external override {
-        require(amountToken0 != 0 && amountToken1 != 0, "token amounts can't be 0");
-        require(totalSupply() == 0, "Already initialised");
-
-        (uint256 amountIn0, uint256 amountIn1) = getRateAdjustedAmounts(
-            amountToken0,
-            amountToken1,
-            token0.getPricePerFullShare(),
-            token1.getPricePerFullShareStored()
-        );
-
-        uint256 lpTokensOut = StableMath.invariant(_getAmplificationValue(), amountIn0, amountIn1, true);
-        assert(lpTokensOut > 0);
-
-        token0.transferFrom(msg.sender, address(this), amountToken0);
-        token1.transferFrom(msg.sender, address(this), amountToken1);
-        _mint(msg.sender, lpTokensOut);
-
-        emit Join(amountToken0, amountToken1, lpTokensOut);
-    }
-
     function join(
         uint256 amountToken0,
         uint256 amountToken1,
         uint256 minLpTokensOut,
         address recipient
     ) external override whenNotPaused {
-        require(totalSupply() > 0, "not initialised");
-        require(amountToken0 > 0 || amountToken1 > 0, "one token amount must be > 0");
-
-        (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
-
         (uint256 amountIn0, uint256 amountIn1) = getRateAdjustedAmounts(
             amountToken0,
             amountToken1,
@@ -136,15 +110,26 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             token1.getPricePerFullShareStored()
         );
 
-        uint256 lpTokensOut = StableMath.lpOutGivenTokensIn(
-            _getAmplificationValue(),
-            balance0,
-            balance1,
-            amountIn0,
-            amountIn1,
-            totalSupply(),
-            swapFeePercentage
-        );
+        uint256 lpTokensOut;
+        if (totalSupply() == 0) {
+            require(amountToken0 != 0 && amountToken1 != 0, "token amounts can't be 0");
+
+            lpTokensOut = StableMath.invariant(_getAmplificationValue(), amountIn0, amountIn1, true);
+        } else {
+            require(amountToken0 > 0 || amountToken1 > 0, "one token amount must be > 0");
+
+            (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
+
+            lpTokensOut = StableMath.lpOutGivenTokensIn(
+                _getAmplificationValue(),
+                balance0,
+                balance1,
+                amountIn0,
+                amountIn1,
+                totalSupply(),
+                swapFeePercentage
+            );
+        }
 
         require(lpTokensOut >= minLpTokensOut, "slippage");
 

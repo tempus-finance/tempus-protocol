@@ -16,12 +16,6 @@ export const MONTH = DAY * 30;
 
 export const AMP_PRECISION = 1e3;
 
-export enum TempusAMMJoinKind {
-  INIT = 0,  // first join to the pool, needs to pick token balances
-  JOIN = 1,  // joining with exact amounts of both tokens
-  INVALID = -1,  // used to test invalid join type
-}
-
 export class TempusAMM extends ContractBase {
   token0: ERC20;
   token1: ERC20;
@@ -116,15 +110,10 @@ export class TempusAMM extends ContractBase {
     ));
   }
 
-  async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number, joinKind: TempusAMMJoinKind) {
+  async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number) {
     await this.token0.approve(from, this.address, token0Balance);
     await this.token1.approve(from, this.address, token1Balance);
-  
-    if (joinKind == TempusAMMJoinKind.INIT) {
-      await this.connect(from).init(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance));
-    } else {
-      await this.connect(from).join(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance), 0, from.address);
-    }
+    await this.connect(from).join(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance), 0, from.address);
   }
 
   async exitPoolExactLpAmountIn(from: Signer, lpTokensAmount: Number) {
