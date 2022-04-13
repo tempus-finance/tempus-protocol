@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString, toWei } from "./Decimal";
+import { Numberish, toWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
 import { AMP_PRECISION, TempusAMM } from "./TempusAMM";
 import { PoolShare } from "./PoolShare";
@@ -51,16 +51,16 @@ export class TempusPoolAMM extends TempusAMM {
     return new TempusPoolAMM(tempusAMM, principalShare, yieldShare);
   }
 
-  async getExpectedPYOutGivenLPIn(inAmount: NumberOrString): Promise<{principalsOut:number, yieldsOut:number}> {
+  async getExpectedPYOutGivenLPIn(inAmount: Numberish): Promise<{principalsOut:number, yieldsOut:number}> {
     const p = await super.getTokensOutGivenLPIn(inAmount);
     return {principalsOut: +p.token0Out, yieldsOut: +p.token1Out};
   }
 
-  async getLPTokensOutForTokensIn(principalsAmountIn:NumberOrString, yieldsAmountIn:NumberOrString): Promise<NumberOrString> {
+  async getLPTokensOutForTokensIn(principalsAmountIn:Numberish, yieldsAmountIn:Numberish): Promise<Numberish> {
     return super.getLPTokensOutForTokensIn(principalsAmountIn, yieldsAmountIn);
   }
 
-  async getLPTokensInGivenTokensOut(principalStaked:NumberOrString, yieldsStaked:NumberOrString): Promise<NumberOrString> {
+  async getLPTokensInGivenTokensOut(principalStaked:Numberish, yieldsStaked:Numberish): Promise<Numberish> {
     return super.getLPTokensInGivenTokensOut(principalStaked, yieldsStaked);
   }
 

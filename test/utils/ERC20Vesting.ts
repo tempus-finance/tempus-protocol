@@ -1,13 +1,13 @@
 import { Contract, Transaction } from "ethers";
-import { NumberOrString } from "./Decimal";
+import { Numberish } from "./Decimal";
 import { ContractBase, SignerOrAddress, Signer, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 
 export interface VestingTerms {
   startTime:number;
   period:number;
-  amount: NumberOrString;
-  claimed: NumberOrString;
+  amount: Numberish;
+  claimed: Numberish;
 }
 
 /**
@@ -95,11 +95,11 @@ export class ERC20Vesting extends ContractBase {
     return this.connect(sender).transferVesting(addressOf(oldAddress), addressOf(newAddress));
   }
 
-  async claimable(receiver:SignerOrAddress): Promise<NumberOrString> {
+  async claimable(receiver:SignerOrAddress): Promise<Numberish> {
     return this.fromBigNum(await this.contract.claimable(addressOf(receiver)));
   }
 
-  async claim(sender:SignerOrAddress, amount?:NumberOrString): Promise<any> {
+  async claim(sender:SignerOrAddress, amount?:Numberish): Promise<any> {
     if (amount === undefined) {
       return this.connect(sender)['claim()']();
     } else {

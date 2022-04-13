@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract, Transaction } from "ethers";
-import { NumberOrString, toWei } from "./Decimal";
+import { Numberish, toWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { blockTimestamp, setEvmTime } from "./Utils";
@@ -61,36 +61,36 @@ export class TempusAMM extends ContractBase {
     return new TempusAMM(tempusAMM, token0, token1);
   }
 
-  async balanceOf(user:Signer): Promise<NumberOrString> {
+  async balanceOf(user:Signer): Promise<Numberish> {
     return this.fromBigNum(await this.contract.balanceOf(user.address));
   }
 
   /**
    * @dev Returns the amount of token0/token1 the users' LP tokens represent.
    */
-  async compositionBalanceOf(user:Signer): Promise<{token0: NumberOrString, token1: NumberOrString}> {
+  async compositionBalanceOf(user:Signer): Promise<{token0: Numberish, token1: Numberish}> {
     const [token0, token1] = await this.contract.compositionBalanceOf(user.address);
     return {token0: this.token0.fromBigNum(token0), token1: this.token1.fromBigNum(token1)};
   }
 
-  async totalSupply(): Promise<NumberOrString> {
+  async totalSupply(): Promise<Numberish> {
     return this.fromBigNum(await this.contract.totalSupply());
   }
 
-  async getRate(): Promise<NumberOrString> {
+  async getRate(): Promise<Numberish> {
     return this.fromBigNum(await this.contract.getRate());
   }
 
-  async getExpectedReturnGivenIn(inAmount: NumberOrString, tokenIn: PoolShare) : Promise<NumberOrString> {
+  async getExpectedReturnGivenIn(inAmount: Numberish, tokenIn: PoolShare) : Promise<Numberish> {
     return tokenIn.fromBigNum(await this.contract.getExpectedReturnGivenIn(tokenIn.toBigNum(inAmount), tokenIn.address));
   }
 
-  async getTokensOutGivenLPIn(inAmount: NumberOrString): Promise<{token0Out:number, token1Out:number}> {
+  async getTokensOutGivenLPIn(inAmount: Numberish): Promise<{token0Out:number, token1Out:number}> {
     const p = await this.contract.getTokensOutGivenLPIn(this.toBigNum(inAmount));
     return {token0Out: +this.token0.fromBigNum(p.token0Out), token1Out: +this.token1.fromBigNum(p.token1Out)};
   }
 
-  async getLPTokensOutForTokensIn(token0AmountIn:NumberOrString, token1AmountIn:NumberOrString): Promise<NumberOrString> {
+  async getLPTokensOutForTokensIn(token0AmountIn:Numberish, token1AmountIn:Numberish): Promise<Numberish> {
     return +this.fromBigNum(await this.contract.getLPTokensOutForTokensIn(
       this.token0.toBigNum(token0AmountIn),
       this.token1.toBigNum(token1AmountIn)
@@ -103,7 +103,7 @@ export class TempusAMM extends ContractBase {
    * @param token1Out amount of Token1 to withdraw
    * @return lpTokens Amount of Lp tokens that user would redeem
    */
-  async getLPTokensInGivenTokensOut(token0Out:NumberOrString, token1Out:NumberOrString): Promise<NumberOrString> {
+  async getLPTokensInGivenTokensOut(token0Out:Numberish, token1Out:Numberish): Promise<Numberish> {
     return this.fromBigNum(await this.contract.getLPTokensInGivenTokensOut(
       this.token0.toBigNum(token0Out),
       this.token1.toBigNum(token1Out)
@@ -129,7 +129,7 @@ export class TempusAMM extends ContractBase {
     );
   }
 
-  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: NumberOrString, givenOut?:boolean) {
+  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: Numberish, givenOut?:boolean) {
     await this.token0.approve(from, this.address, await this.token0.balanceOf(from));
     await this.token1.approve(from, this.address, await this.token1.balanceOf(from));
     const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;
@@ -183,7 +183,7 @@ export class TempusAMM extends ContractBase {
     return this.contract.stopAmplificationParameterUpdate();
   }
 
-  async getAmplificationParam(): Promise<{value:NumberOrString, isUpdating:NumberOrString, precision:NumberOrString}> {
+  async getAmplificationParam(): Promise<{value:Numberish, isUpdating:Numberish, precision:Numberish}> {
     return this.contract.getAmplificationParameter();
   }
 }

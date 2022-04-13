@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString, toRay, fromRay, parseDecimal } from "./Decimal";
+import { Numberish, toRay, fromRay, parseDecimal } from "./Decimal";
 import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -33,14 +33,14 @@ export class Aave extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<NumberOrString> {
+  async assetBalance(user:SignerOrAddress): Promise<Numberish> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<NumberOrString> {
+  async yieldBalance(user:SignerOrAddress): Promise<Numberish> {
     let wei = await this.contract.getDeposit(addressOf(user));
     return this.fromBigNum(wei);
   }
@@ -49,14 +49,14 @@ export class Aave extends ContractBase {
    * @return Current liquidity index of AAVE pool in RAY, which is 
    *         almost equivalent to reserve normalized income.
    */
-  async liquidityIndex(): Promise<NumberOrString> {
+  async liquidityIndex(): Promise<Numberish> {
     return fromRay(await this.contract.getReserveNormalizedIncome(this.asset.address));
   }
 
   /**
    * Sets the AAVE pool's MOCK liquidity index in RAY
    */
-  async setLiquidityIndex(liquidityIndex:NumberOrString, owner:SignerOrAddress = null) {
+  async setLiquidityIndex(liquidityIndex:Numberish, owner:SignerOrAddress = null) {
     if (owner !== null) {
       const prevLiquidityIndex = await this.liquidityIndex();
       const difference = (Number(liquidityIndex) / Number(prevLiquidityIndex)) - 1;
@@ -74,7 +74,7 @@ export class Aave extends ContractBase {
    * @param user User who wants to deposit ETH into AAVE Pool
    * @param amount # of ETH to deposit, eg: 1.0
    */
-  async deposit(user:SignerOrAddress, amount:NumberOrString) {
+  async deposit(user:SignerOrAddress, amount:Numberish) {
     await this.asset.approve(user, this.address, amount);
     await this.contract.connect(user).deposit(this.asset.address, this.toBigNum(amount), addressOf(user), 0);
   }

@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { ContractBase } from "./utils/ContractBase";
 import { expect } from "chai";
-import { NumberOrString, toWei } from "./utils/Decimal";
+import { Numberish, toWei } from "./utils/Decimal";
 import { increaseTime } from "./utils/Utils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
@@ -17,9 +17,9 @@ describeNonPool("MovingAverage", async () => {
 
     static async create(
       type:MAType,
-      updateInterval:NumberOrString,
-      newValueWeight:NumberOrString,
-      trendWeight:NumberOrString = 0
+      updateInterval:Numberish,
+      newValueWeight:Numberish,
+      trendWeight:Numberish = 0
     ): Promise<MovingAverageMock> {
       return new MovingAverageMock(await ContractBase.deployContract("MovingAverageMock",
         type.valueOf(),
@@ -29,12 +29,12 @@ describeNonPool("MovingAverage", async () => {
       ));
     }
 
-    async update(newValue:NumberOrString): Promise<NumberOrString> {
+    async update(newValue:Numberish): Promise<Numberish> {
       await this.contract.update(this.toBigNum(newValue));
       return this.value();
     }
 
-    async value(): Promise<NumberOrString> {
+    async value(): Promise<Numberish> {
       return this.fromBigNum(await this.contract.value());
     }
   }

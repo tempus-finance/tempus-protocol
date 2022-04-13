@@ -1,5 +1,5 @@
 import { BigNumber, Contract } from "ethers";
-import { NumberOrString } from "./Decimal";
+import { Numberish } from "./Decimal";
 import { ContractBase } from "./ContractBase";
 import { ERC20Ether } from "./ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -27,7 +27,7 @@ export class LidoMock extends LidoContract {
     return lido;
   }
 
-  async setInterestRate(interestRate:NumberOrString): Promise<void> {
+  async setInterestRate(interestRate:Numberish): Promise<void> {
     let totalETHSupply:BigNumber = await this.contract.totalSupply();
     // total ETH is 0, so we must actually deposit something, otherwise we can't manipulate the rate
     if (totalETHSupply.isZero()) {

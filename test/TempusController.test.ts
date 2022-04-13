@@ -8,7 +8,7 @@ import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
 import { TempusPoolAMM } from "./utils/TempusPoolAMM";
-import { NumberOrString } from "./utils/Decimal";
+import { Numberish } from "./utils/Decimal";
 
 const SWAP_LIMIT_ERROR_MESSAGE = "slippage";
 
@@ -36,7 +36,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     return amm.toBigNum(1.0).mul(amm.toBigNum(principals)).div(amm.toBigNum(yields));
   }
 
-  function getDefaultLeftoverShares(): NumberOrString
+  function getDefaultLeftoverShares(): Numberish
   {
     if (pool.principalShare.decimals == 18) {
       return "0.000001";

@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { formatDecimal, NumberOrString, parseDecimal } from "./Decimal";
+import { formatDecimal, Numberish, parseDecimal } from "./Decimal";
 import { ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
@@ -29,14 +29,14 @@ export class YearnVault extends ContractBase {
   /**
    * @return Current price per share
    */
-  async pricePerShare(): Promise<NumberOrString> {
+  async pricePerShare(): Promise<Numberish> {
     return formatDecimal(await this.contract.pricePerShare(), this.yieldToken.decimals);
   }
 
   /**
    * Sets the pool price per share
    */
-  async setPricePerShare(pricePerShare:NumberOrString, owner:SignerOrAddress = null): Promise<void> {
+  async setPricePerShare(pricePerShare:Numberish, owner:SignerOrAddress = null): Promise<void> {
     if (owner !== null) {
       const prevExchangeRate = await this.pricePerShare();
       const difference = (Number(pricePerShare) / Number(prevExchangeRate)) - 1;
@@ -49,12 +49,12 @@ export class YearnVault extends ContractBase {
     await this.contract.setPricePerShare(parseDecimal(pricePerShare.toString(), this.yieldToken.decimals));
   }
 
-  async deposit(user:SignerOrAddress, amount:NumberOrString): Promise<void> {
+  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
     await this.contract.connect(user).deposit(this.asset.toBigNum(amount));
   }
 
-  async withdraw(user:SignerOrAddress, maxShares:NumberOrString, recipient: SignerOrAddress): Promise<void> {
+  async withdraw(user:SignerOrAddress, maxShares:Numberish, recipient: SignerOrAddress): Promise<void> {
     await this.contract.connect(user).deposit(this.yieldToken.toBigNum(maxShares), recipient);
   }
 }

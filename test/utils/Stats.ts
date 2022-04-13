@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString, toWei } from "./Decimal";
+import { Numberish, toWei } from "./Decimal";
 import { ContractBase } from "./ContractBase";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 
@@ -25,7 +25,7 @@ export class Stats extends ContractBase {
    * @return Amount of Principals (TPS) and Yields (TYS), scaled as 1e18 decimals.
    *         TPS and TYS are minted in 1:1 ratio, hence a single return value
    */
-  async estimatedMintedShares(pool:PoolTestFixture, amount:NumberOrString, isBackingToken:boolean): Promise<NumberOrString> {
+  async estimatedMintedShares(pool:PoolTestFixture, amount:Numberish, isBackingToken:boolean): Promise<Numberish> {
     const t = pool.tempus;
     const depositAmount = isBackingToken ? t.asset.toBigNum(amount) : t.yieldBearing.toBigNum(amount);
     return t.principalShare.fromBigNum(await this.contract.estimatedMintedShares(t.address, depositAmount, isBackingToken));
@@ -37,7 +37,7 @@ export class Stats extends ContractBase {
    * @param toBackingToken If true, redeem amount is estimated in BackingTokens instead of YieldBearingTokens
    * @return YBT or BT amount
    */
-  async estimatedRedeem(pool:PoolTestFixture, principals:NumberOrString, yields:NumberOrString, toBackingToken:boolean): Promise<NumberOrString> {
+  async estimatedRedeem(pool:PoolTestFixture, principals:Numberish, yields:Numberish, toBackingToken:boolean): Promise<Numberish> {
     const t = pool.tempus;
     const p = toBackingToken ? t.asset : t.yieldBearing;
     return p.fromBigNum(
@@ -58,9 +58,9 @@ export class Stats extends ContractBase {
    */
   async estimatedDepositAndProvideLiquidity(
     pool:PoolTestFixture,
-    amount:NumberOrString,
+    amount:Numberish,
     isBackingToken:boolean
-  ): Promise<[NumberOrString,NumberOrString,NumberOrString]> {
+  ): Promise<[Numberish,Numberish,Numberish]> {
     const t = pool.tempus;
     const tuple = await this.contract.estimatedDepositAndProvideLiquidity(
       pool.amm.address, pool.tempus.address, isBackingToken ? t.toBigNum(amount) : t.yieldBearing.toBigNum(amount), isBackingToken
@@ -72,7 +72,7 @@ export class Stats extends ContractBase {
     ];
   }
   
-  async estimatedDepositAndFix(pool:PoolTestFixture, amount:NumberOrString, isBackingToken:boolean): Promise<NumberOrString> {
+  async estimatedDepositAndFix(pool:PoolTestFixture, amount:Numberish, isBackingToken:boolean): Promise<Numberish> {
     const t = pool.tempus;
     return t.principalShare.fromBigNum(
       await this.contract.estimatedDepositAndFix(
@@ -81,7 +81,7 @@ export class Stats extends ContractBase {
     );
   }
 
-  async estimatedDepositAndLeverage(pool:PoolTestFixture, amount:NumberOrString, isBackingToken:boolean, leverage:NumberOrString): Promise<[NumberOrString,NumberOrString]> {
+  async estimatedDepositAndLeverage(pool:PoolTestFixture, amount:Numberish, isBackingToken:boolean, leverage:Numberish): Promise<[Numberish,Numberish]> {
     const t = pool.tempus;
     
     const principalsYields = await this.contract.estimatedDepositAndLeverage(
@@ -100,11 +100,11 @@ export class Stats extends ContractBase {
 
   async estimateExitAndRedeem(
     pool:PoolTestFixture,
-    lpTokens:NumberOrString,
-    principals:NumberOrString,
-    yields:NumberOrString,
+    lpTokens:Numberish,
+    principals:Numberish,
+    yields:Numberish,
     toBackingToken:boolean
-  ): Promise<NumberOrString> {
+  ): Promise<Numberish> {
     const t = pool.tempus;
     const p = toBackingToken ? t : t.yieldBearing;
     const r = await this.contract.estimateExitAndRedeem(
@@ -121,12 +121,12 @@ export class Stats extends ContractBase {
 
   async estimateExitAndRedeemGivenStakedOut(
     pool:PoolTestFixture,
-    principals:NumberOrString,
-    yields:NumberOrString,
-    principalStaked:NumberOrString,
-    yieldsStaked:NumberOrString,
+    principals:Numberish,
+    yields:Numberish,
+    principalStaked:Numberish,
+    yieldsStaked:Numberish,
     toBackingToken:boolean
-  ): Promise<{ tokenAmount:NumberOrString, lpTokensRedeemed:NumberOrString }> {
+  ): Promise<{ tokenAmount:Numberish, lpTokensRedeemed:Numberish }> {
     const t = pool.tempus;
     const p = toBackingToken ? t : t.yieldBearing;
     const r = await this.contract.estimateExitAndRedeemGivenStakedOut(
