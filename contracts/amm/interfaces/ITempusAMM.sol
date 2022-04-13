@@ -48,11 +48,6 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// second token in TempusAMM pair
     function token1() external view returns (IPoolShare);
 
-    /// Initialises TempusAMM by adding initial liquidity it
-    /// @param amountToken0 Amount of token0 to init TempusAMM with
-    /// @param amountToken1 Amount of token0 to init TempusAMM with
-    function init(uint256 amountToken0, uint256 amountToken1) external;
-
     /// Adds liquidity to TempusAMM
     /// @param amountToken0 Amount of token0 to add to TempusAMM
     /// @param amountToken1 Amount of token0 to add to TempusAMM
