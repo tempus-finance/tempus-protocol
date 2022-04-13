@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ContractBase, Signer } from "./utils/ContractBase";
-import { TempusAMMJoinKind } from "./utils/TempusAMM";
 import { expectRevert } from "./utils/Utils";
 import { PoolType, TempusPool } from "./utils/TempusPool";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
@@ -37,7 +36,7 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
   async function initAMM(user:Signer, ybtDeposit:number, principals:number, yields:number)
   {
     await testPool.tempus.controller.depositYieldBearing(user, pool, ybtDeposit, user);
-    await amm.provideLiquidity(user1, principals, yields, TempusAMMJoinKind.INIT);
+    await amm.provideLiquidity(user1, principals, yields);
   }
 
   it("verifies 3 user position mints followed by 3 burns completely empties the contract from Yields and Capitals", async () =>

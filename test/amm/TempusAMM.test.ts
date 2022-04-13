@@ -4,7 +4,6 @@ import { NumberOrString } from "../utils/Decimal";
 import { Signer } from "../utils/ContractBase";
 import { TempusPool } from "../utils/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
-import { TempusAMMJoinKind } from "../utils/TempusAMM";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
@@ -58,7 +57,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await testFixture.deposit(owner, depositAmount);
     await tempusPool.controller.depositYieldBearing(owner, tempusPool, depositAmount, owner);
     if (params.ammBalanceYield != undefined && params.ammBalancePrincipal != undefined) {
-      await tempusAMM.provideLiquidity(owner, params.ammBalancePrincipal, params.ammBalanceYield, TempusAMMJoinKind.INIT);
+      await tempusAMM.provideLiquidity(owner, params.ammBalancePrincipal, params.ammBalanceYield);
     }
     if (params.amplifyStart != params.amplifyEnd) {
       const oneAmplifyUpdate = (params.oneAmpUpdate === undefined) ? ONE_AMP_UPDATE_TIME : params.oneAmpUpdate;
@@ -219,7 +218,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     
     try {
       const balanceLpBefore = +await testFixture.amm.balanceOf(owner);
-      await testFixture.amm.provideLiquidity(owner, 10, 100, TempusAMMJoinKind.JOIN);
+      await testFixture.amm.provideLiquidity(owner, 10, 100);
       await evmMine();
       const balanceLpAfter = +await testFixture.amm.balanceOf(owner);
       await evmMine();
@@ -261,7 +260,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
   it("checks invariant increases over time with adding liquidity", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd: 95, oneAmpUpdate: (ONE_MONTH / 90)});
-    await testFixture.amm.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
+    await testFixture.amm.provideLiquidity(owner, 100, 1000);
     const amplificationParams = await testFixture.amm.getAmplificationParam();
     expect(amplificationParams.isUpdating).to.be.true;
   });
@@ -295,21 +294,21 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     // stop update
     await tempusAMM.stopAmplificationUpdate();
-    await tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
+    await tempusAMM.provideLiquidity(owner, 100, 1000);
   });
 
   it("revert on invalid join kind", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});
-    await tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT);
-    (await expectRevert(tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INVALID)));
+    await tempusAMM.provideLiquidity(owner, 100, 1000);
+    (await expectRevert(tempusAMM.provideLiquidity(owner, 100, 1000)));
   });
 
   it("revert on join after maturity", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});
     await testFixture.fastForwardToMaturity();
-    (await expectRevert(tempusAMM.provideLiquidity(owner, 100, 1000, TempusAMMJoinKind.INIT)));
+    (await expectRevert(tempusAMM.provideLiquidity(owner, 100, 1000)));
   });
 
   it("checks LP exiting pool", async () =>
@@ -356,7 +355,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     expect(+underlyingBalanceOwner.token1).to.be.within(999.99, 1000);
     await tempusAMM.principalShare.transfer(owner, user.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user.address, 1000);
-    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.JOIN);
+    await tempusAMM.provideLiquidity(user, 100, 1000);
 
     balanceUser = +await tempusAMM.balanceOf(user);
     balanceOwner = +await tempusAMM.balanceOf(owner);
@@ -380,7 +379,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     await tempusAMM.principalShare.transfer(owner, user.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user.address, 1000);
-    await tempusAMM.provideLiquidity(user, 100, 1000, TempusAMMJoinKind.JOIN);
+    await tempusAMM.provideLiquidity(user, 100, 1000);
 
     expect(+await tempusAMM.balanceOf(user)).to.be.within(181, 182);
     expect(+await tempusAMM.getRate()).to.be.within(1.0019, 1.002);
@@ -398,7 +397,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     // provide more liquidity with different user
     await tempusAMM.principalShare.transfer(owner, user1.address, 1000);
     await tempusAMM.yieldShare.transfer(owner, user1.address, 1000);
-    await tempusAMM.provideLiquidity(user1, 100, 1000, TempusAMMJoinKind.JOIN);
+    await tempusAMM.provideLiquidity(user1, 100, 1000);
     
     expect(+await tempusAMM.balanceOf(user1)).to.be.within(180, 181);
     expect(+await tempusAMM.getRate()).to.be.within(1.005975, 1.0060);

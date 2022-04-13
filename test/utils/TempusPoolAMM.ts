@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { NumberOrString, toWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
-import { AMP_PRECISION, MONTH, TempusAMM, TempusAMMJoinKind } from "./TempusAMM";
+import { AMP_PRECISION, TempusAMM } from "./TempusAMM";
 import { PoolShare } from "./PoolShare";
 import { TempusController } from "./TempusController";
 
@@ -64,7 +64,7 @@ export class TempusPoolAMM extends TempusAMM {
     return super.getLPTokensInGivenTokensOut(principalStaked, yieldsStaked);
   }
 
-  async provideLiquidity(from: Signer, principals: Number, yields: Number, joinKind: TempusAMMJoinKind) {
-    await super.provideLiquidity(from, principals, yields, joinKind);
+  async provideLiquidity(from: Signer, principals: Number, yields: Number) {
+    await super.provideLiquidity(from, principals, yields);
   }
 }

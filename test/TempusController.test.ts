@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { addressOf, Signer } from "./utils/ContractBase";
-import { TempusAMMJoinKind } from "./utils/TempusAMM";
 import { expectRevert } from "./utils/Utils";
 import { PoolType, TempusPool } from "./utils/TempusPool";
 import { TempusController } from "./utils/TempusController";
@@ -52,7 +51,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
   async function initAMM(user:Signer, ybtDeposit:number, principals:number, yields:number)
   {
     await controller.depositYieldBearing(user, pool, ybtDeposit, user);
-    await amm.provideLiquidity(user1, principals, yields, TempusAMMJoinKind.INIT);
+    await amm.provideLiquidity(user1, principals, yields);
   }
 
   async function expectValidState(expectedAMMBalancesRatio:BigNumber = null)
@@ -255,7 +254,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
 
       await controller.depositYieldBearing(user2, pool, 10000, user2);
-      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.JOIN);
+      await testPool.amm.provideLiquidity(user2, 1000, 10000);
       
       const userP:number = +await testPool.principals.balanceOf(user2);
       const userY:number = +await testPool.yields.balanceOf(user2);
@@ -280,7 +279,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await controller.depositYieldBearing(user2, pool, 10000, user2);
-      await testPool.amm.provideLiquidity(user2, 1000, 10000, TempusAMMJoinKind.JOIN);
+      await testPool.amm.provideLiquidity(user2, 1000, 10000);
       const userP:number = +await testPool.principals.balanceOf(user2);
       const userY:number = +await testPool.yields.balanceOf(user2);
       const userPRedeem:number = userP < 9999 ? userP : 9999;

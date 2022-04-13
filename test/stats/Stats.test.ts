@@ -5,7 +5,6 @@ import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { Stats } from "../utils/Stats";
 import { TempusController } from "../utils/TempusController";
-import { TempusAMMJoinKind } from "../utils/TempusAMM";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
 
 describeForEachPool("Stats", (testPool:PoolTestFixture) =>
@@ -20,7 +19,7 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
   async function initAMM(user:Signer, ybtDeposit:number, principals:number, yields:number)
   {
     await controller.depositYieldBearing(user, pool, ybtDeposit, user);
-    await amm.provideLiquidity(user1, principals, yields, TempusAMMJoinKind.INIT);
+    await amm.provideLiquidity(user1, principals, yields);
   }
 
   beforeEach(async () =>
