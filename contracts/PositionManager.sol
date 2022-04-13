@@ -81,7 +81,12 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         _safeMint(params.recipient, tokenId);
     }
 
-    function burn(uint256 tokenId, BurnParams calldata params) external override nonReentrant returns (uint256 liquidatedTokenAmount) {
+    function burn(uint256 tokenId, BurnParams calldata params)
+        external
+        override
+        nonReentrant
+        returns (uint256 liquidatedTokenAmount)
+    {
         if (!_isApprovedOrOwner(msg.sender, tokenId)) {
             revert UnauthorizedBurn();
         }
@@ -92,13 +97,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         _burn(tokenId);
 
         ITempusPool tempusPool = p.tempusAMM.token0().pool();
-        liquidatedTokenAmount = _liquidatePosition(
-            p.tempusAMM,
-            tempusPool,
-            p.capitals,
-            p.yields,
-            params
-        );
+        liquidatedTokenAmount = _liquidatePosition(p.tempusAMM, tempusPool, p.capitals, p.yields, params);
     }
 
     function position(uint256 tokenId) external view override returns (Position memory) {
