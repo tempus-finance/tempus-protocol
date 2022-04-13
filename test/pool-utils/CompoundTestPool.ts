@@ -25,8 +25,8 @@ export class CompoundTestPool extends PoolTestFixture {
     await this.compound.enterMarkets(user);
     await this.compound.mint(user, amount);
   }
-  async createWithAMM(params:TempusAMMParams): Promise<TempusPool> {
-    return await this.initPool(params, this.YIELD_TOKEN.name, this.YIELD_TOKEN.symbol, async () => {
+  async createWithAMM(params:TempusAMMParams, isOTC?: boolean): Promise<TempusPool> {
+    return await this.initPool(params, this.YIELD_TOKEN.name, this.YIELD_TOKEN.symbol, isOTC, async () => {
       return await Comptroller.create(this.ASSET_TOKEN, this.YIELD_TOKEN, this.initialRate);
     }, (pool:ContractBase) => {
       this.compound = <Comptroller>pool;

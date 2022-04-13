@@ -26,8 +26,8 @@ export class RariTestPool extends PoolTestFixture {
   async deposit(user:Signer, amount:number): Promise<void> {
     await this.rari.deposit(user, amount);
   }
-  async createWithAMM(params:TempusAMMParams): Promise<TempusPool> {
-    return await this.initPool(params, this.YIELD_TOKEN.name, this.YIELD_TOKEN.symbol, async () => {
+  async createWithAMM(params:TempusAMMParams, isOTC?: boolean): Promise<TempusPool> {
+    return await this.initPool(params, this.YIELD_TOKEN.name, this.YIELD_TOKEN.symbol, isOTC, async () => {
       return await RariFundManager.create(this.ASSET_TOKEN, this.YIELD_TOKEN, this.initialRate);
     }, (pool:ContractBase) => {
       this.rari = <RariFundManager>pool;

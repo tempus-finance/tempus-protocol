@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { Transaction } from "ethers";
 import { deployments, ethers } from "hardhat";
+import { getContractAddress } from '@ethersproject/address';
 import { ContractBase, Signer, SignerOrAddress } from "../utils/ContractBase";
 import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../utils/TempusPool";
 import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
@@ -12,6 +13,7 @@ import { TempusController } from "../utils/TempusController";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
 import { PoolShare } from "../utils/PoolShare";
 import { strict as assert } from 'assert';
+import { TempusOTC } from "../utils/TempusOTC";
 
 const ROUNDING_ERROR_TOLERANCE_THRESHOLD = 0.00000001; /// allow for 0.000001% error in YBT amounts 
 export interface BalancesExpectation {
@@ -133,6 +135,7 @@ export abstract class PoolTestFixture {
   // initialized by initPool()
   tempus:TempusPool;
   controller:TempusController;
+  otc:TempusOTC;
   amm:TempusPoolAMM;
   signers:Signer[];
 
@@ -169,20 +172,20 @@ export abstract class PoolTestFixture {
    * This will create TempusPool, TempusAMM and TempusController instances.
    * @param params Parameters for Pool, AMM and 
    */
-  abstract createWithAMM(params:TempusAMMParams): Promise<TempusPool>;
+  abstract createWithAMM(params:TempusAMMParams, isOTC?: boolean): Promise<TempusPool>;
 
   /**
    * Simplified overload for createPoolWithAMM, giving default parameters for AMM
    */
-  public create(params:TempusParams): Promise<TempusPool> {
-    return this.createWithAMM({ ...params, ammSwapFee:0.02, ammAmplifyStart:5, ammAmplifyEnd:5 });
+  public create(params:TempusParams, isOTC?:boolean): Promise<TempusPool> {
+    return this.createWithAMM({ ...params, ammSwapFee:0.02, ammAmplifyStart:5, ammAmplifyEnd:5}, isOTC);
   }
 
   /**
    * Super-simplified overload for create, sets default parameters
    */
-  public createDefault(): Promise<TempusPool> {
-    return this.create({ initialRate:1.0, poolDuration:60*60, yieldEst:0.1 });
+  public createDefault(isOTC?:boolean): Promise<TempusPool> {
+    return this.create({ initialRate:1.0, poolDuration:60*60, yieldEst:0.1 }, isOTC);
   }
 
   /**
@@ -444,6 +447,7 @@ export abstract class PoolTestFixture {
     p:TempusAMMParams,
     ybtName:string,
     ybtSymbol:string,
+    isOTC: boolean,
     newPool:()=>Promise<ContractBase>,
     setPool:(pool:ContractBase)=>void
   ): Promise<TempusPool> {
@@ -452,7 +456,7 @@ export abstract class PoolTestFixture {
     this.yieldEst = p.yieldEst;
 
     const sig = [this.type, ybtSymbol, p.initialRate, p.poolDuration,
-                 p.yieldEst, p.ammSwapFee, p.ammAmplifyStart, p.ammAmplifyEnd].join("|");
+                 p.yieldEst, p.ammSwapFee, p.ammAmplifyStart, p.ammAmplifyEnd, isOTC].join("|");
     
     let f:FixtureState = POOL_FIXTURES[sig];
     if (!f) // initialize a new fixture
@@ -462,6 +466,10 @@ export abstract class PoolTestFixture {
       const names = generateTempusSharesNames(ybtName, ybtSymbol, maturityTime);
       f = new FixtureState(maturityTime, names, deployments.createFixture(async () =>
       {
+        let tempusOTC:TempusOTC;
+        let amm:TempusPoolAMM;
+        let tempus:TempusPool;
+
         await deployments.fixture(undefined, { keepExistingDeployments: true, });
         // Note: for fixtures, all contracts must be initialized inside this callback
         const [owner, ...users] = await this.getSigners();
@@ -469,19 +477,34 @@ export abstract class PoolTestFixture {
         const asset = (pool as any).asset;
         const ybt = (pool as any).yieldToken;
 
-        // initialize new tempus pool with the controller, TempusPool is auto-registered
-        const tempus = await TempusPool.deploy(
-          this.type, owner, controller, asset, ybt, maturityTime, p.yieldEst, names, pool.address
-        );
+        if (isOTC) {
+          const transactionCount = await owner.getTransactionCount() + 1;
+          const futureTempusOTCAddress = getContractAddress({
+            from: owner.address,
+            nonce: transactionCount
+          });
 
-        // new AMM instance and register the AMM with the controller
-        const amm = await TempusPoolAMM.create(owner, controller, tempus.principalShare, tempus.yieldShare, 
-          p.ammAmplifyStart, p.ammAmplifyEnd, maturityTime, p.ammSwapFee
-        );
+          // initialize new tempus pool with the controller, TempusOTC is auto-registered
+          tempus = await TempusPool.deploy(
+            this.type, owner, controller, asset, ybt, maturityTime, p.yieldEst, names, pool.address, futureTempusOTCAddress
+          );
+
+          tempusOTC = await TempusOTC.create(tempus, transactionCount);
+        } else {
+          // initialize new tempus pool with the controller, TempusPool is auto-registered
+          tempus = await TempusPool.deploy(
+            this.type, owner, controller, asset, ybt, maturityTime, p.yieldEst, names, pool.address
+          );
+
+          // new AMM instance and register the AMM with the controller
+          amm = await TempusPoolAMM.create(owner, controller, tempus.principalShare, tempus.yieldShare, 
+            p.ammAmplifyStart, p.ammAmplifyEnd, maturityTime, p.ammSwapFee
+          );
+        }
 
         return {
           signers: { owner, users },
-          contracts: { pool:pool, tempus:tempus, amm: amm },
+          contracts: { pool:pool, tempus:tempus, amm: amm, otc:tempusOTC },
         };
       }));
       POOL_FIXTURES[sig] = f; // save for later use
@@ -497,6 +520,7 @@ export abstract class PoolTestFixture {
     setPool(this.pool);
     this.tempus = s.contracts.tempus;
     this.controller = this.tempus.controller;
+    this.otc = s.contracts.otc;
     this.amm = s.contracts.amm;
     this.principals = this.tempus.principalShare;
     this.yields = this.tempus.yieldShare;

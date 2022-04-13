@@ -226,10 +226,12 @@ export class TempusPool extends ContractBase {
     maturityTime:number,
     estimatedYield:number,
     shareNames:TempusSharesNames,
-    underlyingProtocolContractAddress: string = null
+    underlyingProtocolContractAddress: string = null,
+    otc: string = null
   ): Promise<TempusPool> {
     let exchangeRatePrec:number;
     let pool:Contract = null;
+    let controllerAddress = (otc == null) ? controller.address : otc;
 
     if (type === PoolType.Aave) {
       exchangeRatePrec = 18; // AaveTempusPool converts 1e27 LiquidityIndex to 1e18 interestRate
@@ -237,7 +239,7 @@ export class TempusPool extends ContractBase {
         type + "TempusPool",
         owner,
         yieldToken.address,
-        controller.address,
+        controllerAddress,
         maturityTime,
         parseDecimal(estimatedYield, exchangeRatePrec),
         /*principalsData*/{
@@ -260,7 +262,7 @@ export class TempusPool extends ContractBase {
         type + "TempusPool",
         owner,
         yieldToken.address,
-        controller.address,
+        controllerAddress,
         maturityTime,
         parseDecimal(estimatedYield, exchangeRatePrec),
         /*principalsData*/{
@@ -284,7 +286,7 @@ export class TempusPool extends ContractBase {
         type + "TempusPool",
         owner,
         yieldToken.address,
-        controller.address,
+        controllerAddress,
         maturityTime,
         parseDecimal(1.0, exchangeRatePrec),
         parseDecimal(estimatedYield, exchangeRatePrec),
@@ -308,7 +310,7 @@ export class TempusPool extends ContractBase {
         type + "TempusPool",
         owner,
         yieldToken.address,
-        controller.address,
+        controllerAddress,
         maturityTime,
         parseDecimal(estimatedYield, exchangeRatePrec),
         /*principalsData*/{
@@ -332,7 +334,7 @@ export class TempusPool extends ContractBase {
         owner,
         underlyingProtocolContractAddress,
         (asset as ERC20).address,
-        controller.address,
+        controllerAddress,
         maturityTime,
         parseDecimal(estimatedYield, exchangeRatePrec),
         /*principalsData*/{
@@ -357,7 +359,9 @@ export class TempusPool extends ContractBase {
     const tps = await PoolShare.attach(ShareKind.Principal, await pool.principalShare(), asset.decimals);
     const tys = await PoolShare.attach(ShareKind.Yield, await pool.yieldShare(), asset.decimals);
     const tempusPool = new TempusPool(type, owner, pool!, controller, asset, yieldToken, tps, tys, exchangeRatePrec);
-    await controller.register(owner, tempusPool.address);
+    if (otc == null) {
+      await controller.register(owner, tempusPool.address);
+    }
     return tempusPool;
   }
 
