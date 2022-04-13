@@ -1,7 +1,109 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 
-export type Numberish = Number | string;
+
+/**
+ * Matches the most common ERC20 18-decimals precision, such as ETH
+ */
+export const DEFAULT_DECIMAL_PRECISION = 18;
+
+ /**
+  * Creates a new `Decimal` type from decimal.js Fixed Point math library
+  * The created Decimal has Decimal.ROUND_DOWN and default precision of 18 decimals
+  * @param value Number-like value to convert to Decimal
+  * @param maxDecimals Maximum Decimal precision after the fraction, excess is truncated
+  */
+export function decimal(value:Numberish, maxDecimals:number = DEFAULT_DECIMAL_PRECISION): Decimal {
+  return new Decimal(value, maxDecimals);
+}
+ 
+/**
+ * @abstract A Fixed-Point Decimal type with a strongly defined `decimals` precision
+ *           compatible with ERC20.decimals() concept.
+ */
+export class Decimal {
+  bn: BigNumber; // big integer that holds the FixedPoint Decimal value
+  decimals: number; // number of decimal digits that form a fraction, can be 0
+
+  constructor(value:Numberish, decimals:number) {
+    this.decimals = decimals;
+    this.bn = Decimal.toFixedPointInteger(value, decimals);
+  }
+
+  public static toFixedPointInteger(value:Numberish, decimals:number): BigNumber {
+    // accept BigNumber without any validation, assume Dev knows what they're doing
+    if (value instanceof BigNumber) {
+      return value;
+    }
+    // this is a no-op case?
+    if (value instanceof Decimal && value.decimals == decimals) {
+      return value.bn;
+    }
+
+    const valstr = value.toString();
+    const fractionIdx = valstr.indexOf('.');
+
+    if (decimals === 0) { // pure integer case, TRUNCATE any decimals
+      const intpart = valstr.substring(0, fractionIdx === -1 ? valstr.length : fractionIdx);
+      return BigNumber.from(intpart);
+    }
+
+    if (fractionIdx === -1) { // input was integer eg "1234"
+      return BigNumber.from(valstr + "0".repeat(decimals));
+    }
+
+    // input was a decimal eg "123.45678"
+    const intpart = valstr.substring(0, fractionIdx);
+    const fracpart = valstr.substring(fractionIdx+1);
+    const zeroes = fracpart.length > decimals ? "0".repeat(decimals - fracpart.length) : "";
+    return BigNumber.from(intpart + fracpart + zeroes);
+  }
+
+  public toDecimalBN(x:Numberish): BigNumber {
+    return Decimal.toFixedPointInteger(x, this.decimals);
+  }
+
+  public toDecimal(x:Numberish): Decimal {
+    return new Decimal(x, this.decimals);
+  }
+
+  public toString(): string {
+    return this.bn.toString();
+  }
+
+  public toHexString(): string {
+    return this.bn.toHexString();
+  }
+
+  /** 1.0 expressed as a scaled BigNumber */
+  public one(): BigNumber {
+    return BigNumber.from(Math.pow(10, this.decimals));
+  }
+
+  /** @return decimal(this) + decimal(x) */
+  public add(x:Numberish): Decimal {
+    return this.toDecimal( this.bn.add(this.toDecimalBN(x)) );
+  }
+
+  /** @return decimal(this) - decimal(x) */
+  public sub(x:Numberish): Decimal {
+    return this.toDecimal( this.bn.sub(this.toDecimalBN(x)) );
+  }
+
+  /** @return decimal(this) * decimal(x) */
+  public mul(x:Numberish): Decimal {
+    // mulf = (a * b) / ONE
+    return this.toDecimal( this.bn.mul(this.toDecimalBN(x)).div(this.one()) );
+  }
+
+  /** @return decimal(this) / decimal(x) */
+  public div(x:Numberish): Decimal {
+    // divf = (a * ONE) / b
+    return this.toDecimal( this.bn.mul(this.one()).div(this.toDecimalBN(x)) );
+  }
+}
+
+export type Numberish = Number | number | string | BigNumber | Decimal;
 
 /**
  * double has limited digits of accuracy, so any decimal 
@@ -31,7 +133,7 @@ export const ONE_WEI:BigNumber = ethers.utils.parseUnits('1.0', 18);
 export function parseDecimal(decimal:Numberish, decimalBase:number): BigNumber {
   // need this special case to support MAX_UINT256, ignoring decimalBase
   const decimalString = decimal.toString();
-  if (decimalString == MAX_UINT256) {
+  if (decimalString === MAX_UINT256) {
     return BigNumber.from(MAX_UINT256);
   }
   return ethers.utils.parseUnits(decimalString, decimalBase);
@@ -50,9 +152,16 @@ export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): Numberi
   return str;
 }
 
+/**
+ * Truncates a number directly into a BigNumber, without any scaling
+ */
+export function bn(number:Numberish): BigNumber {
+  return BigNumber.from(number);
+}
+
 /** @return WEI BigNumber from an ETH decimal */
 export function toWei(eth:Numberish): BigNumber {
-  return parseDecimal(eth.toString(), 18);
+  return parseDecimal(eth, 18);
 }
 
 /** @return Decimal from a WEI BigNumber */
@@ -62,7 +171,7 @@ export function fromWei(wei:BigNumber): Numberish {
 
 /** @return RAY BigNumber from a decimal number */
 export function toRay(decimal:Numberish): BigNumber {
-  return parseDecimal(decimal.toString(), 27);
+  return parseDecimal(decimal, 27);
 }
 
 /** @return Decimal from a RAY BigNumber */
@@ -89,6 +198,9 @@ export class DecimalConvertible {
 
   /** @return Converts a Number or String into this Contract's BigNumber decimal */
   public toBigNum(amount:Numberish):BigNumber {
+    if (amount instanceof BigNumber) {
+      return amount;
+    }
     if (typeof(amount) === "string") {
       return parseDecimal(amount, this.decimals);
     }
