@@ -9,6 +9,9 @@ contract LidoTempusPool is TempusPool {
     bytes32 public constant override protocolName = "Lido";
     address private immutable referrer;
 
+    /// @dev Error thrown when the `withdrawFromUnderlyingProtocol` method is called for Lido pool
+    error LidoWithdrawNotSupported();
+
     constructor(
         ILido token,
         address controller,
@@ -47,8 +50,7 @@ contract LidoTempusPool is TempusPool {
     }
 
     function withdrawFromUnderlyingProtocol(uint256, address) internal pure override returns (uint256) {
-        require(false, "LidoTempusPool.withdrawFromUnderlyingProtocol not supported");
-        return 0;
+        revert LidoWithdrawNotSupported();
     }
 
     /// @return Updated current Interest Rate as an 1e18 decimal

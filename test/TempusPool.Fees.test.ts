@@ -1,4 +1,3 @@
-import { ethers } from "hardhat";
 import { expect } from "chai";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
@@ -36,17 +35,17 @@ describeForEachPool("TempusPool Fees", (pool:PoolTestFixture) =>
 
   it("Fee configuration should revert if deposit percent > max", async () =>
   {
-    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.6, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.0 }))).to.be.equal("Deposit fee percent > max");
+    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.6, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.0 }))).to.be.equal(":FeePercentageTooBig");
   });
 
   it("Fee configuration should revert if early redeem percent > max", async () =>
   {
-    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 1.1, matureRedeemPercent: 0.0 }))).to.be.equal("Early redeem fee percent > max");
+    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 1.1, matureRedeemPercent: 0.0 }))).to.be.equal(":FeePercentageTooBig");
   });
 
   it("Fee configuration should revert if mature redeem percent > max", async () =>
   {
-    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.6 }))).to.be.equal("Mature redeem fee percent > max");
+    (await expectRevert(pool.tempus.setFeesConfig(owner, { depositPercent: 0.0, earlyRedeemPercent: 0.0, matureRedeemPercent: 0.6 }))).to.be.equal(":FeePercentageTooBig");
   });
 
   it("Should collect tokens as fees during deposit() if fees != 0", async () =>

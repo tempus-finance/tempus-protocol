@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./token/IPoolShare.sol";
 import "./utils/IOwnable.sol";
 import "./utils/IVersioned.sol";
@@ -43,6 +45,71 @@ interface ITempusFees is IOwnable {
 
 /// All state changing operations are restricted to the controller.
 interface ITempusPool is ITempusFees, IVersioned {
+    /// @dev Error thrown when the given's pool maturity time has already passed
+    /// @param maturity The maturity timestamp
+    /// @param startTime The pool start timestamp
+    error MaturityTimeBeforeStartTime(uint256 maturity, uint256 startTime);
+
+    /// @dev Error thrown when the address of the controller is the zero address
+    error ZeroAddressController();
+
+    /// @dev Error thrown when the interest rate is zero
+    error ZeroInterestRate();
+
+    /// @dev Error thrown when the estimated final yield is zero
+    error ZeroEstimatedFinalYield();
+
+    /// @dev Error thrown when the address of the yield bearing token is the zero address
+    error ZeroAddressYieldBearingToken();
+
+    /// @dev Error thrown when the method call does not come from the Tempus controller
+    /// @param deniedCaller The address of the denied caller
+    error OnlyControllerAuthorized(address deniedCaller);
+
+    /// @dev Error thrown when a fee percentage is bigger than the maximum
+    /// @param actionType The type of action
+    /// @param feePercent The fee percent given
+    /// @param maximumFeePercent The maximum fee percent allowed
+    error FeePercentageTooBig(bytes32 actionType, uint256 feePercent, uint256 maximumFeePercent);
+
+    /// @dev Error thrown when the pool has already matured
+    /// @param tempusPool The address of the pool that has already matured
+    error PoolAlreadyMatured(ITempusPool tempusPool);
+
+    /// @dev Error thrown when the yield is negative
+    error NegativeYield();
+
+    /// @dev Error thrown when the principal token balance is insufficient
+    /// @param principalTokenBalance The principal token balance
+    /// @param expectedPrincipalTokenAmount The expected principal token amount
+    error InsufficientPrincipalTokenBalance(uint256 principalTokenBalance, uint256 expectedPrincipalTokenAmount);
+
+    /// @dev Error thrown when the yield token balance is insufficient
+    /// @param yieldTokenBalance The yield token balance
+    /// @param expectedYieldTokenAmount The expected yield token amount
+    error InsufficientYieldTokenBalance(uint256 yieldTokenBalance, uint256 expectedYieldTokenAmount);
+
+    /// @dev Error thrown when trying to exit pool before maturity but pricipal and yield token amounts are not equal
+    /// @param principalTokenAmount The amount of principal tokens
+    /// @param yieldTokenAmount The amount of yield tokens
+    error NotEqualPrincipalAndYieldTokenAmounts(uint256 principalTokenAmount, uint256 yieldTokenAmount);
+
+    /// @dev Error thrown when the expected decimals of a token are more than the maximum expected decimals
+    /// @param token The address of the token
+    /// @param maximumExpectedDecimals The maximum expected decimals
+    /// @param actualDecimals The actual decimals
+    error MoreThanMaximumExpectedDecimals(address token, uint256 maximumExpectedDecimals, uint256 actualDecimals);
+
+    /// @dev Error thrown when the given token is not a valid one in the pool's context
+    /// @param token The address of the given token
+    error InvalidBackingToken(IERC20 token);
+
+    /// @dev Error thrown when the expected decimals of a token do not match the actual ones
+    /// @param token The address of the token
+    /// @param expectedDecimals The expected decimals
+    /// @param actualDecimals The actual decimals
+    error DecimalsPrecisionMismatch(address token, uint256 expectedDecimals, uint256 actualDecimals);
+
     /// @return The name of underlying protocol, for example "Aave" for Aave protocol
     function protocolName() external view returns (bytes32);
 

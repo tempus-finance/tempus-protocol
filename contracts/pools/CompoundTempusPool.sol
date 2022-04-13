@@ -17,6 +17,20 @@ contract CompoundTempusPool is TempusPool {
 
     bytes32 public constant override protocolName = "Compound";
 
+    /// @dev Error thrown when the call to the comptroller enter markets method fails
+    /// @param marketToken The address of the market token
+    error ComptrollerEnterMarketsFailed(ICErc20 marketToken);
+
+    /// @dev Error thrown when the minting of Compound tokens fails
+    /// @param cToken The address of the Compound token to mint
+    /// @param amountToMint The amount of Compound token to mint
+    error CTokenMintFailed(address cToken, uint256 amountToMint);
+
+    /// @dev Error thrown when the redeeming of Compound tokens fails
+    /// @param cToken The address of the Compound token to redeem
+    /// @param amountToRedeem The amount of Compound token to redeem
+    error CTokenRedeemFailed(address cToken, uint256 amountToRedeem);
+
     constructor(
         ICErc20 token,
         address controller,
@@ -40,14 +54,23 @@ contract CompoundTempusPool is TempusPool {
             maxFeeSetup
         )
     {
-        require(token.isCToken(), "token is not a CToken");
-        require(token.decimals() == 8, "CErc20 token must have 8 decimals precision");
+        if (!token.isCToken()) {
+            revert InvalidBackingToken(token);
+        }
+        uint256 tokenDecimals = token.decimals();
+        if (tokenDecimals != 8) {
+            revert DecimalsPrecisionMismatch(address(token), tokenDecimals, 8);
+        }
         uint8 underlyingDecimals = ICErc20(token.underlying()).decimals();
-        require(underlyingDecimals <= 36, "Underlying ERC20 token decimals must be <= 36");
+        if (underlyingDecimals > 36) {
+            revert MoreThanMaximumExpectedDecimals(token.underlying(), underlyingDecimals, 36);
+        }
 
         address[] memory markets = new address[](1);
         markets[0] = address(token);
-        require(token.comptroller().enterMarkets(markets)[0] == 0, "enterMarkets failed");
+        if (token.comptroller().enterMarkets(markets)[0] != 0) {
+            revert ComptrollerEnterMarketsFailed(token);
+        }
     }
 
     function depositToUnderlying(uint256 amountBT)
@@ -63,7 +86,9 @@ contract CompoundTempusPool is TempusPool {
 
         // Deposit to Compound
         IERC20(backingToken).safeIncreaseAllowance(yieldBearingToken, amountBT);
-        require(ICErc20(yieldBearingToken).mint(amountBT) == 0, "CErc20 mint failed");
+        if (ICErc20(yieldBearingToken).mint(amountBT) != 0) {
+            revert CTokenMintFailed(yieldBearingToken, amountBT);
+        }
 
         mintedYBT = balanceOfYBT() - ybtBefore;
     }
@@ -76,7 +101,9 @@ contract CompoundTempusPool is TempusPool {
     {
         // tempus pool owns YBT
         assert(ICErc20(yieldBearingToken).balanceOf(address(this)) >= yieldBearingTokensAmount);
-        require(ICErc20(yieldBearingToken).redeem(yieldBearingTokensAmount) == 0, "CErc20 redeem failed");
+        if (ICErc20(yieldBearingToken).redeem(yieldBearingTokensAmount) != 0) {
+            revert CTokenRedeemFailed(yieldBearingToken, yieldBearingTokensAmount);
+        }
 
         // need to rescale the truncated amount which was used during cToken.redeem()
         uint256 backing = numAssetsPerYieldToken(yieldBearingTokensAmount, updateInterestRate());

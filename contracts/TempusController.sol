@@ -478,7 +478,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool toBackingToken
     ) private returns (uint256) {
         if (tempusPool.matured()) {
-            revert PoolAlreadyFinalized(address(tempusPool));
+            revert PoolAlreadyMatured(tempusPool);
         }
         principals += principalsStaked;
         yields += yieldsStaked;
@@ -525,10 +525,10 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         IPoolShare yieldShare = tempusPool.yieldShare();
 
         if (!principalShare.transferFrom(msg.sender, address(this), principals)) {
-            revert FailedPrincipalTokensTransfer(msg.sender, address(this), principals);
+            revert FailedPrincipalTokensTransfer(msg.sender, this, principals);
         }
         if (!yieldShare.transferFrom(msg.sender, address(this), yields)) {
-            revert FailedYieldTokensTransfer(msg.sender, address(this), yields);
+            revert FailedYieldTokensTransfer(msg.sender, this, yields);
         }
         if (yieldsRate == 0) {
             revert ZeroYieldsRate();

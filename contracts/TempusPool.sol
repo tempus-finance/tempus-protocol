@@ -84,11 +84,21 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
     ) Versioned(1, 0, 0) {
-        require(maturity > block.timestamp, "maturityTime is after startTime");
-        require(ctrl != address(0), "controller can not be zero");
-        require(initInterestRate > 0, "initInterestRate can not be zero");
-        require(estimatedFinalYield > 0, "estimatedFinalYield can not be zero");
-        require(_yieldBearingToken != address(0), "YBT can not be zero");
+        if (maturity <= block.timestamp) {
+            revert MaturityTimeBeforeStartTime(maturity, block.timestamp);
+        }
+        if (ctrl == address(0)) {
+            revert ZeroAddressController();
+        }
+        if (initInterestRate == 0) {
+            revert ZeroInterestRate();
+        }
+        if (estimatedFinalYield == 0) {
+            revert ZeroEstimatedFinalYield();
+        }
+        if (_yieldBearingToken == address(0)) {
+            revert ZeroAddressYieldBearingToken();
+        }
 
         yieldBearingToken = _yieldBearingToken;
         backingToken = _backingToken;
@@ -134,7 +144,9 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     modifier onlyController() {
-        require(msg.sender == controller, "Only callable by TempusController");
+        if (msg.sender != controller) {
+            revert OnlyControllerAuthorized(msg.sender);
+        }
         _;
     }
 
@@ -186,9 +198,15 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     }
 
     function setFeesConfig(FeesConfig calldata newFeesConfig) external override onlyOwner {
-        require(newFeesConfig.depositPercent <= maxDepositFee, "Deposit fee percent > max");
-        require(newFeesConfig.earlyRedeemPercent <= maxEarlyRedeemFee, "Early redeem fee percent > max");
-        require(newFeesConfig.matureRedeemPercent <= maxMatureRedeemFee, "Mature redeem fee percent > max");
+        if (newFeesConfig.depositPercent > maxDepositFee) {
+            revert FeePercentageTooBig("deposit", newFeesConfig.depositPercent, maxDepositFee);
+        }
+        if (newFeesConfig.earlyRedeemPercent > maxEarlyRedeemFee) {
+            revert FeePercentageTooBig("early redeem", newFeesConfig.earlyRedeemPercent, maxEarlyRedeemFee);
+        }
+        if (newFeesConfig.matureRedeemPercent > maxMatureRedeemFee) {
+            revert FeePercentageTooBig("mature redeem", newFeesConfig.matureRedeemPercent, maxMatureRedeemFee);
+        }
         feesConfig = newFeesConfig;
     }
 
@@ -252,8 +270,12 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         rate = updateInterestRate();
         (bool hasMatured, bool hasNegativeYield) = validateInterestRate(rate);
 
-        require(!hasMatured, "Maturity reached.");
-        require(!hasNegativeYield, "Negative yield!");
+        if (hasMatured) {
+            revert PoolAlreadyMatured(this);
+        }
+        if (hasNegativeYield) {
+            revert NegativeYield();
+        }
 
         // Collect fees if they are set, reducing the number of tokens for the sender
         // thus leaving more YBT in the TempusPool than there are minted TPS/TYS
@@ -333,8 +355,15 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
             uint256 interestRate
         )
     {
-        require(IERC20(address(principalShare)).balanceOf(from) >= principalAmount, "Insufficient principals.");
-        require(IERC20(address(yieldShare)).balanceOf(from) >= yieldAmount, "Insufficient yields.");
+        uint256 principalTokenBalance = IERC20(address(principalShare)).balanceOf(from);
+        if (principalTokenBalance < principalAmount) {
+            revert InsufficientPrincipalTokenBalance(principalTokenBalance, principalAmount);
+        }
+
+        uint256 yieldTokenBalance = IERC20(address(yieldShare)).balanceOf(from);
+        if (yieldTokenBalance < yieldAmount) {
+            revert InsufficientYieldTokenBalance(yieldTokenBalance, yieldAmount);
+        }
 
         uint256 currentRate = updateInterestRate();
         (bool hasMatured, ) = validateInterestRate(currentRate);
@@ -343,7 +372,9 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
             finalize();
         } else {
             // Redeeming prior to maturity is only allowed in equal amounts.
-            require(principalAmount == yieldAmount, "Inequal redemption not allowed before maturity.");
+            if (principalAmount != yieldAmount) {
+                revert NotEqualPrincipalAndYieldTokenAmounts(principalAmount, yieldAmount);
+            }
         }
         // Burn the appropriate shares
         PrincipalShare(address(principalShare)).burnFrom(from, principalAmount);
@@ -517,7 +548,9 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         override
         returns (uint256)
     {
-        require(!matured(), "Should run only before maturity");
+        if (matured()) {
+            revert PoolAlreadyMatured(this);
+        }
         return sharesToMintBurnForTokensInOut(amountOut, isBackingToken);
     }
 

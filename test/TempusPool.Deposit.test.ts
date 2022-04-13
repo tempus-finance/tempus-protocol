@@ -84,7 +84,7 @@ describeForEachPool("TempusPool Deposit", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 500]]);
     await pool.setInterestRate(0.8);
 
-    (await pool.expectDepositYBT(user, 100)).to.equal('Negative yield!');
+    (await pool.expectDepositYBT(user, 100)).to.equal(':NegativeYield');
   });
 
   it.includeIntegration("Should revert when trying to deposit directly into the TempusPool (not via the TempusController)", async () => 
@@ -93,7 +93,7 @@ describeForEachPool("TempusPool Deposit", (pool:PoolTestFixture) =>
     const [owner, user] = pool.signers;
     await pool.setupAccounts(owner, [[user, 500]]);
     
-    (await expectRevert(pool.tempus.onDepositYieldBearing(user, 1, user))).to.equal("Only callable by TempusController");
+    (await expectRevert(pool.tempus.onDepositYieldBearing(user, 1, user))).to.equal(":OnlyControllerAuthorized");
   });
 
   it.includeIntegration("Should increase YBT 2x after changing rate to 2.0", async () =>
@@ -133,7 +133,7 @@ describeForEachPool("TempusPool Deposit", (pool:PoolTestFixture) =>
     await pool.setupAccounts(owner, [[user, 500]]);
 
     await pool.fastForwardToMaturity();
-    (await pool.expectDepositYBT(user, 100)).to.equal('Maturity reached.');
+    (await pool.expectDepositYBT(user, 100)).to.equal(':PoolAlreadyMatured');
   });
 
   it.includeIntegration("Should allow depositing from multiple users", async () =>
