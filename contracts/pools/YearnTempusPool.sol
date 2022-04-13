@@ -10,7 +10,7 @@ import "../utils/UntrustedERC20.sol";
 import "../math/Fixed256xVar.sol";
 
 contract YearnTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -42,7 +42,7 @@ contract YearnTempusPool is TempusPool {
         uint256 vaultDecimals = vault.decimals();
         uint256 vaultTokenDecimals = IERC20Metadata(vault.token()).decimals();
         if (vaultDecimals != vaultTokenDecimals) {
-            revert DecimalsPrecisionMismatch(address(vault), vaultDecimals, vaultTokenDecimals);
+            revert DecimalsPrecisionMismatch(vault, vaultDecimals, vaultTokenDecimals);
         }
 
         yearnVault = vault;
@@ -60,7 +60,7 @@ contract YearnTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Yearn Vault
-        IERC20(backingToken).safeIncreaseAllowance(address(yearnVault), amountBT);
+        backingToken.safeIncreaseAllowance(address(yearnVault), amountBT);
         yearnVault.deposit(amountBT);
 
         mintedYBT = balanceOfYBT() - ybtBefore;

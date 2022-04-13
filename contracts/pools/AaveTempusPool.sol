@@ -10,7 +10,7 @@ import "../protocols/aave/ILendingPool.sol";
 import "../utils/UntrustedERC20.sol";
 
 contract AaveTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
 
     ILendingPool internal immutable aavePool;
@@ -41,9 +41,10 @@ contract AaveTempusPool is TempusPool {
     {
         aavePool = token.POOL();
 
-        uint8 underlyingDecimals = IERC20Metadata(token.UNDERLYING_ASSET_ADDRESS()).decimals();
+        IERC20Metadata backing = IERC20Metadata(token.UNDERLYING_ASSET_ADDRESS());
+        uint8 underlyingDecimals = backing.decimals();
         if (underlyingDecimals > 18) {
-            revert MoreThanMaximumExpectedDecimals(token.UNDERLYING_ASSET_ADDRESS(), underlyingDecimals, 18);
+            revert MoreThanMaximumExpectedDecimals(backing, underlyingDecimals, 18);
         }
         unchecked {
             exchangeRateToBackingPrecision = 10**(18 - underlyingDecimals);
@@ -62,13 +63,8 @@ contract AaveTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to AAVE
-        IERC20(backingToken).safeIncreaseAllowance(address(aavePool), amountBT);
-        aavePool.deposit(
-            address(backingToken),
-            amountBT,
-            address(this),
-            0 /*referralCode*/
-        );
+        backingToken.safeIncreaseAllowance(address(aavePool), amountBT);
+        aavePool.deposit(address(backingToken), amountBT, address(this), 0);
 
         mintedYBT = balanceOfYBT() - ybtBefore;
     }

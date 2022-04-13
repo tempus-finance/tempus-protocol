@@ -98,7 +98,7 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// @param token The address of the token
     /// @param maximumExpectedDecimals The maximum expected decimals
     /// @param actualDecimals The actual decimals
-    error MoreThanMaximumExpectedDecimals(address token, uint256 maximumExpectedDecimals, uint256 actualDecimals);
+    error MoreThanMaximumExpectedDecimals(IERC20 token, uint256 maximumExpectedDecimals, uint256 actualDecimals);
 
     /// @dev Error thrown when the given token is not a valid one in the pool's context
     /// @param token The address of the given token
@@ -108,7 +108,7 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// @param token The address of the token
     /// @param expectedDecimals The expected decimals
     /// @param actualDecimals The actual decimals
-    error DecimalsPrecisionMismatch(address token, uint256 expectedDecimals, uint256 actualDecimals);
+    error DecimalsPrecisionMismatch(IERC20 token, uint256 expectedDecimals, uint256 actualDecimals);
 
     /// @return The name of underlying protocol, for example "Aave" for Aave protocol
     function protocolName() external view returns (bytes32);

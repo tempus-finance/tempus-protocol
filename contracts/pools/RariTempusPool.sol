@@ -10,7 +10,7 @@ import "../utils/UntrustedERC20.sol";
 import "../math/Fixed256xVar.sol";
 
 contract RariTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -83,7 +83,7 @@ contract RariTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Rari Pool
-        IERC20(backingToken).safeIncreaseAllowance(address(rariFundManager), amountBT);
+        backingToken.safeIncreaseAllowance(address(rariFundManager), amountBT);
         rariFundManager.deposit(backingToken.symbol(), amountBT);
 
         mintedYBT = balanceOfYBT() - ybtBefore;

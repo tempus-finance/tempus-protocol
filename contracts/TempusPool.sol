@@ -23,7 +23,7 @@ struct TokenData {
 /// @author The tempus.finance team
 /// @title Implementation of Tempus Pool
 abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -212,7 +212,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     function transferFees(address recipient) external override nonReentrant onlyOwner {
         uint256 amount = totalFees;
         totalFees = 0;
-        IERC20(yieldBearingToken).safeTransfer(recipient, amount);
+        yieldBearingToken.safeTransfer(recipient, amount);
     }
 
     function onDepositBacking(uint256 backingTokenAmount, address recipient)
@@ -352,12 +352,12 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
             uint256 interestRate
         )
     {
-        uint256 principalTokenBalance = IERC20(address(principalShare)).balanceOf(from);
+        uint256 principalTokenBalance = principalShare.balanceOf(from);
         if (principalTokenBalance < principalAmount) {
             revert InsufficientPrincipalTokenBalance(principalTokenBalance, principalAmount);
         }
 
-        uint256 yieldTokenBalance = IERC20(address(yieldShare)).balanceOf(from);
+        uint256 yieldTokenBalance = yieldShare.balanceOf(from);
         if (yieldTokenBalance < yieldAmount) {
             revert InsufficientYieldTokenBalance(yieldTokenBalance, yieldAmount);
         }

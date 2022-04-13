@@ -14,7 +14,7 @@ import "./math/Fixed256xVar.sol";
 
 contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
     using Fixed256xVar for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
 
     mapping(uint256 => Position) private _positions;
@@ -33,7 +33,9 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
 
         uint256 tokenAmountToDeposit = msg.value;
         {
-            IERC20Metadata depositedAsset = params.isBackingToken ? tempusPool.backingToken() : tempusPool.yieldBearingToken();
+            IERC20Metadata depositedAsset = params.isBackingToken
+                ? tempusPool.backingToken()
+                : tempusPool.yieldBearingToken();
 
             if (address(depositedAsset) != address(0)) {
                 tokenAmountToDeposit = depositedAsset.untrustedTransferFrom(
@@ -41,7 +43,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
                     address(this),
                     params.tokenAmountToDeposit
                 );
-                IERC20(depositedAsset).safeIncreaseAllowance(controller, tokenAmountToDeposit);
+                depositedAsset.safeIncreaseAllowance(controller, tokenAmountToDeposit);
             }
         }
 
@@ -112,8 +114,8 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         BurnParams calldata params
     ) private returns (uint256 liquidatedTokenAmount) {
         address controller = tempusPool.controller();
-        IERC20(address(tempusPool.principalShare())).approve(controller, capitals);
-        IERC20(address(tempusPool.yieldShare())).approve(controller, yields);
+        tempusPool.principalShare().approve(controller, capitals);
+        tempusPool.yieldShare().approve(controller, yields);
         liquidatedTokenAmount = ITempusController(controller).exitAmmGivenLpAndRedeem(
             amm,
             tempusPool,
@@ -130,9 +132,9 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         );
 
         if (params.toBackingToken) {
-            IERC20(tempusPool.backingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
+            tempusPool.backingToken().safeTransfer(params.recipient, liquidatedTokenAmount);
         } else {
-            IERC20(tempusPool.yieldBearingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
+            tempusPool.yieldBearingToken().safeTransfer(params.recipient, liquidatedTokenAmount);
         }
     }
 }

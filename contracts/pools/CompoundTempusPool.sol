@@ -11,7 +11,7 @@ import "../utils/UntrustedERC20.sol";
 
 /// Allows depositing ERC20 into Compound's CErc20 contracts
 contract CompoundTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -24,12 +24,12 @@ contract CompoundTempusPool is TempusPool {
     /// @dev Error thrown when the minting of Compound tokens fails
     /// @param cToken The address of the Compound token to mint
     /// @param amountToMint The amount of Compound token to mint
-    error CTokenMintFailed(address cToken, uint256 amountToMint);
+    error CTokenMintFailed(ICErc20 cToken, uint256 amountToMint);
 
     /// @dev Error thrown when the redeeming of Compound tokens fails
     /// @param cToken The address of the Compound token to redeem
     /// @param amountToRedeem The amount of Compound token to redeem
-    error CTokenRedeemFailed(address cToken, uint256 amountToRedeem);
+    error CTokenRedeemFailed(ICErc20 cToken, uint256 amountToRedeem);
 
     constructor(
         ICErc20 token,
@@ -59,11 +59,13 @@ contract CompoundTempusPool is TempusPool {
         }
         uint256 tokenDecimals = token.decimals();
         if (tokenDecimals != 8) {
-            revert DecimalsPrecisionMismatch(address(token), tokenDecimals, 8);
+            revert DecimalsPrecisionMismatch(token, tokenDecimals, 8);
         }
-        uint8 underlyingDecimals = ICErc20(token.underlying()).decimals();
+
+        IERC20Metadata underlying = IERC20Metadata(token.underlying());
+        uint8 underlyingDecimals = underlying.decimals();
         if (underlyingDecimals > 36) {
-            revert MoreThanMaximumExpectedDecimals(token.underlying(), underlyingDecimals, 36);
+            revert MoreThanMaximumExpectedDecimals(underlying, underlyingDecimals, 36);
         }
 
         address[] memory markets = new address[](1);
@@ -85,9 +87,10 @@ contract CompoundTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Compound
-        IERC20(backingToken).safeIncreaseAllowance(address(yieldBearingToken), amountBT);
-        if (ICErc20(yieldBearingToken).mint(amountBT) != 0) {
-            revert CTokenMintFailed(yieldBearingToken, amountBT);
+        ICErc20 cerc20 = ICErc20(address(yieldBearingToken));
+        backingToken.safeIncreaseAllowance(address(cerc20), amountBT);
+        if (cerc20.mint(amountBT) != 0) {
+            revert CTokenMintFailed(cerc20, amountBT);
         }
 
         mintedYBT = balanceOfYBT() - ybtBefore;
@@ -103,7 +106,7 @@ contract CompoundTempusPool is TempusPool {
         ICErc20 cerc20 = ICErc20(address(yieldBearingToken));
         assert(cerc20.balanceOf(address(this)) >= yieldBearingTokensAmount);
         if (cerc20.redeem(yieldBearingTokensAmount) != 0) {
-            revert CTokenRedeemFailed(yieldBearingToken, yieldBearingTokensAmount);
+            revert CTokenRedeemFailed(cerc20, yieldBearingTokensAmount);
         }
 
         // need to rescale the truncated amount which was used during cToken.redeem()

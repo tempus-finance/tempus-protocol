@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @title UntrustedERC20
@@ -16,12 +16,12 @@ library UntrustedERC20 {
     /// @param value The requested amount.
     /// @return The actual amount of tokens transferred.
     function untrustedTransfer(
-        IERC20Metadata token,
+        IERC20 token,
         address to,
         uint256 value
     ) internal returns (uint256) {
         uint256 startBalance = token.balanceOf(to);
-        IERC20(token).safeTransfer(to, value);
+        token.safeTransfer(to, value);
         return token.balanceOf(to) - startBalance;
     }
 
@@ -32,13 +32,13 @@ library UntrustedERC20 {
     /// @param value The requested amount.
     /// @return The actual amount of tokens transferred.
     function untrustedTransferFrom(
-        IERC20Metadata token,
+        IERC20 token,
         address from,
         address to,
         uint256 value
     ) internal returns (uint256) {
         uint256 startBalance = token.balanceOf(to);
-        IERC20(token).safeTransferFrom(from, to, value);
+        token.safeTransferFrom(from, to, value);
         return token.balanceOf(to) - startBalance;
     }
 }
