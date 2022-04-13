@@ -23,8 +23,8 @@ contract LidoTempusPool is TempusPool {
         address referrerAddress
     )
         TempusPool(
-            address(token),
-            address(0),
+            IERC20Metadata(token),
+            IERC20Metadata(address(0)),
             controller,
             maturity,
             token.getPooledEthByShares(1e18),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -17,7 +17,7 @@ import "./utils/Versioned.sol";
 ///      Owner is automatically set to the deployer of this contract
 contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versioned {
     using Fixed256xVar for uint256;
-    using UntrustedERC20 for IERC20;
+    using UntrustedERC20 for IERC20Metadata;
 
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
@@ -314,10 +314,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             revert ZeroYieldTokenAmount();
         }
 
-        IERC20 yieldBearingToken = IERC20(tempusPool.yieldBearingToken());
-
         // Transfer funds from msg.sender to tempusPool
-        uint256 transferredYBT = yieldBearingToken.untrustedTransferFrom(
+        uint256 transferredYBT = tempusPool.yieldBearingToken().untrustedTransferFrom(
             msg.sender,
             address(tempusPool),
             yieldTokenAmount
@@ -351,7 +349,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             revert ZeroBackingTokenAmount();
         }
 
-        IERC20 backingToken = IERC20(tempusPool.backingToken());
+        IERC20Metadata backingToken = tempusPool.backingToken();
 
         // In case the underlying pool expects deposits in Ether (e.g. Lido),
         // it uses `backingToken = address(0)`.  Since we disallow 0-value deposits,

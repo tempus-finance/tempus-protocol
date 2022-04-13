@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -60,8 +59,7 @@ contract CErc20 is CTokenMock, CErc20Interface {
     }
 
     function doTransferIn(address from, uint256 amount) internal override returns (uint) {
-        IERC20 backingToken = IERC20(underlying);
-        backingToken.safeTransferFrom(from, address(this), amount);
+        IERC20(underlying).safeTransferFrom(from, address(this), amount);
         return amount;
     }
 }

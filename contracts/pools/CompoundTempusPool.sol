@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../TempusPool.sol";
@@ -11,8 +11,8 @@ import "../utils/UntrustedERC20.sol";
 
 /// Allows depositing ERC20 into Compound's CErc20 contracts
 contract CompoundTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
-    using UntrustedERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
+    using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
     bytes32 public constant override protocolName = "Compound";
@@ -24,12 +24,12 @@ contract CompoundTempusPool is TempusPool {
     /// @dev Error thrown when the minting of Compound tokens fails
     /// @param cToken The address of the Compound token to mint
     /// @param amountToMint The amount of Compound token to mint
-    error CTokenMintFailed(address cToken, uint256 amountToMint);
+    error CTokenMintFailed(ICErc20 cToken, uint256 amountToMint);
 
     /// @dev Error thrown when the redeeming of Compound tokens fails
     /// @param cToken The address of the Compound token to redeem
     /// @param amountToRedeem The amount of Compound token to redeem
-    error CTokenRedeemFailed(address cToken, uint256 amountToRedeem);
+    error CTokenRedeemFailed(ICErc20 cToken, uint256 amountToRedeem);
 
     constructor(
         ICErc20 token,
@@ -42,8 +42,8 @@ contract CompoundTempusPool is TempusPool {
         FeesConfig memory maxFeeSetup
     )
         TempusPool(
-            address(token),
-            token.underlying(),
+            IERC20Metadata(address(token)),
+            IERC20Metadata(token.underlying()),
             controller,
             maturity,
             token.exchangeRateCurrent(),
@@ -59,11 +59,13 @@ contract CompoundTempusPool is TempusPool {
         }
         uint256 tokenDecimals = token.decimals();
         if (tokenDecimals != 8) {
-            revert DecimalsPrecisionMismatch(address(token), tokenDecimals, 8);
+            revert DecimalsPrecisionMismatch(token, tokenDecimals, 8);
         }
-        uint8 underlyingDecimals = ICErc20(token.underlying()).decimals();
+
+        IERC20Metadata underlying = IERC20Metadata(token.underlying());
+        uint8 underlyingDecimals = underlying.decimals();
         if (underlyingDecimals > 36) {
-            revert MoreThanMaximumExpectedDecimals(token.underlying(), underlyingDecimals, 36);
+            revert MoreThanMaximumExpectedDecimals(underlying, underlyingDecimals, 36);
         }
 
         address[] memory markets = new address[](1);
@@ -85,9 +87,10 @@ contract CompoundTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Compound
-        IERC20(backingToken).safeIncreaseAllowance(yieldBearingToken, amountBT);
-        if (ICErc20(yieldBearingToken).mint(amountBT) != 0) {
-            revert CTokenMintFailed(yieldBearingToken, amountBT);
+        ICErc20 cerc20 = ICErc20(address(yieldBearingToken));
+        backingToken.safeIncreaseAllowance(address(cerc20), amountBT);
+        if (cerc20.mint(amountBT) != 0) {
+            revert CTokenMintFailed(cerc20, amountBT);
         }
 
         mintedYBT = balanceOfYBT() - ybtBefore;
@@ -100,14 +103,15 @@ contract CompoundTempusPool is TempusPool {
         returns (uint256 backingTokenAmount)
     {
         // tempus pool owns YBT
-        assert(ICErc20(yieldBearingToken).balanceOf(address(this)) >= yieldBearingTokensAmount);
-        if (ICErc20(yieldBearingToken).redeem(yieldBearingTokensAmount) != 0) {
-            revert CTokenRedeemFailed(yieldBearingToken, yieldBearingTokensAmount);
+        ICErc20 cerc20 = ICErc20(address(yieldBearingToken));
+        assert(cerc20.balanceOf(address(this)) >= yieldBearingTokensAmount);
+        if (cerc20.redeem(yieldBearingTokensAmount) != 0) {
+            revert CTokenRedeemFailed(cerc20, yieldBearingTokensAmount);
         }
 
         // need to rescale the truncated amount which was used during cToken.redeem()
         uint256 backing = numAssetsPerYieldToken(yieldBearingTokensAmount, updateInterestRate());
-        return IERC20(backingToken).untrustedTransfer(recipient, backing);
+        return backingToken.untrustedTransfer(recipient, backing);
     }
 
     /// @return Updated current Interest Rate in 10**(18 - 8 + Underlying Token Decimals) decimal precision
@@ -116,13 +120,13 @@ contract CompoundTempusPool is TempusPool {
         // NOTE: exchangeRateCurrent() will accrue interest and gets the latest Interest Rate
         //       The default exchange rate for Compound is 0.02 and grows
         //       cTokens are minted as (backingAmount / rate), so 1 DAI = 50 cDAI with 0.02 rate
-        return ICErc20(yieldBearingToken).exchangeRateCurrent();
+        return ICErc20(address(yieldBearingToken)).exchangeRateCurrent();
     }
 
     /// @return Current Interest Rate in 10**(18 - 8 + Underlying Token Decimals) decimal precision
     ///         This varying rate enables simple conversion from Compound cToken to backing token precision
     function currentInterestRate() public view override returns (uint256) {
-        return ICErc20(yieldBearingToken).exchangeRateStored();
+        return ICErc20(address(yieldBearingToken)).exchangeRateStored();
     }
 
     // NOTE: yieldTokens are in YieldToken precision, return value is in BackingToken precision

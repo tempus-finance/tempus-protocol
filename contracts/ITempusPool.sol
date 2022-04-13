@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "./token/IPoolShare.sol";
 import "./utils/IOwnable.sol";
@@ -98,7 +98,7 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// @param token The address of the token
     /// @param maximumExpectedDecimals The maximum expected decimals
     /// @param actualDecimals The actual decimals
-    error MoreThanMaximumExpectedDecimals(address token, uint256 maximumExpectedDecimals, uint256 actualDecimals);
+    error MoreThanMaximumExpectedDecimals(IERC20 token, uint256 maximumExpectedDecimals, uint256 actualDecimals);
 
     /// @dev Error thrown when the given token is not a valid one in the pool's context
     /// @param token The address of the given token
@@ -108,7 +108,7 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// @param token The address of the token
     /// @param expectedDecimals The expected decimals
     /// @param actualDecimals The actual decimals
-    error DecimalsPrecisionMismatch(address token, uint256 expectedDecimals, uint256 actualDecimals);
+    error DecimalsPrecisionMismatch(IERC20 token, uint256 expectedDecimals, uint256 actualDecimals);
 
     /// @return The name of underlying protocol, for example "Aave" for Aave protocol
     function protocolName() external view returns (bytes32);
@@ -116,12 +116,12 @@ interface ITempusPool is ITempusFees, IVersioned {
     /// This token will be used as a token that user can deposit to mint same amounts
     /// of principal and interest shares.
     /// @return The underlying yield bearing token.
-    function yieldBearingToken() external view returns (address);
+    function yieldBearingToken() external view returns (IERC20Metadata);
 
     /// This is the address of the actual backing asset token
     /// in the case of ETH, this address will be 0
     /// @return Address of the Backing Token
-    function backingToken() external view returns (address);
+    function backingToken() external view returns (IERC20Metadata);
 
     /// @return uint256 value of one backing token, in case of 18 decimals 1e18
     function backingTokenONE() external view returns (uint256);

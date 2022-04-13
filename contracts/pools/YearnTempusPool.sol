@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../TempusPool.sol";
 import "../protocols/yearn/IYearnVaultV2.sol";
@@ -11,8 +10,8 @@ import "../utils/UntrustedERC20.sol";
 import "../math/Fixed256xVar.sol";
 
 contract YearnTempusPool is TempusPool {
-    using SafeERC20 for IERC20;
-    using UntrustedERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
+    using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
     IYearnVaultV2 private immutable yearnVault;
@@ -28,8 +27,8 @@ contract YearnTempusPool is TempusPool {
         FeesConfig memory maxFeeSetup
     )
         TempusPool(
-            address(vault),
-            vault.token(),
+            IERC20Metadata(address(vault)),
+            IERC20Metadata(vault.token()),
             controller,
             maturity,
             vault.pricePerShare(),
@@ -43,7 +42,7 @@ contract YearnTempusPool is TempusPool {
         uint256 vaultDecimals = vault.decimals();
         uint256 vaultTokenDecimals = IERC20Metadata(vault.token()).decimals();
         if (vaultDecimals != vaultTokenDecimals) {
-            revert DecimalsPrecisionMismatch(address(vault), vaultDecimals, vaultTokenDecimals);
+            revert DecimalsPrecisionMismatch(vault, vaultDecimals, vaultTokenDecimals);
         }
 
         yearnVault = vault;
@@ -61,7 +60,7 @@ contract YearnTempusPool is TempusPool {
         uint256 ybtBefore = balanceOfYBT();
 
         // Deposit to Yearn Vault
-        IERC20(backingToken).safeIncreaseAllowance(address(yearnVault), amountBT);
+        backingToken.safeIncreaseAllowance(address(yearnVault), amountBT);
         yearnVault.deposit(amountBT);
 
         mintedYBT = balanceOfYBT() - ybtBefore;
