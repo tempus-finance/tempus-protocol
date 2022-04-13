@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./amm/interfaces/ITempusAMM.sol";
 import "./ITempusPool.sol";
 
+/// @dev The Position Manager's purpose is to allow depositing funds to a Tempus Pool
+/// and wrapping the minted Capitals and Yields into a non-fungible ERC721 token
 interface IPositionManager is IERC721, IERC721Metadata {
     /// @dev Provided Leverage Multiplier is invalid
     error InvalidLeverageMultiplier();
