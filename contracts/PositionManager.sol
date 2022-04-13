@@ -81,7 +81,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         _safeMint(params.recipient, tokenId);
     }
 
-    function burn(uint256 tokenId, BurnParams calldata params) external override nonReentrant {
+    function burn(uint256 tokenId, BurnParams calldata params) external override nonReentrant returns (uint256 liquidatedTokenAmount) {
         if (!_isApprovedOrOwner(msg.sender, tokenId)) {
             revert UnauthorizedBurn();
         }
@@ -92,23 +92,13 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         _burn(tokenId);
 
         ITempusPool tempusPool = p.tempusAMM.token0().pool();
-        uint256 liquidatedTokenAmount = _liquidatePosition(
+        liquidatedTokenAmount = _liquidatePosition(
             p.tempusAMM,
             tempusPool,
             p.capitals,
             p.yields,
-            params.maxLeftoverShares,
-            params.yieldsRate,
-            params.maxSlippage,
-            params.toBackingToken,
-            params.deadline
+            params
         );
-
-        if (params.toBackingToken) {
-            IERC20(tempusPool.backingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
-        } else {
-            IERC20(tempusPool.yieldBearingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
-        }
     }
 
     function position(uint256 tokenId) external view override returns (Position memory) {
@@ -120,11 +110,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         ITempusPool tempusPool,
         uint128 capitals,
         uint128 yields,
-        uint256 maxLeftoverShares,
-        uint256 yieldsRate,
-        uint256 maxSlippage,
-        bool toBackingToken,
-        uint256 deadline
+        BurnParams calldata params
     ) private returns (uint256 liquidatedTokenAmount) {
         address controller = tempusPool.controller();
         IERC20(address(tempusPool.principalShare())).approve(controller, capitals);
@@ -137,11 +123,17 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
             yields,
             0, // minPrincipalsStaked is 0 since LP tokens are not supported by the PositionManager
             0, // minYieldsStaked is 0 since LP tokens are not supported by the PositionManager
-            maxLeftoverShares,
-            yieldsRate,
-            maxSlippage,
-            toBackingToken,
-            deadline
+            params.maxLeftoverShares,
+            params.yieldsRate,
+            params.maxSlippage,
+            params.toBackingToken,
+            params.deadline
         );
+
+        if (params.toBackingToken) {
+            IERC20(tempusPool.backingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
+        } else {
+            IERC20(tempusPool.yieldBearingToken()).safeTransfer(params.recipient, liquidatedTokenAmount);
+        }
     }
 }

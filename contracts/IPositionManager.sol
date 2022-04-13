@@ -70,7 +70,8 @@ interface IPositionManager is IERC721, IERC721Metadata {
     /// @dev Burns a non-fungible positions and liquidates its value to the position owner
     /// @param tokenId Token ID to burn
     /// @param params Instructions for position liquidation
-    function burn(uint256 tokenId, BurnParams calldata params) external;
+    /// @return liquidatedTokenAmount as a result of burning the position
+    function burn(uint256 tokenId, BurnParams calldata params) external returns (uint256 liquidatedTokenAmount);
 
     /// @dev retrieves position data for a given token ID.
     function position(uint256 tokenId) external view returns (Position memory);
