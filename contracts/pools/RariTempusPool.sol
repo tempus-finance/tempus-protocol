@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../TempusPool.sol";
 import "../protocols/rari/IRariFundManager.sol";
@@ -12,7 +11,7 @@ import "../math/Fixed256xVar.sol";
 
 contract RariTempusPool is TempusPool {
     using SafeERC20 for IERC20;
-    using UntrustedERC20 for IERC20;
+    using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
     bytes32 public constant override protocolName = "Rari";
@@ -24,7 +23,7 @@ contract RariTempusPool is TempusPool {
 
     constructor(
         IRariFundManager fundManager,
-        address backingToken,
+        IERC20Metadata backingToken,
         address controller,
         uint256 maturity,
         uint256 estYield,
@@ -33,13 +32,13 @@ contract RariTempusPool is TempusPool {
         FeesConfig memory maxFeeSetup
     )
         TempusPool(
-            fundManager.rariFundToken(),
+            IERC20Metadata(fundManager.rariFundToken()),
             backingToken,
             controller,
             maturity,
             calculateInterestRate(
                 fundManager,
-                fundManager.rariFundToken(),
+                IERC20Metadata(fundManager.rariFundToken()),
                 getTokenRariPoolIndex(fundManager, backingToken)
             ),
             /*exchangeRateOne:*/
@@ -53,14 +52,14 @@ contract RariTempusPool is TempusPool {
         /// As for now, Rari's Yield Bearing Tokens are always 18 decimals and throughout this contract we're using some
         /// hard-coded 18 decimal logic for simplification and optimization of some of the calculations.
         /// Therefore, non 18 decimal YBT are not with this current version.
-        uint256 tokenDecimals = IERC20Metadata(yieldBearingToken).decimals();
+        uint256 tokenDecimals = yieldBearingToken.decimals();
         if (tokenDecimals != 18) {
             revert DecimalsPrecisionMismatch(yieldBearingToken, tokenDecimals, 18);
         }
 
         uint256 backingTokenIndex = getTokenRariPoolIndex(fundManager, backingToken);
 
-        uint8 underlyingDecimals = IERC20Metadata(backingToken).decimals();
+        uint8 underlyingDecimals = backingToken.decimals();
         if (underlyingDecimals > 18) {
             revert MoreThanMaximumExpectedDecimals(backingToken, underlyingDecimals, 18);
         }
@@ -85,7 +84,7 @@ contract RariTempusPool is TempusPool {
 
         // Deposit to Rari Pool
         IERC20(backingToken).safeIncreaseAllowance(address(rariFundManager), amountBT);
-        rariFundManager.deposit(IERC20Metadata(backingToken).symbol(), amountBT);
+        rariFundManager.deposit(backingToken.symbol(), amountBT);
 
         mintedYBT = balanceOfYBT() - ybtBefore;
     }
@@ -98,7 +97,7 @@ contract RariTempusPool is TempusPool {
         assertTransferYBT(yieldBearingTokensAmount, exchangeRateToBackingPrecision)
         returns (uint256 backingTokenAmount)
     {
-        uint256 rftTotalSupply = IERC20(yieldBearingToken).totalSupply();
+        uint256 rftTotalSupply = yieldBearingToken.totalSupply();
         uint256 withdrawalAmountUsd = (yieldBearingTokensAmount * rariFundManager.getFundBalance()) / rftTotalSupply;
 
         uint256 backingTokenToUsdRate = rariFundManager.rariFundPriceConsumer().getCurrencyPricesInUsd()[
@@ -111,11 +110,11 @@ contract RariTempusPool is TempusPool {
             withdrawalAmountInBackingToken -= 1;
         }
 
-        uint256 preDepositBalance = IERC20(backingToken).balanceOf(address(this));
-        rariFundManager.withdraw(IERC20Metadata(backingToken).symbol(), withdrawalAmountInBackingToken);
-        uint256 amountWithdrawn = IERC20(backingToken).balanceOf(address(this)) - preDepositBalance;
+        uint256 preDepositBalance = backingToken.balanceOf(address(this));
+        rariFundManager.withdraw(backingToken.symbol(), withdrawalAmountInBackingToken);
+        uint256 amountWithdrawn = backingToken.balanceOf(address(this)) - preDepositBalance;
 
-        return IERC20(backingToken).untrustedTransfer(recipient, amountWithdrawn);
+        return backingToken.untrustedTransfer(recipient, amountWithdrawn);
     }
 
     /// @return Updated current Interest Rate with the same precision as the BackingToken
@@ -156,11 +155,11 @@ contract RariTempusPool is TempusPool {
     /// Based on https://github.com/Rari-Capital/rari-stable-pool-contracts/blob/386aa8811e7f12c2908066ae17af923758503739/contracts/RariFundManager.sol#L580
     function calculateInterestRate(
         IRariFundManager fundManager,
-        address ybToken,
+        IERC20Metadata ybToken,
         uint256 currencyIndex
     ) private returns (uint256) {
         uint256 backingTokenToUsdRate = fundManager.rariFundPriceConsumer().getCurrencyPricesInUsd()[currencyIndex];
-        uint256 rftTotalSupply = IERC20(ybToken).totalSupply();
+        uint256 rftTotalSupply = ybToken.totalSupply();
         uint256 fundBalanceUsd = rftTotalSupply > 0 ? fundManager.getFundBalance() : 0; // Only set if used
 
         uint256 preFeeRate;
@@ -176,9 +175,9 @@ contract RariTempusPool is TempusPool {
         return postFeeRate;
     }
 
-    function getTokenRariPoolIndex(IRariFundManager fundManager, address bToken) private view returns (uint256) {
+    function getTokenRariPoolIndex(IRariFundManager fundManager, IERC20Metadata token) private view returns (uint256) {
         string[] memory acceptedSymbols = fundManager.getAcceptedCurrencies();
-        string memory backingTokenSymbol = IERC20Metadata(bToken).symbol();
+        string memory backingTokenSymbol = token.symbol();
 
         for (uint256 i = 0; i < acceptedSymbols.length; i++) {
             if (keccak256(bytes(backingTokenSymbol)) == keccak256(bytes(acceptedSymbols[i]))) {

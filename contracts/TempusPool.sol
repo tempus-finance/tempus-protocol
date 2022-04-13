@@ -2,7 +2,6 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
@@ -25,13 +24,13 @@ struct TokenData {
 /// @title Implementation of Tempus Pool
 abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned {
     using SafeERC20 for IERC20;
-    using UntrustedERC20 for IERC20;
+    using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
     uint256 public constant override maximumNegativeYieldDuration = 7 days;
 
-    address public immutable override yieldBearingToken;
-    address public immutable override backingToken;
+    IERC20Metadata public immutable override yieldBearingToken;
+    IERC20Metadata public immutable override backingToken;
 
     uint256 public immutable override startTime;
     uint256 public immutable override maturityTime;
@@ -73,8 +72,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     /// @param maxFeeSetup Maximum fee percentages that this pool can have,
     ///                    values in Yield Bearing Token precision
     constructor(
-        address _yieldBearingToken,
-        address _backingToken,
+        IERC20Metadata _yieldBearingToken,
+        IERC20Metadata _backingToken,
         address ctrl,
         uint256 maturity,
         uint256 initInterestRate,
@@ -96,7 +95,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         if (estimatedFinalYield == 0) {
             revert ZeroEstimatedFinalYield();
         }
-        if (_yieldBearingToken == address(0)) {
+        if (address(_yieldBearingToken) == address(0)) {
             revert ZeroAddressYieldBearingToken();
         }
 
@@ -107,14 +106,14 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         maturityTime = maturity;
         initialInterestRate = initInterestRate;
         exchangeRateONE = exchangeRateOne;
-        yieldBearingONE = 10**ERC20(_yieldBearingToken).decimals();
+        yieldBearingONE = 10**_yieldBearingToken.decimals();
         initialEstimatedYield = estimatedFinalYield;
 
         maxDepositFee = maxFeeSetup.depositPercent;
         maxEarlyRedeemFee = maxFeeSetup.earlyRedeemPercent;
         maxMatureRedeemFee = maxFeeSetup.matureRedeemPercent;
 
-        uint8 backingDecimals = _backingToken != address(0) ? IERC20Metadata(_backingToken).decimals() : 18;
+        uint8 backingDecimals = address(_backingToken) != address(0) ? _backingToken.decimals() : 18;
         backingTokenONE = 10**backingDecimals;
 
         principalShare = new PrincipalShare(this, principalsData.name, principalsData.symbol, backingDecimals);
@@ -157,12 +156,12 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
 
     /// @dev Utility for checking YBT balance of this contract
     function balanceOfYBT() internal view returns (uint256) {
-        return IERC20(yieldBearingToken).balanceOf(address(this));
+        return yieldBearingToken.balanceOf(address(this));
     }
 
     /// @dev Utility for checking BT balance of this contract
     function balanceOfBT() internal view returns (uint256) {
-        return IERC20(backingToken).balanceOf(address(this));
+        return backingToken.balanceOf(address(this));
     }
 
     /// @dev Asserts all of the Backing Tokens are transferred during this operation
@@ -213,9 +212,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     function transferFees(address recipient) external override nonReentrant onlyOwner {
         uint256 amount = totalFees;
         totalFees = 0;
-
-        IERC20 token = IERC20(yieldBearingToken);
-        token.safeTransfer(recipient, amount);
+        IERC20(yieldBearingToken).safeTransfer(recipient, amount);
     }
 
     function onDepositBacking(uint256 backingTokenAmount, address recipient)
@@ -334,7 +331,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     {
         (redeemedYieldTokens, fee, rate) = burnShares(from, principalAmount, yieldAmount);
 
-        redeemedYieldTokens = IERC20(yieldBearingToken).untrustedTransfer(recipient, redeemedYieldTokens);
+        redeemedYieldTokens = yieldBearingToken.untrustedTransfer(recipient, redeemedYieldTokens);
     }
 
     function finalize() public override {

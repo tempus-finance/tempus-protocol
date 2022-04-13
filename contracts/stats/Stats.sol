@@ -18,8 +18,8 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
     /// @param tempusPool The TempusPool to fetch its TVL (total value locked)
     /// @return total value locked of a TempusPool (denominated in BackingTokens)
     function totalValueLockedInBackingTokens(ITempusPool tempusPool) public view returns (uint256) {
-        PoolShare principalShare = PoolShare(address(tempusPool.principalShare()));
-        PoolShare yieldShare = PoolShare(address(tempusPool.yieldShare()));
+        IPoolShare principalShare = tempusPool.principalShare();
+        IPoolShare yieldShare = tempusPool.yieldShare();
 
         uint256 backingTokenOne = tempusPool.backingTokenONE();
 
@@ -28,8 +28,8 @@ contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
 
         return
             calculateTvlInBackingTokens(
-                IERC20(address(principalShare)).totalSupply(),
-                IERC20(address(yieldShare)).totalSupply(),
+                principalShare.totalSupply(),
+                yieldShare.totalSupply(),
                 pricePerPrincipalShare,
                 pricePerYieldShare,
                 backingTokenOne

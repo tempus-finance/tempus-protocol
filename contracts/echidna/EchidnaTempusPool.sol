@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../TempusPool.sol";
 
 abstract contract EchidnaTempusPool {
-    using UntrustedERC20 for IERC20;
+    using UntrustedERC20 for IERC20Metadata;
 
     uint160 private constant _ADDRESSES_LENGTH = 5;
 
@@ -120,7 +120,7 @@ abstract contract EchidnaTempusPool {
         require(backingTokenAmount > 0, "backingTokenAmount is 0");
 
         uint256 ethAmount = msg.value;
-        IERC20 backingToken = IERC20(tempusPool.backingToken());
+        IERC20Metadata backingToken = tempusPool.backingToken();
         if (address(backingToken) != address(0)) {
             ethAmount = 0;
             backingTokenAmount = backingToken.untrustedTransfer(address(tempusPool), backingTokenAmount);
@@ -140,8 +140,7 @@ abstract contract EchidnaTempusPool {
     {
         require(yieldTokenAmount > 0, "yieldTokenAmount is 0");
 
-        IERC20 yieldBearingToken = IERC20(tempusPool.yieldBearingToken());
-
+        IERC20Metadata yieldBearingToken = tempusPool.yieldBearingToken();
         uint256 transferredYBT = yieldBearingToken.untrustedTransfer(address(tempusPool), yieldTokenAmount);
 
         return tempusPool.onDepositYieldBearing(transferredYBT, convertAddressToLimitedSet(recipient));
@@ -185,8 +184,7 @@ abstract contract EchidnaTempusPool {
     ///     equal before maturity
     function echidnaPrincipalAndYieldEquality() public view returns (bool) {
         if (!tempusPool.matured()) {
-            return (IERC20(address(tempusPool.principalShare())).totalSupply() ==
-                IERC20(address(tempusPool.yieldShare())).totalSupply());
+            return (tempusPool.principalShare().totalSupply() == tempusPool.yieldShare().totalSupply());
         }
         return true;
     }
@@ -195,9 +193,9 @@ abstract contract EchidnaTempusPool {
     function echidnaPoolHasEnoughYBT() public returns (bool) {
         tempusPool.updateInterestRate();
 
-        uint256 principalAmount = IERC20(address(tempusPool.principalShare())).totalSupply();
-        uint256 yieldAmount = IERC20(address(tempusPool.yieldShare())).totalSupply();
-        uint256 yieldBearingTokenAmount = IERC20(tempusPool.yieldBearingToken()).balanceOf(address(tempusPool));
+        uint256 principalAmount = tempusPool.principalShare().totalSupply();
+        uint256 yieldAmount = tempusPool.yieldShare().totalSupply();
+        uint256 yieldBearingTokenAmount = tempusPool.yieldBearingToken().balanceOf(address(tempusPool));
         uint256 estimateYieldBearingTokenAmount = tempusPool.estimatedRedeem(principalAmount, yieldAmount, false);
 
         return yieldBearingTokenAmount >= estimateYieldBearingTokenAmount;

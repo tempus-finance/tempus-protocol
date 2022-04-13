@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -15,7 +15,7 @@ import "./math/Fixed256xVar.sol";
 contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
     using Fixed256xVar for uint256;
     using SafeERC20 for IERC20;
-    using UntrustedERC20 for IERC20;
+    using UntrustedERC20 for IERC20Metadata;
 
     mapping(uint256 => Position) private _positions;
     uint256 private _nextId = 1;
@@ -33,10 +33,10 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
 
         uint256 tokenAmountToDeposit = msg.value;
         {
-            address depositedAsset = params.isBackingToken ? tempusPool.backingToken() : tempusPool.yieldBearingToken();
+            IERC20Metadata depositedAsset = params.isBackingToken ? tempusPool.backingToken() : tempusPool.yieldBearingToken();
 
-            if (depositedAsset != address(0)) {
-                tokenAmountToDeposit = IERC20(depositedAsset).untrustedTransferFrom(
+            if (address(depositedAsset) != address(0)) {
+                tokenAmountToDeposit = depositedAsset.untrustedTransferFrom(
                     msg.sender,
                     address(this),
                     params.tokenAmountToDeposit
