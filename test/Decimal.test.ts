@@ -63,64 +63,118 @@ describeNonPool.only("Decimal Utils", () =>
       equals(dec6('-100.123456').toRounded(8), '-100.123456');
     });
 
-    it("add basic", () =>
-    {
-      equals(dec6('10.000000').add('20.0'), '30.000000');
-      equals(dec6('10.530200').add('20.004001'), '30.534201');
-      equals(dec6('10').add(20), '30.000000');
-      equals(dec6(10).add(20), '30.000000');
-      equals(dec6(Number(10)).add(20), '30.000000');
-    });
-    it("add negative numbers", () =>
-    {
-      equals(dec6(-10).add(5), '-5.000000');
-      equals(dec6(-10).add(-5), '-15.000000');
-    });
-    it("add mixed decimal numbers", () =>
-    {
-      // check if mixed precision decimals lead to sane results
-      equals(dec18(100.5).add(dec6(0.5)), '101.000000000000000000');
-      equals(dec18(100.5).add(dec6(-0.5)), '100.000000000000000000');
-      equals(dec6(100.5).add(dec18(0.5)), '101.000000');
-      equals(dec6(100.5).add(dec18(-0.5)), '100.000000');
-    });
-    it("add random numbers", () =>
-    {
-      for (let i = 0; i < 1000; ++i) {
-        const [a, b] = [rand6(1000), rand6(1000)];
-        const expected = (a + b).toFixed(6);
-        equals(dec6(a).add(b), expected, `${a} + ${b} should be ${expected}`);
+    interface TestSet {
+      a:number, b:number, expected:string;
+    }
+
+    function generate(operation:(a,b) => number): TestSet[] {
+      const testSet = new Array(1000);
+      for (let i = 0; i < testSet.length; ++i) {
+        const [a, b] = [rand6(100), rand6(100)];
+        const expected = operation(a, b).toFixed(6);
+        testSet[i] = { a:a, b:b, expected:expected };
       }
+      return testSet;
+    }
+
+    describe("add()", () =>
+    {
+      it("basic", () =>
+      {
+        equals(dec6('10.000000').add('20.0'), '30.000000');
+        equals(dec6('10.530200').add('20.004001'), '30.534201');
+        equals(dec6('10').add(20), '30.000000');
+        equals(dec6(10).add(20), '30.000000');
+        equals(dec6(Number(10)).add(20), '30.000000');
+      });
+
+      it("negative numbers", () =>
+      {
+        equals(dec6(-10).add(5), '-5.000000');
+        equals(dec6(-10).add(-5), '-15.000000');
+      });
+
+      it("mixed decimal numbers", () =>
+      {
+        // check if mixed precision decimals lead to sane results
+        equals(dec18(100.5).add(dec6(0.5)), '101.000000000000000000');
+        equals(dec18(100.5).add(dec6(-0.5)), '100.000000000000000000');
+        equals(dec6(100.5).add(dec18(0.5)), '101.000000');
+        equals(dec6(100.5).add(dec18(-0.5)), '100.000000');
+      });
+
+      it("random numbers", () =>
+      {
+        for (const { a, b, expected } of generate((a,b) => a+b)) {
+          equals(dec6(a).add(b), expected, `${a} + ${b} should be ${expected}`);
+        }
+      });
     });
 
-    it("sub basic", () =>
+    describe("sub()", () =>
     {
-      equals(dec6('20.000000').sub('5.0'), '15.000000');
-      equals(dec6('20.535203').sub('5.004001'), '15.531202');
-      equals(dec6('20').sub(5), '15.000000');
-      equals(dec6(20).sub(5), '15.000000');
-      equals(dec6(Number(20)).sub(5), '15.000000');
+      it("basic", () =>
+      {
+        equals(dec6('20.000000').sub('5.0'), '15.000000');
+        equals(dec6('20.535203').sub('5.004001'), '15.531202');
+        equals(dec6('20').sub(5), '15.000000');
+        equals(dec6(20).sub(5), '15.000000');
+        equals(dec6(Number(20)).sub(5), '15.000000');
+      });
+
+      it("negative numbers", () =>
+      {
+        equals(dec6(-10).sub(5), '-15.000000');
+        equals(dec6(-10).sub(-5), '-5.000000');
+      });
+
+      it("mixed decimal numbers", () =>
+      {
+        // check if mixed precision decimals lead to sane results
+        equals(dec18(100.5).sub(dec6(0.5)), '100.000000000000000000');
+        equals(dec18(100.5).sub(dec6(-0.5)), '101.000000000000000000');
+        equals(dec6(100.5).sub(dec18(0.5)), '100.000000');
+        equals(dec6(100.5).sub(dec18(-0.5)), '101.000000');
+      });
+
+      it("random numbers", () =>
+      {
+        for (const { a, b, expected } of generate((a,b) => a-b)) {
+          equals(dec6(a).sub(b), expected, `${a} - ${b} should be ${expected}`);
+        }
+      });
     });
-    it("sub negative numbers", () =>
+
+    describe("mul()", () =>
     {
-      equals(dec6(-10).sub(5), '-15.000000');
-      equals(dec6(-10).sub(-5), '-5.000000');
-    });
-    it("sub mixed decimal numbers", () =>
-    {
-      // check if mixed precision decimals lead to sane results
-      equals(dec18(100.5).sub(dec6(0.5)), '100.000000000000000000');
-      equals(dec18(100.5).sub(dec6(-0.5)), '101.000000000000000000');
-      equals(dec6(100.5).sub(dec18(0.5)), '100.000000');
-      equals(dec6(100.5).sub(dec18(-0.5)), '101.000000');
-    });
-    it("sub random numbers", () =>
-    {
-      for (let i = 0; i < 1000; ++i) {
-        const [a, b] = [rand6(1000), rand6(1000)];
-        const expected = (a - b).toFixed(6);
-        equals(dec6(a).sub(b), expected, `${a} - ${b} should be ${expected}`);
-      }
+      it("basic", () =>
+      {
+        equals(dec6('10.000000').mul('20.0'), '200.000000');
+        equals(dec6('10.241232').mul('20.21332'), '207.009299');
+        equals(dec6('10').mul(20), '200.000000');
+        equals(dec6(10).mul(20), '200.000000');
+        equals(dec6(Number(10)).mul(20), '200.000000');
+      });
+      it("negative numbers", () =>
+      {
+        equals(dec6(-10).mul(5), '-50.000000');
+        equals(dec6(-10).mul(-5), '50.000000');
+        equals(dec6(-10.123).mul(-5.723), '57.933929');
+      });
+      it("mixed decimal numbers", () =>
+      {
+        // check if mixed precision decimals lead to sane results
+        equals(dec18(100.5).mul(dec6(0.5)), '50.250000000000000000');
+        equals(dec18(100.5).mul(dec6(-0.5)), '-50.250000000000000000');
+        equals(dec6(100.5).mul(dec18(0.5)), '50.250000');
+        equals(dec6(100.5).mul(dec18(-0.5)), '-50.250000');
+      });
+      it("random numbers", () =>
+      {
+        for (const { a, b, expected } of generate((a,b) => a*b)) {
+          equals(dec6(a).mul(b), expected, `${a} * ${b} should be ${expected}`);
+        }
+      });
     });
 
     it("div: underflow is truncated", () =>
