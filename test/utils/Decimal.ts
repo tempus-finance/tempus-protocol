@@ -17,7 +17,7 @@ export const DEFAULT_DECIMAL_PRECISION = 18;
 export function decimal(value:Numberish, maxDecimals:number = DEFAULT_DECIMAL_PRECISION): Decimal {
   return new Decimal(value, maxDecimals);
 }
- 
+
 /**
  * @abstract A Fixed-Point Decimal type with a strongly defined `decimals` precision
  *           compatible with ERC20.decimals() concept.
@@ -69,9 +69,19 @@ export class Decimal {
     return this.bn.toNumber();
   }
 
+  private static ONE_CACHE: { [key:number]: BigNumber } = {
+    6: BigNumber.from("1000000"),
+    18: BigNumber.from("1000000000000000000"),
+  };
+
   /** 1.0 expressed as a scaled BigNumber */
   public one(): BigNumber {
-    return BigNumber.from(Math.pow(10, this.decimals));
+    let one = Decimal.ONE_CACHE[this.decimals];
+    if (!one) {
+      one = BigNumber.from("1"+"0".repeat(this.decimals));
+      Decimal.ONE_CACHE[this.decimals] = one;
+    }
+    return one;
   }
 
   /** @return decimal(this) + decimal(x) */

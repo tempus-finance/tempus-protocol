@@ -63,18 +63,22 @@ describeNonPool.only("Decimal Utils", () =>
       equals(dec6('-100.123456').toRounded(8), '-100.123456');
     });
 
-    interface TestSet {
-      a:number, b:number, expected:string;
+    type BinaryOp<T> = (a:number, b:number) => T;
+
+    // toFixed, but with BigNumber-like rounding
+    function truncate(x:number, precision:number): string {
+      const [whole, fract] = x.toFixed(precision + 6).split('.');
+      if (!fract) return whole;
+      return whole + '.' + fract.substring(0, Math.min(fract.length, precision));
     }
 
-    function generate(operation:(a,b) => number): TestSet[] {
-      const testSet = new Array(1000);
-      for (let i = 0; i < testSet.length; ++i) {
+    function generateAndTest(what:string, op1:BinaryOp<Decimal>, op2:BinaryOp<number>) {
+      for (let i = 0; i < 1000; ++i) {
         const [a, b] = [rand6(100), rand6(100)];
-        const expected = operation(a, b).toFixed(6);
-        testSet[i] = { a:a, b:b, expected:expected };
+        const actual = op1(a, b).toString();
+        const expected = truncate(op2(a, b), 6);
+        equals(actual, expected, `${a} ${what} ${b} expected=${expected} actual=${actual}`);
       }
-      return testSet;
     }
 
     describe("add()", () =>
@@ -105,9 +109,7 @@ describeNonPool.only("Decimal Utils", () =>
 
       it("random numbers", () =>
       {
-        for (const { a, b, expected } of generate((a,b) => a+b)) {
-          equals(dec6(a).add(b), expected, `${a} + ${b} should be ${expected}`);
-        }
+        generateAndTest('+', (a,b) => dec6(a).add(b), (a,b) => a + b);
       });
     });
 
@@ -139,9 +141,7 @@ describeNonPool.only("Decimal Utils", () =>
 
       it("random numbers", () =>
       {
-        for (const { a, b, expected } of generate((a,b) => a-b)) {
-          equals(dec6(a).sub(b), expected, `${a} - ${b} should be ${expected}`);
-        }
+        generateAndTest('-', (a,b) => dec6(a).sub(b), (a,b) => a - b);
       });
     });
 
@@ -150,17 +150,19 @@ describeNonPool.only("Decimal Utils", () =>
       it("basic", () =>
       {
         equals(dec6('10.000000').mul('20.0'), '200.000000');
-        equals(dec6('10.241232').mul('20.21332'), '207.009299');
+        equals(dec6('10.241232').mul('20.213327'), '207.009371');
         equals(dec6('10').mul(20), '200.000000');
         equals(dec6(10).mul(20), '200.000000');
         equals(dec6(Number(10)).mul(20), '200.000000');
       });
+
       it("negative numbers", () =>
       {
         equals(dec6(-10).mul(5), '-50.000000');
         equals(dec6(-10).mul(-5), '50.000000');
         equals(dec6(-10.123).mul(-5.723), '57.933929');
       });
+
       it("mixed decimal numbers", () =>
       {
         // check if mixed precision decimals lead to sane results
@@ -169,17 +171,49 @@ describeNonPool.only("Decimal Utils", () =>
         equals(dec6(100.5).mul(dec18(0.5)), '50.250000');
         equals(dec6(100.5).mul(dec18(-0.5)), '-50.250000');
       });
+
       it("random numbers", () =>
       {
-        for (const { a, b, expected } of generate((a,b) => a*b)) {
-          equals(dec6(a).mul(b), expected, `${a} * ${b} should be ${expected}`);
-        }
+        generateAndTest('*', (a,b) => dec6(a).mul(b), (a,b) => a * b);
       });
     });
 
-    it("div: underflow is truncated", () =>
+    describe("div()", () =>
     {
-      equals(dec6('0.000001').div(2), '0.000000');
+      it("basic", () =>
+      {
+        equals(dec6('10.000000').div('20.0'), '0.500000');
+        equals(dec6('10.241232').div('20.21337'), '0.506656');
+        equals(dec6('10').div(20), '0.500000');
+        equals(dec6(10).div(20), '0.500000');
+        equals(dec6(Number(10)).div(20), '0.500000');
+      });
+
+      it("negative numbers", () =>
+      {
+        equals(dec6(-10).div(5), '-2.000000');
+        equals(dec6(-10).div(-5), '2.000000');
+        equals(dec6(-10.123).div(-5.723), '1.768827');
+      });
+
+      it("mixed decimal numbers", () =>
+      {
+        // check if mixed precision decimals lead to sane results
+        equals(dec18(100.5).div(dec6(0.5)), '201.000000000000000000');
+        equals(dec18(100.5).div(dec6(-0.5)), '-201.000000000000000000');
+        equals(dec6(100.5).div(dec18(0.5)), '201.000000');
+        equals(dec6(100.5).div(dec18(-0.5)), '-201.000000');
+      });
+
+      it("random numbers", () =>
+      {
+        generateAndTest('/', (a,b) => dec6(a).div(b), (a,b) => a / b);
+      });
+
+      it("underflow is truncated", () =>
+      {
+        equals(dec6('0.000001').div(2), '0.000000');
+      });
     });
   });
 });
