@@ -256,6 +256,9 @@ export class DecimalConvertible {
     if (amount instanceof BigNumber) {
       return amount;
     }
+    if (amount instanceof Decimal) { // fastpath
+      return new Decimal(amount, this.decimals).toBigNumber();
+    }
     if (typeof(amount) === "string") {
       return parseDecimal(amount, this.decimals);
     }
