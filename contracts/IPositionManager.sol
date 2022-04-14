@@ -15,6 +15,8 @@ interface IPositionManager is IERC721, IERC721Metadata {
     error UnauthorizedBurn();
     /// @dev A Tempus AMM whose shares are of different TempusPools was provided
     error AmmSharesPoolMismatch();
+    /// @dev An invalid Tempus Controller was provided
+    error InvalidTempusController();
 
     /// @dev Holds information about an open position
     /// @param capitals Amount of Capitals owned by the position

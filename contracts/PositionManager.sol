@@ -17,19 +17,27 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
     using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
 
+    ITempusController public immutable controller;
     mapping(uint256 => Position) private _positions;
     uint256 private _nextId = 1;
 
     // solhint-disable-next-line no-empty-blocks
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+    constructor(
+        address tempusController,
+        string memory name,
+        string memory symbol
+    ) ERC721(name, symbol) {
+        if (tempusController == address(0)) {
+            revert InvalidTempusController();
+        }
+        controller = ITempusController(tempusController);
+    }
 
     function mint(MintParams calldata params) external payable override nonReentrant returns (uint256 tokenId) {
         ITempusPool tempusPool = params.tempusAMM.token0().pool();
         if (tempusPool != params.tempusAMM.token1().pool()) {
             revert AmmSharesPoolMismatch();
         }
-
-        address controller = tempusPool.controller();
 
         uint256 tokenAmountToDeposit = msg.value;
         {
@@ -43,7 +51,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
                     address(this),
                     params.tokenAmountToDeposit
                 );
-                depositedAsset.safeIncreaseAllowance(controller, tokenAmountToDeposit);
+                depositedAsset.safeIncreaseAllowance(address(controller), tokenAmountToDeposit);
             }
         }
 
@@ -51,7 +59,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         uint256 yieldsMinted;
         if (params.leverageMultiplier == 0) {
             uint256 backingTokenONE = tempusPool.backingTokenONE();
-            capitalsMinted = ITempusController(controller).depositAndFix{value: msg.value}(
+            capitalsMinted = controller.depositAndFix{value: msg.value}(
                 params.tempusAMM,
                 tempusPool,
                 tokenAmountToDeposit,
@@ -60,7 +68,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
                 params.deadline
             );
         } else if (params.leverageMultiplier > 1e18) {
-            (capitalsMinted, yieldsMinted) = ITempusController(controller).depositAndLeverage{value: msg.value}(
+            (capitalsMinted, yieldsMinted) = controller.depositAndLeverage{value: msg.value}(
                 params.tempusAMM,
                 tempusPool,
                 params.leverageMultiplier,
@@ -113,10 +121,9 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         uint128 yields,
         BurnParams calldata params
     ) private returns (uint256 liquidatedTokenAmount) {
-        address controller = tempusPool.controller();
-        tempusPool.principalShare().approve(controller, capitals);
-        tempusPool.yieldShare().approve(controller, yields);
-        liquidatedTokenAmount = ITempusController(controller).exitAmmGivenLpAndRedeem(
+        tempusPool.principalShare().approve(address(controller), capitals);
+        tempusPool.yieldShare().approve(address(controller), yields);
+        liquidatedTokenAmount = controller.exitAmmGivenLpAndRedeem(
             amm,
             tempusPool,
             0, // lpTokens is 0 since LP tokens are not supported by the PositionManager
