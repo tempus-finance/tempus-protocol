@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 
-export type Numberish = Number | number | string | BigNumber | Decimal;
+export type Numberish = Number | number | string | BigInt | BigNumber | Decimal;
 
 /**
  * Matches the most common ERC20 18-decimals precision, such as ETH
@@ -23,20 +23,20 @@ export function decimal(value:Numberish, maxDecimals:number = DEFAULT_DECIMAL_PR
  *           compatible with ERC20.decimals() concept.
  */
 export class Decimal {
-  bn: BigNumber; // big integer that holds the FixedPoint Decimal value
+  int: bigint; // big integer that holds the FixedPoint Decimal value
   decimals: number; // number of decimal digits that form a fraction, can be 0
 
   constructor(value:Numberish, decimals:number) {
     this.decimals = decimals;
-    this.bn = Decimal.toFixedPointInteger(value, decimals);
+    this.int = Decimal.toFixedPointInteger(value, decimals);
   }
 
   /** @returns BigNumber from this Decimal */
   public toBigNumber(): BigNumber {
-    return this.bn; // currently a no-op, but implementation may change
+    return BigNumber.from(this.int.toString());
   }
 
-  private toDecimalBN(x:Numberish): BigNumber {
+  private toDecimalBN(x:Numberish): bigint {
     return Decimal.toFixedPointInteger(x, this.decimals);
   }
 
@@ -57,28 +57,24 @@ export class Decimal {
     return this._toString(maxDecimals);
   }
 
-  public toHexString(): string {
-    return this.bn.toHexString();
-  }
-
   public toJSON(key?: string): any {
       return { type: "Decimal", value: this.toString() };
   }
 
   public toNumber(): number {
-    return this.bn.toNumber();
+    return Number(this.toString());
   }
 
-  private static ONE_CACHE: { [key:number]: BigNumber } = {
-    6: BigNumber.from("1000000"),
-    18: BigNumber.from("1000000000000000000"),
+  private static ONE_CACHE: { [key:number]: bigint } = {
+    6: BigInt("1000000"),
+    18: BigInt("1000000000000000000"),
   };
 
-  /** 1.0 expressed as a scaled BigNumber */
-  public one(): BigNumber {
-    let one = Decimal.ONE_CACHE[this.decimals];
+  /** 1.0 expressed as a scaled bigint */
+  public one(): bigint {
+    let one:bigint = Decimal.ONE_CACHE[this.decimals];
     if (!one) {
-      one = BigNumber.from("1"+"0".repeat(this.decimals));
+      one = BigInt("1"+"0".repeat(this.decimals));
       Decimal.ONE_CACHE[this.decimals] = one;
     }
     return one;
@@ -86,33 +82,37 @@ export class Decimal {
 
   /** @return decimal(this) + decimal(x) */
   public add(x:Numberish): Decimal {
-    return this.toDecimal( this.bn.add(this.toDecimalBN(x)) );
+    return this.toDecimal( this.int + this.toDecimalBN(x) );
   }
 
   /** @return decimal(this) - decimal(x) */
   public sub(x:Numberish): Decimal {
-    return this.toDecimal( this.bn.sub(this.toDecimalBN(x)) );
+    return this.toDecimal( this.int - this.toDecimalBN(x) );
   }
 
   /** @return decimal(this) * decimal(x) */
   public mul(x:Numberish): Decimal {
     // mulf = (a * b) / ONE
-    return this.toDecimal( this.bn.mul(this.toDecimalBN(x)).div(this.one()) );
+    return this.toDecimal( (this.int * this.toDecimalBN(x)) / this.one() );
   }
 
   /** @return decimal(this) / decimal(x) */
   public div(x:Numberish): Decimal {
     // divf = (a * ONE) / b
-    return this.toDecimal( this.bn.mul(this.one()).div(this.toDecimalBN(x)) );
+    return this.toDecimal( (this.int * this.one()) / this.toDecimalBN(x) );
   }
 
-  private static toFixedPointInteger(value:Numberish, decimals:number): BigNumber {
+  private static toFixedPointInteger(value:Numberish, decimals:number): bigint {
+    if (typeof(value) === "bigint") {
+      return value; // accept BigInt without any validation
+    }
+
     if (value instanceof BigNumber) {
-      return value; // accept BigNumber without any validation
+      return BigInt(value.toString()); // accept BigNumber without any validation
     }
 
     if (value instanceof Decimal && value.decimals == decimals) {
-      return value.bn; // this is a no-op case
+      return value.int; // this is a no-op case
     }
 
     // get the string representation of the Numberish value
@@ -122,11 +122,11 @@ export class Decimal {
     const whole = val.substring(0, decimalIdx === -1 ? val.length : decimalIdx);
 
     if (decimals === 0) { // pure integer case, TRUNCATE any decimals
-      return BigNumber.from(whole);
+      return BigInt(whole);
     }
 
     if (decimalIdx === -1) { // input was integer eg "1234"
-      return BigNumber.from(val + "0".repeat(decimals));
+      return BigInt(val + "0".repeat(decimals));
     }
 
     // input was a decimal eg "123.45678"
@@ -134,16 +134,16 @@ export class Decimal {
     const fract = val.substring(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
     // if it's not long enough, create a trail of zeroes to satisfy decimals precision
     const trail = decimals > fract.length ? "0".repeat(decimals - fract.length) : "";
-    return BigNumber.from(whole + fract + trail);
+    return BigInt(whole + fract + trail);
   }
 
   private _toString(maxDecimals:number): string {
     if (this.decimals === 0) {
-      return this.bn.toString();
+      return this.int.toString();
     }
 
     // get the BN digits and check if it's negative
-    const s = this.bn.toString();
+    const s = this.int.toString();
     const neg = s[0] === '-';
     const abs = neg ? s.substring(1) : s;
 

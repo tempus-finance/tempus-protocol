@@ -11,7 +11,7 @@ export const ALL_POOLS = [
 ];
 
 // Set this to `PoolType.XXX` if you want to only run one specific pool's tests
-const ONLY_RUN_POOL:PoolType = PoolType.None;
+const ONLY_RUN_POOL:PoolType = undefined;
 
 // Set this to `DAI` or `USDC` if you want to only run one specific BT tests
 const ONLY_TOKEN_SYMBOL:string = undefined;

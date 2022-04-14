@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
-import { Decimal, decimal } from "./utils/Decimal";
+import { Numberish, Decimal, decimal } from "./utils/Decimal";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
-describeNonPool.only("Decimal Utils", () =>
+describeNonPool("Decimal Utils", () =>
 {
   describe("Decimal", () =>
   {
@@ -15,8 +15,8 @@ describeNonPool.only("Decimal Utils", () =>
     const rand = (scale:number):number => (Math.random() - 0.5) * 2.0 * scale;
     const rand6 = (scale:number):number => Number(rand(scale).toFixed(6)).valueOf();
 
-    function equals(a:Decimal|string, b:string, msg?:string) {
-      expect((typeof(a) !== "string") ? a.str() : a).to.be.equal(b, msg);
+    function equals(a:Numberish, b:string, msg?:string) {
+      expect(a.toString()).to.be.equal(b, msg);
     }
 
     // easier to test init and toString together
@@ -29,7 +29,7 @@ describeNonPool.only("Decimal Utils", () =>
       equals(dec6('123.4567890'), '123.456789');
       equals(int('1234567890'), '1234567890');
       equals(int('123.4567890'), '123');
-      equals(decimal(BigNumber.from('12340123456'), 6), '12340.123456');
+      equals(dec6(BigNumber.from('12340123456')), '12340.123456');
       equals(dec6(dec6(1.654321)), '1.654321');
       equals(dec6(dec18('1.123456789012345678')), '1.123456');
 
@@ -40,7 +40,7 @@ describeNonPool.only("Decimal Utils", () =>
       equals(dec6('-123.4567890'), '-123.456789');
       equals(int('-1234567890'), '-1234567890');
       equals(int('-123.4567890'), '-123');
-      equals(decimal(BigNumber.from('-12340123456'), 6), '-12340.123456');
+      equals(dec6(BigNumber.from('-12340123456')), '-12340.123456');
       equals(dec6(dec6(-1.654321)), '-1.654321');
       equals(dec6(dec18('-1.123456789012345678')), '-1.123456');
     });
@@ -61,6 +61,12 @@ describeNonPool.only("Decimal Utils", () =>
 
       equals(dec18('-100.12345678901234567890').toRounded(6), '-100.123456');
       equals(dec6('-100.123456').toRounded(8), '-100.123456');
+    });
+
+    it("toNumber", () =>
+    {
+      // Number can carry 17 significant digits
+      equals(dec18('100.12345678901234567890').toNumber(), '100.12345678901235');
     });
 
     type BinaryOp<T> = (a:number, b:number) => T;
