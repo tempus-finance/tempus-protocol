@@ -78,19 +78,28 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationEndTime,
         uint256 swapFeePerc
     ) ERC20(name, symbol) {
-        require(swapFeePerc <= MAX_SWAP_FEE_PERCENTAGE, "max swap fee");
+        if (swapFeePerc > MAX_SWAP_FEE_PERCENTAGE) {
+            revert SwapFeeTooBig(swapFeePerc, MAX_SWAP_FEE_PERCENTAGE);
+        }
         swapFeePercentage = swapFeePerc;
 
         (token0, token1) = (t0, t1);
 
-        require(t0.decimals() == t1.decimals(), "token0 != token1 decimals");
+        if (t0.decimals() != t1.decimals()) {
+            revert TokenDecimalsMismatch(t0, t1);
+        }
         TEMPUS_SHARE_PRECISION = 10**t0.decimals();
 
         scalingFactor = Fixed256x18.ONE * 10**(18 - t0.decimals());
 
         setInitialAmplification(amplificationStartValue);
         if (amplificationStartValue != amplificationEndValue) {
-            require(amplificationStartValue < amplificationEndValue, "invalid amp");
+            if (amplificationStartValue >= amplificationEndValue) {
+                revert StartingAmplificationValueBiggerThanEndingAmplificationValue(
+                    amplificationStartValue,
+                    amplificationEndValue
+                );
+            }
             startAmplificationParameterUpdate(amplificationEndValue, amplificationEndTime);
         }
     }
@@ -112,12 +121,14 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         uint256 lpTokensOut;
         if (totalSupply() == 0) {
-            require(amountToken0 != 0 && amountToken1 != 0, "token amounts can't be 0");
-
+            if (amountToken0 == 0 || amountToken1 == 0) {
+                revert ZeroTokenAmount();
+            }
             lpTokensOut = StableMath.invariant(_getAmplificationValue(), amountIn0, amountIn1, true);
         } else {
-            require(amountToken0 > 0 || amountToken1 > 0, "one token amount must be > 0");
-
+            if (amountToken0 == 0 && amountToken1 == 0) {
+                revert ZeroTokenAmount();
+            }
             (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
 
             lpTokensOut = StableMath.lpOutGivenTokensIn(
@@ -131,7 +142,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             );
         }
 
-        require(lpTokensOut >= minLpTokensOut, "slippage");
+        if (lpTokensOut < minLpTokensOut) {
+            revert AddingLiquidityLPTokensSlippage(lpTokensOut, minLpTokensOut);
+        }
 
         token0.transferFrom(msg.sender, address(this), amountToken0);
         token1.transferFrom(msg.sender, address(this), amountToken1);
@@ -155,7 +168,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
         (uint256 amountOut0, uint256 amountOut1) = getTokensOutGivenLPIn(lpTokensIn);
 
-        require(amountOut0 > minAmountOut0 && amountOut1 > minAmountOut1, "slippage");
+        if (amountOut0 < minAmountOut0) {
+            revert RemovingLiquidityPoolTokensSlippage(amountOut0, minAmountOut0);
+        }
+        if (amountOut1 < minAmountOut1) {
+            revert RemovingLiquidityPoolTokensSlippage(amountOut1, minAmountOut1);
+        }
 
         _burn(msg.sender, lpTokensIn);
         token0.transfer(recipient, amountOut0);
@@ -188,7 +206,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             totalSupply(),
             swapFeePercentage
         );
-        require(lpTokensIn <= maxLpTokensIn, "slippage");
+        if (lpTokensIn > maxLpTokensIn) {
+            revert RemovingLiquidityLpTokensSlippage(lpTokensIn, maxLpTokensIn);
+        }
 
         _burn(msg.sender, lpTokensIn);
         token0.transfer(recipient, token0AmountOut);
@@ -206,10 +226,15 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         SwapType swapType,
         uint256 deadline
     ) external override whenNotPaused {
-        require(block.timestamp <= deadline, "deadline");
-        require(tokenIn == token0 || tokenIn == token1, "invalid tokenIn");
-        require(amount > 0, "invalid amount");
-
+        if (deadline < block.timestamp) {
+            revert SwapDeadlinePassed(deadline, block.timestamp);
+        }
+        if (tokenIn != token0 && tokenIn != token1) {
+            revert InvalidTokenIn(tokenIn);
+        }
+        if (amount == 0) {
+            revert ZeroTokenAmount();
+        }
         (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalances();
@@ -236,7 +261,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                 scalingFactor
             );
 
-            require(amountOut >= slippageParam, "slippage");
+            if (amountOut < slippageParam) {
+                revert SwapGivenTokensInSlippage(amountOut, slippageParam);
+            }
         } else {
             assert(swapType == SwapType.GIVEN_OUT);
 
@@ -256,7 +283,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
             scaledAmountIn = scaledAmountIn.divfV(tokenIn.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
             amountIn = addSwapFeeAmount(scaledAmountIn.divUp(scalingFactor));
 
-            require(amountIn <= slippageParam, "slippage");
+            if (amountIn > slippageParam) {
+                revert SwapGivenTokensOutSlippage(amountIn, slippageParam);
+            }
         }
 
         tokenIn.transferFrom(msg.sender, address(this), amountIn);
@@ -287,7 +316,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view override returns (uint256) {
-        require(tokenIn == token0 || tokenIn == token1, "tokenIn must be token0 or token1");
+        if (tokenIn != token0 && tokenIn != token1) {
+            revert InvalidTokenIn(tokenIn);
+        }
 
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
         (IPoolShare tokenOut, bool firstIn) = (tokenIn == token0) ? (token1, true) : (token0, false);
@@ -305,8 +336,10 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function getExpectedInGivenOut(uint256 amountOut, IPoolShare tokenIn) external view override returns (uint256) {
+        if (tokenIn != token0 && tokenIn != token1) {
+            revert InvalidTokenIn(tokenIn);
+        }
         (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-        require(tokenIn == token0 || tokenIn == token1, "invalid tokenIn");
         IPoolShare tokenOut = (tokenIn == token0) ? token1 : token0;
 
         uint256 rateAdjustedAmountOut = amountOut.mulfV(tokenOut.getPricePerFullShareStored(), TEMPUS_SHARE_PRECISION);
@@ -438,7 +471,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         override
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        require(totalSupply() > 0, "not initialised");
+        if (totalSupply() == 0) {
+            revert NotInitialisedYet();
+        }
         uint256 token0Balance = selfBalance0();
         uint256 token1Balance = selfBalance1();
 
@@ -454,8 +489,12 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     // NOTE: this function MUST be called in the constructor
     function setInitialAmplification(uint256 startValue) private {
-        require(startValue >= MIN_AMPLIFICATION, "min start amp");
-        require(startValue <= MAX_AMPLIFICATION, "max start amp");
+        if (startValue < MIN_AMPLIFICATION) {
+            revert AmplificationValueTooSmall(startValue, MIN_AMPLIFICATION);
+        }
+        if (startValue > MAX_AMPLIFICATION) {
+            revert AmplificationValueTooBig(startValue, MAX_AMPLIFICATION);
+        }
 
         _setAmplificationData(startValue, startValue, block.timestamp, block.timestamp);
         emit AmpUpdateStarted(startValue, startValue, block.timestamp, block.timestamp);
@@ -463,14 +502,22 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     }
 
     function startAmplificationParameterUpdate(uint256 endValue, uint256 endTime) public onlyOwner {
-        require(endValue >= MIN_AMPLIFICATION, "min end amp");
-        require(endValue <= MAX_AMPLIFICATION, "max end amp");
+        if (endValue < MIN_AMPLIFICATION) {
+            revert AmplificationValueTooSmall(endValue, MIN_AMPLIFICATION);
+        }
+        if (endValue > MAX_AMPLIFICATION) {
+            revert AmplificationValueTooBig(endValue, MAX_AMPLIFICATION);
+        }
 
         uint256 duration = endTime - block.timestamp;
-        require(duration >= MIN_UPDATE_TIME, "amp endtime too close");
+        if (duration < MIN_UPDATE_TIME) {
+            revert AmplificationValueUpdateEndTimeTooClose(duration, MIN_UPDATE_TIME);
+        }
 
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
-        require(!isUpdating, "amp ongoing update");
+        if (isUpdating) {
+            revert AmplificationOngoingUpdate();
+        }
 
         // daily rate = (endValue / currentValue) / duration * 1 day
         // We perform all multiplications first to not reduce precision, and round the division up as we want to avoid
@@ -478,7 +525,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 dailyRate = endValue > currentValue
             ? Math.divUp(1 days * endValue, currentValue * duration)
             : Math.divUp(1 days * currentValue, endValue * duration);
-        require(dailyRate <= MAX_AMP_UPDATE_DAILY_RATE, "amp rate too high");
+        if (dailyRate > MAX_AMP_UPDATE_DAILY_RATE) {
+            revert AmplificationUpdateDailyRateTooBig(dailyRate, MAX_AMP_UPDATE_DAILY_RATE);
+        }
 
         _setAmplificationData(currentValue, endValue, block.timestamp, endTime);
 
@@ -487,7 +536,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     function stopAmplificationParameterUpdate() external override onlyOwner {
         (uint256 currentValue, bool isUpdating) = _getAmplificationParameter();
-        require(isUpdating, "amp no ongoing update");
+        if (!isUpdating) {
+            revert NoAmplificationValueOngoingUpdate();
+        }
 
         _setAmplificationData(currentValue, currentValue, block.timestamp, block.timestamp);
 

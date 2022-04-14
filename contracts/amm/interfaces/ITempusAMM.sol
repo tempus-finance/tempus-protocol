@@ -42,6 +42,90 @@ interface ITempusAMM is IERC20, IRateProvider, IOwnable {
     /// @param amountOut Amount of tokensOut received by user
     event Swap(IPoolShare tokenIn, uint256 amountIn, uint256 amountOut);
 
+    /// @dev Error thrown when proposed swap fee is bigger than the maximum
+    /// @param swapFee The swap fee
+    /// @param maxSwapFee The maximum swap fee
+    error SwapFeeTooBig(uint256 swapFee, uint256 maxSwapFee);
+
+    /// @dev Error thrown when the two pool share tokens have different number of decimals
+    /// @param token0 The first token
+    /// @param token1 The second token
+    error TokenDecimalsMismatch(IPoolShare token0, IPoolShare token1);
+
+    /// @dev Error thrown when starting amplification value is bigger than the ending amplification value
+    /// @param startingAmplificationValue The starting amplification value
+    /// @param endingAmplificationValue The ending amplification value
+    error StartingAmplificationValueBiggerThanEndingAmplificationValue(
+        uint256 startingAmplificationValue,
+        uint256 endingAmplificationValue
+    );
+
+    /// @dev Error thrown when amplification value is smaller than the minimum
+    /// @param amplificationValue The starting amplification value
+    /// @param minAmplificationValue The minimum amplification value
+    error AmplificationValueTooSmall(uint256 amplificationValue, uint256 minAmplificationValue);
+
+    /// @dev Error thrown when amplification value is bigger than the maximum
+    /// @param amplificationValue The starting amplification value
+    /// @param maxAmplificationValue The maximum amplification value
+    error AmplificationValueTooBig(uint256 amplificationValue, uint256 maxAmplificationValue);
+
+    /// @dev Error thrown when the amount of a token is zero
+    error ZeroTokenAmount();
+
+    /// @dev Error thrown when LP tokens to receive are less than the minimum expected when adding liquidity
+    /// @param lpTokensOut The LP tokens to receive
+    /// @param minLPTokensOut The minimum LP tokens to receive
+    error AddingLiquidityLPTokensSlippage(uint256 lpTokensOut, uint256 minLPTokensOut);
+
+    /// @dev Error thrown when pool tokens to receive are less than the minimum expected when removing liquidity
+    /// @param poolTokensOut The pool tokens to receive
+    /// @param minPoolTokensOut The minimum pool tokens to receive
+    error RemovingLiquidityPoolTokensSlippage(uint256 poolTokensOut, uint256 minPoolTokensOut);
+
+    /// @dev Error thrown when the LP tokens to put in are more than the maximum expected when removing liquidity
+    /// @param lpTokensIn The LP tokens to put in
+    /// @param maxLpTokensIn The maximum LP tokens to put in
+    error RemovingLiquidityLpTokensSlippage(uint256 lpTokensIn, uint256 maxLpTokensIn);
+
+    /// @dev Error thrown when the tokens to receive are less than the minimum expected when doing a swap
+    /// @param tokensOut The tokens to receive
+    /// @param minTokensOut The minimum tokens to receive
+    error SwapGivenTokensInSlippage(uint256 tokensOut, uint256 minTokensOut);
+
+    /// @dev Error thrown when the tokens to put in are more than the maximum expected when doing a swap
+    /// @param tokensIn The tokens to put in
+    /// @param maxTokensIn The maximum tokens to put in
+    error SwapGivenTokensOutSlippage(uint256 tokensIn, uint256 maxTokensIn);
+
+    /// @dev Error thrown when the swap deadline has passed
+    /// @param deadline The swap deadline
+    /// @param currentTime The current timestamp
+    error SwapDeadlinePassed(uint256 deadline, uint256 currentTime);
+
+    /// @dev Error thrown when the token in is invalid
+    /// @param tokenIn The token in
+    error InvalidTokenIn(IPoolShare tokenIn);
+
+    /// @dev Error thrown when AMM is not initialised yet
+    error NotInitialisedYet();
+
+    /// @dev Error thrown when amplification value update end time is too close to the current time
+    /// @param updateTimeRemaining The update time remaining
+    /// @param minUpdateTimeRemaining The minimum update time remaining
+    error AmplificationValueUpdateEndTimeTooClose(uint256 updateTimeRemaining, uint256 minUpdateTimeRemaining);
+
+    /// @dev Error thrown when the amplification value has an ongoing update
+    error AmplificationOngoingUpdate();
+
+    /// @dev Error thrown when the amplification update daily rate is more than the maximum
+    /// @param amplificationDailyRate The amplification daily rate
+    /// @param maxAmplificationDailyRate The maximum amplification daily rate
+    error AmplificationUpdateDailyRateTooBig(uint256 amplificationDailyRate, uint256 maxAmplificationDailyRate);
+
+    /// @dev Error thrown when the amplification value does not have an ongoing update
+    error NoAmplificationValueOngoingUpdate();
+
     /// first token in TempusAMM pair
     function token0() external view returns (IPoolShare);
 

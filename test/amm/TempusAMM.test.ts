@@ -93,35 +93,35 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
       ammSwapFee:SWAP_FEE_PERC,
       ammAmplifyStart: 0.5,
       ammAmplifyEnd: 10
-    }))).to.equal("min start amp");
+    }))).to.equal(":AmplificationValueTooSmall");
 
     (await expectRevert(testFixture.createWithAMM({
       initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
       ammSwapFee:SWAP_FEE_PERC,
       ammAmplifyStart: 1000000,
       ammAmplifyEnd: 10
-    }))).to.equal("max start amp");
+    }))).to.equal(":AmplificationValueTooBig");
 
     (await expectRevert(testFixture.createWithAMM({
       initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
       ammSwapFee:SWAP_FEE_PERC,
       ammAmplifyStart: 5,
       ammAmplifyEnd: 1000000
-    }))).to.equal("max end amp");
+    }))).to.equal(":AmplificationValueTooBig");
 
     (await expectRevert(testFixture.createWithAMM({
       initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
       ammSwapFee:SWAP_FEE_PERC,
       ammAmplifyStart: 95,
       ammAmplifyEnd: 5
-    }))).to.equal("invalid amp");
+    }))).to.equal(":StartingAmplificationValueBiggerThanEndingAmplificationValue");
 
     (await expectRevert(testFixture.createWithAMM({
       initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
       ammSwapFee:0.051,
       ammAmplifyStart: 5,
       ammAmplifyEnd: 95
-    }))).to.equal("max swap fee");
+    }))).to.equal(":SwapFeeTooBig");
 
     tempusPool = await testFixture.createWithAMM({
       initialRate:1.0, poolDuration:ONE_MONTH, yieldEst:0.1,
@@ -140,7 +140,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
       95000,
       await blockTimestamp() + ONE_MONTH,
       0
-    ))).to.equal("token0 != token1 decimals");
+    ))).to.equal(":TokenDecimalsMismatch");
   });
 
   it("[getExpectedReturnGivenIn] verifies the expected amount is equivilant to actual amount returned from swapping (TYS to TPS)", async () => {
@@ -186,7 +186,7 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 10000, ammBalanceYield: 100000});
     await testFixture.setTimeRelativeToPoolStart(0.5);
     const expectedReturn = tempusAMM.getExpectedReturnGivenIn(inputAmount, testPoolShare);
-    (await expectRevert(expectedReturn)).to.equal("tokenIn must be token0 or token1");
+    (await expectRevert(expectedReturn)).to.equal(":InvalidTokenIn");
   });
   
   it("[getTokensOutGivenLPIn] verifies the expected amount is equivilant to actual exit from TempusAMM", async () => {
@@ -271,26 +271,26 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     // min amp 
     let invalidAmpUpdate = tempusAMM.startAmplificationUpdate(0, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("min end amp");
+    (await expectRevert(invalidAmpUpdate)).to.equal(":AmplificationValueTooSmall");
 
     // max amp 
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(1000000, 0);
-    (await expectRevert(invalidAmpUpdate)).to.equal("max end amp");
+    (await expectRevert(invalidAmpUpdate)).to.equal(":AmplificationValueTooBig");
 
     // min duration
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(65, 1);
-    (await expectRevert(invalidAmpUpdate)).to.equal("amp endtime too close");
+    (await expectRevert(invalidAmpUpdate)).to.equal(":AmplificationValueUpdateEndTimeTooClose");
 
     // stop update no ongoing update
     invalidAmpUpdate = tempusAMM.stopAmplificationUpdate();
-    (await expectRevert(invalidAmpUpdate)).to.equal("amp no ongoing update");
+    (await expectRevert(invalidAmpUpdate)).to.equal(":NoAmplificationValueOngoingUpdate");
 
     // there is ongoing update
     await tempusAMM.startAmplificationUpdate(65, 60*60*12);
     await increaseTime(60*60*24*15);
     testFixture.setInterestRate(1.05);
     invalidAmpUpdate = tempusAMM.startAmplificationUpdate(95, 60*60*24);
-    (await expectRevert(invalidAmpUpdate)).to.equal("amp ongoing update");
+    (await expectRevert(invalidAmpUpdate)).to.equal(":AmplificationOngoingUpdate");
 
     // stop update
     await tempusAMM.stopAmplificationUpdate();
