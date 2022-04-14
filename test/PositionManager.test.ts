@@ -20,9 +20,9 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
   {
     pool = await testPool.createDefault();
     [owner, user1, user2, user3] = testPool.signers;
-
+    
     amm = testPool.amm;
-    positionManager = await ContractBase.deployContract("PositionManager", "Tempus Positions", "POSITION");
+    positionManager = await ContractBase.deployContract("PositionManager", testPool.controller.address, "Tempus Positions", "POSITION");
     await testPool.setupAccounts(owner, [[user1,/*ybt*/1000000],[user2,/*ybt*/100000], [user3,/*ybt*/100000]]);
     await pool.yieldBearing.approve(user1, positionManager.address, 100000);
     await pool.yieldBearing.approve(user2, positionManager.address, 100000);
@@ -362,5 +362,9 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
     else {
       expect(balanceAfter.eq(expectedBalanceAfter)).to.be.true;
     }
+  });
+
+  it("verifies passing address zero Tempus Controller in the constructor reverts", async () => {
+    (await expectRevert(ContractBase.deployContract("PositionManager", constants.AddressZero, "Tempus Positions", "POSITION"))).to.equal(":InvalidTempusController");
   });
 });
