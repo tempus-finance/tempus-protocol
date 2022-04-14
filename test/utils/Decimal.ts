@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 
+export type Numberish = Number | number | string | BigNumber | Decimal;
 
 /**
  * Matches the most common ERC20 18-decimals precision, such as ETH
@@ -30,36 +31,12 @@ export class Decimal {
     this.bn = Decimal.toFixedPointInteger(value, decimals);
   }
 
-  public static toFixedPointInteger(value:Numberish, decimals:number): BigNumber {
-    // accept BigNumber without any validation, assume Dev knows what they're doing
-    if (value instanceof BigNumber) {
-      return value;
-    }
-    // this is a no-op case?
-    if (value instanceof Decimal && value.decimals == decimals) {
-      return value.bn;
-    }
-
-    const valstr = value.toString();
-    const fractionIdx = valstr.indexOf('.');
-
-    if (decimals === 0) { // pure integer case, TRUNCATE any decimals
-      const intpart = valstr.substring(0, fractionIdx === -1 ? valstr.length : fractionIdx);
-      return BigNumber.from(intpart);
-    }
-
-    if (fractionIdx === -1) { // input was integer eg "1234"
-      return BigNumber.from(valstr + "0".repeat(decimals));
-    }
-
-    // input was a decimal eg "123.45678"
-    const intpart = valstr.substring(0, fractionIdx);
-    const fracpart = valstr.substring(fractionIdx+1);
-    const zeroes = fracpart.length > decimals ? "0".repeat(decimals - fracpart.length) : "";
-    return BigNumber.from(intpart + fracpart + zeroes);
+  /** @returns BigNumber from this Decimal */
+  public toBigNumber(): BigNumber {
+    return this.bn; // currently a no-op, but implementation may change
   }
 
-  public toDecimalBN(x:Numberish): BigNumber {
+  private toDecimalBN(x:Numberish): BigNumber {
     return Decimal.toFixedPointInteger(x, this.decimals);
   }
 
@@ -67,12 +44,29 @@ export class Decimal {
     return new Decimal(x, this.decimals);
   }
 
+  public str(): string {
+    return this.toString();
+  }
+
   public toString(): string {
-    return this.bn.toString();
+    return this._toString(this.decimals);
+  }
+
+  /*** @returns Decimal toString with fractional part truncated to maxDecimals */
+  public toRounded(maxDecimals:number): string {
+    return this._toString(maxDecimals);
   }
 
   public toHexString(): string {
     return this.bn.toHexString();
+  }
+
+  public toJSON(key?: string): any {
+      return { type: "Decimal", value: this.toString() };
+  }
+
+  public toNumber(): number {
+    return this.bn.toNumber();
   }
 
   /** 1.0 expressed as a scaled BigNumber */
@@ -101,9 +95,60 @@ export class Decimal {
     // divf = (a * ONE) / b
     return this.toDecimal( this.bn.mul(this.one()).div(this.toDecimalBN(x)) );
   }
-}
 
-export type Numberish = Number | number | string | BigNumber | Decimal;
+  private static toFixedPointInteger(value:Numberish, decimals:number): BigNumber {
+    if (value instanceof BigNumber) {
+      return value; // accept BigNumber without any validation
+    }
+
+    if (value instanceof Decimal && value.decimals == decimals) {
+      return value.bn; // this is a no-op case
+    }
+
+    // get the string representation of the Numberish value
+    const val = value.toString();
+    // figure out if there is a fractional part to it and get the Whole part
+    const decimalIdx = val.indexOf('.');
+    const whole = val.substring(0, decimalIdx === -1 ? val.length : decimalIdx);
+
+    if (decimals === 0) { // pure integer case, TRUNCATE any decimals
+      return BigNumber.from(whole);
+    }
+
+    if (decimalIdx === -1) { // input was integer eg "1234"
+      return BigNumber.from(val + "0".repeat(decimals));
+    }
+
+    // input was a decimal eg "123.45678"
+    // extract the fractional part of the decimal string
+    const fract = val.substring(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
+    // if it's not long enough, create a trail of zeroes to satisfy decimals precision
+    const trail = decimals > fract.length ? "0".repeat(decimals - fract.length) : "";
+    return BigNumber.from(whole + fract + trail);
+  }
+
+  private _toString(maxDecimals:number): string {
+    if (this.decimals === 0) {
+      return this.bn.toString();
+    }
+
+    // get the BN digits and check if it's negative
+    const s = this.bn.toString();
+    const neg = s[0] === '-';
+    const abs = neg ? s.substring(1) : s;
+
+    // split the BN digits into whole and fractional parts
+    const gotWhole = abs.length > this.decimals; // is BN >= Decimal(1.000000)
+    const whole = gotWhole ? abs.substring(0, abs.length - this.decimals) : "0";
+    const fract = gotWhole ? abs.substring(abs.length - this.decimals)
+                           : "0".repeat(this.decimals - abs.length) + abs;
+
+    // truncate the trailing fraction (if needed)
+    const truncatedFract = (maxDecimals === this.decimals) ? fract
+                         : fract.substring(0, Math.min(maxDecimals, fract.length));
+    return (neg ? "-" : "") + whole + "." + truncatedFract;
+  }
+}
 
 /**
  * double has limited digits of accuracy, so any decimal 
