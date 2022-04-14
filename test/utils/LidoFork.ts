@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
-import { NumberOrString, parseDecimal } from "./Decimal";
+import { Numberish, parseDecimal } from "./Decimal";
 import { setStorageField } from "./Utils";
 import { ERC20Ether } from "./ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -44,7 +44,7 @@ export class LidoFork extends LidoContract {
    * beaconBalance value (which is a component of TotalETHSupply), and by scaling everything up we avoid the potential situation where we need to set beaconBalance
    * to a negative value to achieve the desired TargetETHSupply.
    */
-  async setInterestRate(interestRate:NumberOrString): Promise<void> {
+  async setInterestRate(interestRate:Numberish): Promise<void> {
     const totalETHSupply:BigNumber = await this.contract.totalSupply();
     
     const targetETHSupply = parseDecimal(interestRate, 36);

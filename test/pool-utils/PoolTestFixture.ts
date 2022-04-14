@@ -6,7 +6,7 @@ import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } fr
 import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
 import { ERC20 } from "../utils/ERC20";
 import { IERC20 } from "../utils/IERC20";
-import { NumberOrString, formatDecimal } from "../utils/Decimal";
+import { Numberish, formatDecimal } from "../utils/Decimal";
 import { getRevertMessage } from "../utils/Utils";
 import { TempusController } from "../utils/TempusController";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
@@ -210,14 +210,14 @@ export abstract class PoolTestFixture {
   /**
    * Deposit YieldBearingTokens into TempusPool
    */
-  async depositYBT(user:Signer, yieldBearingAmount:NumberOrString, recipient:SignerOrAddress = user): Promise<Transaction> {
+  async depositYBT(user:Signer, yieldBearingAmount:Numberish, recipient:SignerOrAddress = user): Promise<Transaction> {
     return this.tempus.controller.depositYieldBearing(user, this.tempus, yieldBearingAmount, recipient);
   }
 
   /**
    * Deposit BackingTokens into TempusPool
    */
-  async depositBT(user:Signer, backingTokenAmount:NumberOrString, recipient:SignerOrAddress = user, ethValue: NumberOrString = undefined): Promise<Transaction> {
+  async depositBT(user:Signer, backingTokenAmount:Numberish, recipient:SignerOrAddress = user, ethValue: Numberish = undefined): Promise<Transaction> {
     const ethToTransfer = this.acceptsEther ? ((ethValue == undefined) ? backingTokenAmount : ethValue) : (ethValue || 0);
     return this.tempus.controller.depositBacking(user, this.tempus, backingTokenAmount, recipient, ethToTransfer);
   }
@@ -225,14 +225,14 @@ export abstract class PoolTestFixture {
   /**
    * Redeems TempusShares to YieldBearingTokens
    */
-  async redeemToYBT(user:Signer, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress = user): Promise<Transaction> {
+  async redeemToYBT(user:Signer, principalAmount:Numberish, yieldAmount:Numberish, recipient:SignerOrAddress = user): Promise<Transaction> {
     return this.tempus.controller.redeemToYieldBearing(user, this.tempus, principalAmount, yieldAmount, recipient);
   }
 
   /**
    * Redeems TempusShares to BackingTokens
    */
-  async redeemToBT(user:Signer, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress = user): Promise<Transaction> {
+  async redeemToBT(user:Signer, principalAmount:Numberish, yieldAmount:Numberish, recipient:SignerOrAddress = user): Promise<Transaction> {
     return this.tempus.controller.redeemToBacking(user, this.tempus, principalAmount, yieldAmount, recipient);
   }
 
@@ -242,7 +242,7 @@ export abstract class PoolTestFixture {
    * @example (await pool.expectDepositYBT(user, 100)).to.equal('success');
    * @returns RevertMessage assertion, or 'success' assertion
    */
-  async expectDepositYBT(user:Signer, yieldBearingAmount:NumberOrString, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
+  async expectDepositYBT(user:Signer, yieldBearingAmount:Numberish, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
     try {
       await this.depositYBT(user, yieldBearingAmount, recipient);
       return expect('success');
@@ -257,7 +257,7 @@ export abstract class PoolTestFixture {
    * @example (await pool.expectDepositBT(user, 100)).to.equal('success');
    * @returns RevertMessage assertion, or 'success' assertion
    */
-  async expectDepositBT(user:Signer, backingTokenAmount:NumberOrString, recipient:SignerOrAddress = user, ethValue: NumberOrString = undefined): Promise<Chai.Assertion> {
+  async expectDepositBT(user:Signer, backingTokenAmount:Numberish, recipient:SignerOrAddress = user, ethValue: Numberish = undefined): Promise<Chai.Assertion> {
     try {
       await this.depositBT(user, backingTokenAmount, recipient, ethValue);
       return expect('success');
@@ -272,7 +272,7 @@ export abstract class PoolTestFixture {
    * @example (await pool.expectRedeemYBT(user, 100, 100)).to.equal('success');
    * @returns RevertMessage assertion, or 'success' assertion
    */
-  async expectRedeemYBT(user:Signer, principalShares:NumberOrString, yieldShares:NumberOrString, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
+  async expectRedeemYBT(user:Signer, principalShares:Numberish, yieldShares:Numberish, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
     try {
       await this.redeemToYBT(user, principalShares, yieldShares, recipient);
       return expect('success');
@@ -287,7 +287,7 @@ export abstract class PoolTestFixture {
    * @example (await pool.expectRedeemYBT(user, 100, 100)).to.equal('success');
    * @returns RevertMessage assertion, or 'success' assertion
    */
-  async expectRedeemBT(user:Signer, principalShares:NumberOrString, yieldShares:NumberOrString, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
+  async expectRedeemBT(user:Signer, principalShares:Numberish, yieldShares:Numberish, recipient:SignerOrAddress = user): Promise<Chai.Assertion> {
     try {
       await this.redeemToBT(user, principalShares, yieldShares, recipient);
       return expect('success');

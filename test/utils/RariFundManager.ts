@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString, parseDecimal } from "./Decimal";
+import { Numberish, parseDecimal } from "./Decimal";
 import { ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
@@ -32,11 +32,11 @@ export class RariFundManager extends ContractBase {
     return new RariFundManager(rariFundManager, asset, yieldToken);
   }
 
-  async setInterestRate(interest:NumberOrString): Promise<void> { 
+  async setInterestRate(interest:Numberish): Promise<void> { 
     await this.contract.setInterestRate(parseDecimal(interest.toString(), 18));
   }
 
-  async deposit(user:SignerOrAddress, amount:NumberOrString): Promise<void> {
+  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
     await this.contract.connect(user).deposit((await this.asset.symbol()), this.asset.toBigNum(amount));
   }

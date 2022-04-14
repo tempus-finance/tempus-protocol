@@ -1,5 +1,5 @@
 import { Contract, Transaction } from "ethers";
-import { NumberOrString, toWei } from "./Decimal";
+import { Numberish, toWei } from "./Decimal";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
@@ -66,7 +66,7 @@ export class TempusController extends ContractBase {
    * @param recipient Address or User who will receive the minted shares
    * @param ethValue value of ETH to send with the tx
    */
-  async depositYieldBearing(user:SignerOrAddress, pool: TempusPool, yieldBearingAmount:NumberOrString, recipient:SignerOrAddress = user, ethValue: NumberOrString = 0): Promise<Transaction> {
+  async depositYieldBearing(user:SignerOrAddress, pool: TempusPool, yieldBearingAmount:Numberish, recipient:SignerOrAddress = user, ethValue: Numberish = 0): Promise<Transaction> {
     await pool.yieldBearing.approve(user, this.contract.address, yieldBearingAmount);
     return this.connect(user).depositYieldBearing(
       pool.address, pool.yieldBearing.toBigNum(yieldBearingAmount),
@@ -82,7 +82,7 @@ export class TempusController extends ContractBase {
   * @param recipient Address or User who will receive the minted shares
   * @param ethValue value of ETH to send with the tx
   */
-  async depositBacking(user:SignerOrAddress, pool: TempusPool, backingAmount:NumberOrString, recipient:SignerOrAddress = user, ethValue: NumberOrString = 0): Promise<Transaction> {
+  async depositBacking(user:SignerOrAddress, pool: TempusPool, backingAmount:Numberish, recipient:SignerOrAddress = user, ethValue: Numberish = 0): Promise<Transaction> {
     return this.connect(user).depositBacking(
       pool.address, pool.asset.toBigNum(backingAmount),
       addressOf(recipient), { value: toWei(ethValue) }
@@ -97,7 +97,7 @@ export class TempusController extends ContractBase {
    * @param yieldAmount How many yield shares to redeem
    * @param recipient The recipient address (can be user)
    */
-  async redeemToBacking(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress): Promise<Transaction> {
+  async redeemToBacking(user:SignerOrAddress, pool: TempusPool, principalAmount:Numberish, yieldAmount:Numberish, recipient:SignerOrAddress): Promise<Transaction> {
     return this.connect(user).redeemToBacking(
       pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
@@ -111,7 +111,7 @@ export class TempusController extends ContractBase {
    * @param yieldAmount How many yield shares to redeem
    * @param recipient The recipient address (can be user)
    */
-  async redeemToYieldBearing(user:SignerOrAddress, pool: TempusPool, principalAmount:NumberOrString, yieldAmount:NumberOrString, recipient:SignerOrAddress): Promise<Transaction> {
+  async redeemToYieldBearing(user:SignerOrAddress, pool: TempusPool, principalAmount:Numberish, yieldAmount:Numberish, recipient:SignerOrAddress): Promise<Transaction> {
     return this.connect(user).redeemToYieldBearing(
       pool.address, pool.principalShare.toBigNum(principalAmount), pool.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
@@ -120,7 +120,7 @@ export class TempusController extends ContractBase {
   /**
    * Approves either BT or YBT transfer
    */
-  async approve(pool:PoolTestFixture, user:SignerOrAddress, amount:NumberOrString, isBackingToken:boolean) {
+  async approve(pool:PoolTestFixture, user:SignerOrAddress, amount:Numberish, isBackingToken:boolean) {
     const token = isBackingToken ? pool.asset : pool.ybt;
     await token.approve(user, this.address, amount);
   }
@@ -137,9 +137,9 @@ export class TempusController extends ContractBase {
   async depositAndProvideLiquidity(
     pool: PoolTestFixture,
     user: SignerOrAddress,
-    tokenAmount: NumberOrString,
+    tokenAmount: Numberish,
     isBackingToken: boolean,
-    ethValue: NumberOrString = 0
+    ethValue: Numberish = 0
   ): Promise<Transaction> {
     await this.approve(pool, user, tokenAmount, isBackingToken);
     const amount = isBackingToken ? pool.tempus.asset.toBigNum(tokenAmount) : pool.ybt.toBigNum(tokenAmount);
@@ -161,10 +161,10 @@ export class TempusController extends ContractBase {
   async depositAndFix(
     pool: PoolTestFixture,
     user: SignerOrAddress,
-    tokenAmount: NumberOrString,
+    tokenAmount: Numberish,
     isBackingToken: boolean,
-    minTYSRate: NumberOrString,
-    ethValue: NumberOrString = 0,
+    minTYSRate: Numberish,
+    ethValue: Numberish = 0,
     deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
   ): Promise<Transaction> {
     await this.approve(pool, user, tokenAmount, isBackingToken);
@@ -193,11 +193,11 @@ export class TempusController extends ContractBase {
    async depositAndLeverage(
     pool: PoolTestFixture,
     user: SignerOrAddress,
-    tokenAmount: NumberOrString,
+    tokenAmount: Numberish,
     isBackingToken: boolean,
-    leverageMultiplier: NumberOrString,
-    minCapitalsRate: NumberOrString,
-    ethValue: NumberOrString = 0,
+    leverageMultiplier: Numberish,
+    minCapitalsRate: Numberish,
+    ethValue: Numberish = 0,
     deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
   ): Promise<Transaction> {
     await this.approve(pool, user, tokenAmount, isBackingToken);
@@ -217,7 +217,7 @@ export class TempusController extends ContractBase {
   async provideLiquidity(
     pool: PoolTestFixture,
     user: SignerOrAddress,
-    sharesAmount: NumberOrString
+    sharesAmount: Numberish
   ): Promise<Transaction> {
     await pool.yields.approve(user, this.address, sharesAmount);
     await pool.principals.approve(user, this.address, sharesAmount);
@@ -227,10 +227,10 @@ export class TempusController extends ContractBase {
   async exitAmmGivenAmountsOutAndEarlyRedeem(
     pool: PoolTestFixture,
     user: SignerOrAddress,
-    principals: NumberOrString,
-    yields: NumberOrString,
-    principalsLp: NumberOrString,
-    yieldsLp: NumberOrString,
+    principals: Numberish,
+    yields: Numberish,
+    principalsLp: Numberish,
+    yieldsLp: Numberish,
     toBackingToken: boolean
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus;
@@ -252,13 +252,13 @@ export class TempusController extends ContractBase {
   async exitAmmGivenLpAndRedeem(
     pool:PoolTestFixture, 
     user: SignerOrAddress, 
-    lpTokens:NumberOrString, 
-    principals:NumberOrString, 
-    yields:NumberOrString, 
+    lpTokens:Numberish, 
+    principals:Numberish, 
+    yields:Numberish, 
     toBacking: boolean,
-    maxLeftoverShares: NumberOrString,
-    yieldsRate: NumberOrString = 1,
-    maxSlippage: NumberOrString = 1,
+    maxLeftoverShares: Numberish,
+    yieldsRate: Numberish = 1,
+    maxSlippage: Numberish = 1,
     deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus, addr = addressOf(user);

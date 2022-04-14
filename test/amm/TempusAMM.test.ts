@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { BigNumber, Contract, ethers } from "ethers";
-import { NumberOrString } from "../utils/Decimal";
+import { Numberish } from "../utils/Decimal";
 import { Signer } from "../utils/ContractBase";
 import { TempusPool } from "../utils/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
@@ -13,8 +13,8 @@ import { ContractBase } from "../utils/ContractBase";
 
 interface SwapTestRun {
   amplification:number;
-  swapAmountIn:NumberOrString;
-  swapAmountOut: NumberOrString;
+  swapAmountIn:Numberish;
+  swapAmountOut: Numberish;
   principalIn:boolean;
   givenOut?:boolean;
 }

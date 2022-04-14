@@ -1,5 +1,5 @@
 import { Contract, BigNumber } from "ethers";
-import { formatDecimal, NumberOrString, parseDecimal } from "./Decimal";
+import { formatDecimal, Numberish, parseDecimal } from "./Decimal";
 import { addressOf, ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -39,14 +39,14 @@ export class Comptroller extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<NumberOrString> {
+  async assetBalance(user:SignerOrAddress): Promise<Numberish> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<NumberOrString> {
+  async yieldBalance(user:SignerOrAddress): Promise<Numberish> {
     return await this.yieldToken.balanceOf(user);
   }
 
@@ -54,14 +54,14 @@ export class Comptroller extends ContractBase {
    * @return Current Exchange Rate, converted from exchange rate decimal which has variable decimal precision
    *         The default initial exchange rate on compound is 0.02
    */
-  async exchangeRate(): Promise<NumberOrString> {
+  async exchangeRate(): Promise<Numberish> {
     return formatDecimal(await this.contract.exchangeRate(), this.ratePrecision);
   }
 
   /**
    * Sets the pool Exchange Rate, converting it to exchange rate decimal which has variable decimal precision
    */
-  async setExchangeRate(exchangeRate:NumberOrString, owner:SignerOrAddress = null): Promise<void> {
+  async setExchangeRate(exchangeRate:Numberish, owner:SignerOrAddress = null): Promise<void> {
     if (owner !== null) {
       const prevExchangeRate = await this.exchangeRate();
       const difference = (Number(exchangeRate) / Number(prevExchangeRate)) - 1;
@@ -108,14 +108,14 @@ export class Comptroller extends ContractBase {
    * @param user User to check
    * @param mintAmount How much he wants to mint
    */
-  async mintAllowed(user:SignerOrAddress, mintAmount:NumberOrString): Promise<boolean> {
+  async mintAllowed(user:SignerOrAddress, mintAmount:Numberish): Promise<boolean> {
     return await this.contract.mintAllowed(this.yieldToken.address, addressOf(user), this.asset.toBigNum(mintAmount)) == 0;
   }
 
   /**
    * Calls CErc20 mint() on the CToken, which means CToken must be CErc20 (like cDAI)
    */
-  async mint(user:SignerOrAddress, amount:NumberOrString) {
+  async mint(user:SignerOrAddress, amount:Numberish) {
     await this.asset.approve(user, this.yieldToken.address, amount);
     await this.yieldToken.contract.connect(user).mint(this.asset.toBigNum(amount));
   }

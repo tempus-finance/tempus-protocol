@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "ethers";
 
-export type NumberOrString = Number | string;
+export type Numberish = Number | string;
 
 /**
  * double has limited digits of accuracy, so any decimal 
@@ -28,7 +28,7 @@ export const ONE_WEI:BigNumber = ethers.utils.parseUnits('1.0', 18);
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27 
  * @returns BigNumber for use in solidity contracts
  */
-export function parseDecimal(decimal:NumberOrString, decimalBase:number): BigNumber {
+export function parseDecimal(decimal:Numberish, decimalBase:number): BigNumber {
   // need this special case to support MAX_UINT256, ignoring decimalBase
   const decimalString = decimal.toString();
   if (decimalString == MAX_UINT256) {
@@ -43,7 +43,7 @@ export function parseDecimal(decimal:NumberOrString, decimalBase:number): BigNum
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27
  * @returns Number for simple decimals like 2.5, string for long decimals "0.00000000000001"
  */
-export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): NumberOrString {
+export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): Numberish {
   const str = ethers.utils.formatUnits(bigDecimal, decimalBase);
   if (str.length <= MAX_NUMBER_DIGITS) 
     return Number(str);
@@ -51,27 +51,27 @@ export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): NumberO
 }
 
 /** @return WEI BigNumber from an ETH decimal */
-export function toWei(eth:NumberOrString): BigNumber {
+export function toWei(eth:Numberish): BigNumber {
   return parseDecimal(eth.toString(), 18);
 }
 
 /** @return Decimal from a WEI BigNumber */
-export function fromWei(wei:BigNumber): NumberOrString {
+export function fromWei(wei:BigNumber): Numberish {
   return formatDecimal(wei, 18);
 }
 
 /** @return RAY BigNumber from a decimal number */
-export function toRay(decimal:NumberOrString): BigNumber {
+export function toRay(decimal:Numberish): BigNumber {
   return parseDecimal(decimal.toString(), 27);
 }
 
 /** @return Decimal from a RAY BigNumber */
-export function fromRay(wei:BigNumber): NumberOrString {
+export function fromRay(wei:BigNumber): Numberish {
   return formatDecimal(wei, 27);
 }
 
 /** @return ETH decimal from WEI BigNumber */
-export function toEth(wei:BigNumber): NumberOrString {
+export function toEth(wei:BigNumber): Numberish {
   return formatDecimal(wei, 18);
 }
 
@@ -88,7 +88,7 @@ export class DecimalConvertible {
   }
 
   /** @return Converts a Number or String into this Contract's BigNumber decimal */
-  public toBigNum(amount:NumberOrString):BigNumber {
+  public toBigNum(amount:Numberish):BigNumber {
     if (typeof(amount) === "string") {
       return parseDecimal(amount, this.decimals);
     }
@@ -100,7 +100,7 @@ export class DecimalConvertible {
   }
 
   /** @return Converts a BN big decimal of this Contract into a String or Number */
-  public fromBigNum(contractDecimal:BigNumber): NumberOrString {
+  public fromBigNum(contractDecimal:BigNumber): Numberish {
     return formatDecimal(contractDecimal, this.decimals);
   }
 }

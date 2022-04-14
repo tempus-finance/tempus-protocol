@@ -1,5 +1,5 @@
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { NumberOrString, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
+import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { IERC20 } from "./IERC20";
@@ -23,9 +23,9 @@ export interface TempusSharesNames {
 }
 
 export interface TempusFeesConfig {
-  depositPercent: NumberOrString;
-  earlyRedeemPercent: NumberOrString;
-  matureRedeemPercent: NumberOrString;
+  depositPercent: Numberish;
+  earlyRedeemPercent: Numberish;
+  matureRedeemPercent: Numberish;
 }
 
 export function generateTempusSharesNames(ybtName:string, ybtSymbol:string, maturityTime:number): TempusSharesNames {
@@ -364,18 +364,18 @@ export class TempusPool extends ContractBase {
   /**
    * @returns Number of YBT deposited into this TempusPool contract
    */
-  async contractBalance(): Promise<NumberOrString> {
+  async contractBalance(): Promise<Numberish> {
     return this.yieldBearing.balanceOf(this.contract.address);
   }
 
-  async onDepositYieldBearing(user:SignerOrAddress, yieldBearingAmount:NumberOrString, recipient:SignerOrAddress): Promise<Transaction> {
+  async onDepositYieldBearing(user:SignerOrAddress, yieldBearingAmount:Numberish, recipient:SignerOrAddress): Promise<Transaction> {
     await this.yieldBearing.approve(user, this.contract.address, yieldBearingAmount);
     return this.connect(user).onDepositYieldBearing(
       this.yieldBearing.toBigNum(yieldBearingAmount), addressOf(recipient)
     );
   }
 
-  async onDepositBacking(user:SignerOrAddress, backingTokenAmount:NumberOrString, recipient:SignerOrAddress, ethValue: NumberOrString = 0): Promise<Transaction> {
+  async onDepositBacking(user:SignerOrAddress, backingTokenAmount:Numberish, recipient:SignerOrAddress, ethValue: Numberish = 0): Promise<Transaction> {
     return this.connect(user).onDepositBacking(
       this.asset.toBigNum(backingTokenAmount), addressOf(recipient), { value: toWei(ethValue)}
     );
@@ -389,7 +389,7 @@ export class TempusPool extends ContractBase {
    * @param from Address of which Tempus Shares should be burned
    * @param recipient Address to which redeemed Backing Tokens should be transferred
    */
-  async redeemToBacking(user:SignerOrAddress, principalAmount:NumberOrString, yieldAmount:NumberOrString, from: SignerOrAddress = user, recipient: SignerOrAddress = user): Promise<Transaction> {
+  async redeemToBacking(user:SignerOrAddress, principalAmount:Numberish, yieldAmount:Numberish, from: SignerOrAddress = user, recipient: SignerOrAddress = user): Promise<Transaction> {
     return this.contract.connect(user).redeemToBacking(
       addressOf(from), this.principalShare.toBigNum(principalAmount), this.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
@@ -403,7 +403,7 @@ export class TempusPool extends ContractBase {
    * @param from Address of which Tempus Shares should be burned
    * @param recipient Address to which redeemed Yield Bearing Tokens should be transferred
    */
-  async redeem(user:SignerOrAddress, principalAmount:NumberOrString, yieldAmount:NumberOrString, from: SignerOrAddress = user, recipient: SignerOrAddress = user): Promise<Transaction> {
+  async redeem(user:SignerOrAddress, principalAmount:Numberish, yieldAmount:Numberish, from: SignerOrAddress = user, recipient: SignerOrAddress = user): Promise<Transaction> {
     try {
       return this.contract.connect(user).redeem(
         addressOf(from), this.principalShare.toBigNum(principalAmount), this.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
@@ -442,14 +442,14 @@ export class TempusPool extends ContractBase {
    * @returns The address of the backing token
    *          or the zero address in case of ETH
    */
-  async backingToken(): Promise<NumberOrString> {
+  async backingToken(): Promise<Numberish> {
     return await this.contract.backingToken();
   }
 
   /**
    * @returns The start time of the pool
    */
-  async startTime(): Promise<NumberOrString> {
+  async startTime(): Promise<Numberish> {
     let start:BigNumber = await this.contract.startTime();
     return start.toNumber();
   }
@@ -457,7 +457,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns The maturity time of the pool
    */
-  async maturityTime(): Promise<NumberOrString> {
+  async maturityTime(): Promise<Numberish> {
     let maturity:BigNumber = await this.contract.maturityTime();
     return maturity.toNumber();
   }
@@ -466,7 +466,7 @@ export class TempusPool extends ContractBase {
    * @returns The exceptional halt time of the pool
    * @note This returns null in case it is not set (i.e. has the special value of `type(uin256).max`)
    */
-  async exceptionalHaltTime(): Promise<NumberOrString | null> {
+  async exceptionalHaltTime(): Promise<Numberish | null> {
     let exceptionalHaltTime:BigNumber = await this.contract.exceptionalHaltTime();
     if (exceptionalHaltTime.toHexString() === MAX_UINT256) {
       return null;
@@ -477,7 +477,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns The maximum allowed duration of negative yield periods (in seconds)
    */
-  async maximumNegativeYieldDuration(): Promise<NumberOrString> {
+  async maximumNegativeYieldDuration(): Promise<Numberish> {
     let maximumNegativeYieldDuration:BigNumber = await this.contract.maximumNegativeYieldDuration();
     return maximumNegativeYieldDuration.toNumber();
   }
@@ -485,28 +485,28 @@ export class TempusPool extends ContractBase {
   /**
    * @returns JS decimal converted to suitable contract Exchange Rate precision BigNumber
    */
-  public toContractExchangeRate(decimal:NumberOrString): BigNumber {
+  public toContractExchangeRate(decimal:Numberish): BigNumber {
     return parseDecimal(decimal, this.exchangeRatePrec);
   }
 
   /**
    * @returns Initial Interest Rate when the pool started
    */
-  async initialInterestRate(): Promise<NumberOrString> {
+  async initialInterestRate(): Promise<Numberish> {
     return formatDecimal(await this.contract.initialInterestRate(), this.exchangeRatePrec);
   }
 
   /**
    * @returns Current STORED Interest rate of the pool
    */
-  async currentInterestRate(): Promise<NumberOrString> {
+  async currentInterestRate(): Promise<Numberish> {
     return formatDecimal(await this.contract.currentInterestRate(), this.exchangeRatePrec);
   }
 
   /**
    * @returns Updated current Interest Rate
    */
-  async updateInterestRate(): Promise<NumberOrString> {
+  async updateInterestRate(): Promise<Numberish> {
     await this.contract.updateInterestRate();
     return this.currentInterestRate();
   }
@@ -514,7 +514,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns Interest rate at maturity of the pool
    */
-  async maturityInterestRate(): Promise<NumberOrString> {
+  async maturityInterestRate(): Promise<Numberish> {
     return formatDecimal(await this.contract.maturityInterestRate(), this.exchangeRatePrec);
   }
 
@@ -524,7 +524,7 @@ export class TempusPool extends ContractBase {
    * @return Amount of Principals (TPS) and Yields (TYS) in Principal/YieldShare decimal precision
    *         TPS and TYS are minted in 1:1 ratio, hence a single return value
    */
-  async estimatedMintedShares(amount:NumberOrString, backingToken:boolean): Promise<NumberOrString> {
+  async estimatedMintedShares(amount:Numberish, backingToken:boolean): Promise<Numberish> {
     return this.principalShare.fromBigNum(await this.contract.estimatedMintedShares(amount, backingToken));
   }
 
@@ -534,28 +534,28 @@ export class TempusPool extends ContractBase {
    * @return Amount of Principals (TPS) and Yields (TYS), scaled as 1e18 decimals.
    *         TPS and TYS are redeemed in 1:1 ratio before maturity, hence a single return value.
    */
-  async getSharesAmountForExactTokensOut(amountOut:NumberOrString, isBackingToken:boolean): Promise<NumberOrString> {
+  async getSharesAmountForExactTokensOut(amountOut:Numberish, isBackingToken:boolean): Promise<Numberish> {
     const numTokensOut = isBackingToken ? this.asset.toBigNum(amountOut) : this.yieldBearing.toBigNum(amountOut);
     return this.principalShare.fromBigNum(await this.contract.getSharesAmountForExactTokensOut(numTokensOut, isBackingToken));
   }
   
-  async numAssetsPerYieldToken(amount:NumberOrString, interestRate:NumberOrString): Promise<NumberOrString> {
+  async numAssetsPerYieldToken(amount:Numberish, interestRate:Numberish): Promise<Numberish> {
     return this.asset.fromBigNum(await this.contract.numAssetsPerYieldToken(
       this.yieldBearing.toBigNum(amount), this.toContractExchangeRate(interestRate)
     ));
   }
 
-  async numYieldTokensPerAsset(amount:NumberOrString, interestRate:NumberOrString): Promise<NumberOrString> {
+  async numYieldTokensPerAsset(amount:Numberish, interestRate:Numberish): Promise<Numberish> {
     return this.yieldBearing.fromBigNum(await this.contract.numYieldTokensPerAsset(
       this.asset.toBigNum(amount), this.toContractExchangeRate(interestRate)
     ));
   }
 
-  async pricePerPrincipalShare(): Promise<NumberOrString> {
+  async pricePerPrincipalShare(): Promise<Numberish> {
     return this.principalShare.fromBigNum(await this.contract.pricePerPrincipalShareStored());
   }
 
-  async pricePerYieldShare(): Promise<NumberOrString> {
+  async pricePerYieldShare(): Promise<Numberish> {
     return this.yieldShare.fromBigNum(await this.contract.pricePerYieldShareStored());
   }
 
@@ -563,7 +563,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns Total accumulated fees
    */
-  async totalFees(): Promise<NumberOrString> {
+  async totalFees(): Promise<Numberish> {
     return this.yieldBearing.fromBigNum(await this.contract.totalFees());
   }
 

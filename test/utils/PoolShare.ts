@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { NumberOrString } from "./Decimal";
+import { Numberish } from "./Decimal";
 import { ERC20OwnerMintable } from "./ERC20OwnerMintable";
 
 export enum ShareKind {
@@ -26,7 +26,7 @@ export class PoolShare extends ERC20OwnerMintable {
   /**
    * @returns Updates and gets price per share as described in PoolShare.sol
    */
-  async getPricePerFullShare(): Promise<NumberOrString> {
+  async getPricePerFullShare(): Promise<Numberish> {
     // this transaction will update latest PricePerFullShare
     await this.contract.getPricePerFullShare();
     return this.getPricePerFullShareStored(); // fetch the stored PPS
@@ -35,7 +35,7 @@ export class PoolShare extends ERC20OwnerMintable {
   /**
    * @returns Stored price per share as described in PoolShare.sol
    */
-  async getPricePerFullShareStored(): Promise<NumberOrString> {
+  async getPricePerFullShareStored(): Promise<Numberish> {
     return this.fromBigNum(await this.contract.getPricePerFullShareStored());
   }
 }

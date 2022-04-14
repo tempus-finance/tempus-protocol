@@ -1,5 +1,5 @@
 import { Contract, Transaction } from "ethers";
-import { NumberOrString } from "./Decimal";
+import { Numberish } from "./Decimal";
 import { ContractBase, SignerOrAddress, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { getContractAddress } from '@ethersproject/address';
@@ -10,9 +10,9 @@ import { getContractAddress } from '@ethersproject/address';
 export class TempusOTC extends ContractBase {
   tokenToBuy: ERC20;
   tokenToSell: ERC20;
-  sellAmount: NumberOrString;
+  sellAmount: Numberish;
 
-  constructor(contract: Contract, tokenToBuy: ERC20, tokenToSell: ERC20, sellAmount: NumberOrString) {
+  constructor(contract: Contract, tokenToBuy: ERC20, tokenToSell: ERC20, sellAmount: Numberish) {
     super("TempusOTC", 18, contract);
 
     this.tokenToBuy = tokenToBuy;
@@ -24,8 +24,8 @@ export class TempusOTC extends ContractBase {
     owner: Signer,
     tokenToBuy: ERC20,
     tokenToSell: ERC20, 
-    buyAmount: NumberOrString, 
-    sellAmount: NumberOrString, 
+    buyAmount: Numberish, 
+    sellAmount: Numberish, 
     taker: string
   ): Promise<TempusOTC> {
     
@@ -58,7 +58,7 @@ export class TempusOTC extends ContractBase {
    * @param user The caller who is sending this approve
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(token: ERC20, user:SignerOrAddress, amount:NumberOrString) {
+  async approve(token: ERC20, user:SignerOrAddress, amount:Numberish) {
     await token.approve(user, this.address, amount);
   }
   
