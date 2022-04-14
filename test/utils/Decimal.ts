@@ -4,18 +4,18 @@ import { BigNumber } from "ethers";
 export type Numberish = Number | number | string | BigInt | BigNumber | Decimal;
 
 /**
- * Matches the most common ERC20 18-decimals precision, such as ETH
+ * Matches the most common ERC20 18-decimals precision, such as wETH
  */
 export const DEFAULT_DECIMAL_PRECISION = 18;
 
  /**
-  * Creates a new `Decimal` type from decimal.js Fixed Point math library
-  * The created Decimal has Decimal.ROUND_DOWN and default precision of 18 decimals
+  * Creates a new `Decimal` Fixed-Point Decimal type
+  * The default precision is 18 decimals. Any excess digits will be truncated.
   * @param value Number-like value to convert to Decimal
-  * @param maxDecimals Maximum Decimal precision after the fraction, excess is truncated
+  * @param decimals Decimals precision after the fraction, excess is truncated
   */
-export function decimal(value:Numberish, maxDecimals:number = DEFAULT_DECIMAL_PRECISION): Decimal {
-  return new Decimal(value, maxDecimals);
+export function decimal(value:Numberish, decimals:number = DEFAULT_DECIMAL_PRECISION): Decimal {
+  return new Decimal(value, decimals);
 }
 
 /**
@@ -23,12 +23,13 @@ export function decimal(value:Numberish, maxDecimals:number = DEFAULT_DECIMAL_PR
  *           compatible with ERC20.decimals() concept.
  */
 export class Decimal {
-  int: bigint; // big integer that holds the FixedPoint Decimal value
-  decimals: number; // number of decimal digits that form a fraction, can be 0
+  readonly int: bigint; // big integer that holds the FixedPoint Decimal value
+  readonly decimals: number; // number of decimal digits that form a fraction, can be 0
 
   constructor(value:Numberish, decimals:number) {
     this.decimals = decimals;
     this.int = Decimal.toFixedPointInteger(value, decimals);
+    Object.freeze(this);
   }
 
   /** @returns BigNumber from this Decimal */
@@ -40,12 +41,14 @@ export class Decimal {
     return Decimal.toFixedPointInteger(x, this.decimals);
   }
 
+  /** @returns Number(x) converted to Decimal this precision */
   public toDecimal(x:Numberish): Decimal {
     return new Decimal(x, this.decimals);
   }
 
-  public str(): string {
-    return this.toString();
+  /** @returns Decimal(this) converted to `decimals` precision */
+  public toPrecision(decimals:number): Decimal {
+    return new Decimal(this, decimals);
   }
 
   public toString(): string {
@@ -53,8 +56,13 @@ export class Decimal {
   }
 
   /*** @returns Decimal toString with fractional part truncated to maxDecimals */
-  public toRounded(maxDecimals:number): string {
+  public toTruncated(maxDecimals:number = 0): string {
     return this._toString(maxDecimals);
+  }
+
+  /*** @returns Decimal toString with fractional part truncated to maxDecimals */
+  public toRounded(maxDecimals:number): string {
+    return this._toString(maxDecimals, true);
   }
 
   public toJSON(key?: string): any {
@@ -65,17 +73,21 @@ export class Decimal {
     return Number(this.toString());
   }
 
-  private static ONE_CACHE: { [key:number]: bigint } = {
+  private static readonly ONE_CACHE: { [key:number]: bigint } = {
     6: BigInt("1000000"),
     18: BigInt("1000000000000000000"),
   };
 
   /** 1.0 expressed as a scaled bigint */
   public one(): bigint {
-    let one:bigint = Decimal.ONE_CACHE[this.decimals];
+    return Decimal._one(this.decimals);
+  }
+
+  private static _one(decimals:number): bigint {
+    let one:bigint = Decimal.ONE_CACHE[decimals];
     if (!one) {
-      one = BigInt("1"+"0".repeat(this.decimals));
-      Decimal.ONE_CACHE[this.decimals] = one;
+      one = BigInt("1".padEnd(decimals + 1, "0"));
+      Decimal.ONE_CACHE[decimals] = one;
     }
     return one;
   }
@@ -104,40 +116,51 @@ export class Decimal {
 
   private static toFixedPointInteger(value:Numberish, decimals:number): bigint {
     if (typeof(value) === "bigint") {
-      return value; // accept BigInt without any validation
+      return value; // accept BigInt without any validation, this is necessary to enable raw interop
     }
 
     if (value instanceof BigNumber) {
       return BigInt(value.toString()); // accept BigNumber without any validation
     }
 
-    if (value instanceof Decimal && value.decimals == decimals) {
-      return value.int; // this is a no-op case
+    // for Decimal types we can perform optimized upscaling/downscaling fastpaths
+    if (value instanceof Decimal) {
+      if (value.decimals === decimals) {
+        return value.int; // this is a no-op case
+      } else if (value.decimals > decimals) {
+        // incoming needs to be truncated
+        const downscaleDigits = value.decimals - decimals;
+        return value.int / this._one(downscaleDigits);
+      } else {
+        // incoming needs to be upscaled
+        const upscaleDigits = decimals - value.decimals;
+        return value.int * this._one(upscaleDigits);
+      }
     }
 
     // get the string representation of the Numberish value
     const val = value.toString();
     // figure out if there is a fractional part to it and get the Whole part
     const decimalIdx = val.indexOf('.');
-    const whole = val.substring(0, decimalIdx === -1 ? val.length : decimalIdx);
+    const whole = val.slice(0, decimalIdx === -1 ? val.length : decimalIdx);
 
     if (decimals === 0) { // pure integer case, TRUNCATE any decimals
       return BigInt(whole);
     }
 
     if (decimalIdx === -1) { // input was integer eg "1234"
-      return BigInt(val + "0".repeat(decimals));
+      return BigInt(val.padEnd(val.length + decimals, "0"));
     }
 
     // input was a decimal eg "123.45678"
     // extract the fractional part of the decimal string
-    const fract = val.substring(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
+    const fract = val.slice(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
     // if it's not long enough, create a trail of zeroes to satisfy decimals precision
-    const trail = decimals > fract.length ? "0".repeat(decimals - fract.length) : "";
-    return BigInt(whole + fract + trail);
+    const trail = decimals > fract.length ? decimals - fract.length : 0;
+    return BigInt(whole + fract.padEnd(fract.length + trail, "0"));
   }
 
-  private _toString(maxDecimals:number): string {
+  private _toString(maxDecimals:number, round:boolean=false): string {
     if (this.decimals === 0) {
       return this.int.toString();
     }
@@ -145,18 +168,32 @@ export class Decimal {
     // get the BN digits and check if it's negative
     const s = this.int.toString();
     const neg = s[0] === '-';
-    const abs = neg ? s.substring(1) : s;
+    const abs = neg ? s.slice(1) : s;
 
     // split the BN digits into whole and fractional parts
     const gotWhole = abs.length > this.decimals; // is BN >= Decimal(1.000000)
-    const whole = gotWhole ? abs.substring(0, abs.length - this.decimals) : "0";
-    const fract = gotWhole ? abs.substring(abs.length - this.decimals)
-                           : "0".repeat(this.decimals - abs.length) + abs;
+    const whole = gotWhole ? abs.slice(0, abs.length - this.decimals) : "0";
 
-    // truncate the trailing fraction (if needed)
-    const truncatedFract = (maxDecimals === this.decimals) ? fract
-                         : fract.substring(0, Math.min(maxDecimals, fract.length));
-    return (neg ? "-" : "") + whole + "." + truncatedFract;
+    let fractPart = "";
+    if (maxDecimals > 0) {
+      const f = gotWhole ? abs.slice(abs.length - this.decimals)
+                         : abs.padStart(this.decimals, "0");
+
+      const truncationIdx = Math.min(maxDecimals, f.length);
+      if (round) {
+        // convert the fract part into a Number and round it at the truncation point
+        const rounded = Math.round(Number(f.slice(0, truncationIdx)+"."+f.slice(truncationIdx)));
+        // and truncate any trailing parts
+        fractPart = "." + rounded.toString().slice(0, truncationIdx);
+      } else if (maxDecimals !== this.decimals) {
+        // truncate the trailing fraction
+        fractPart = "." + f.slice(0, truncationIdx);
+      } else {
+        fractPart = "." + f;
+      }
+    }
+
+    return (neg ? "-" : "") + whole + fractPart;
   }
 }
 

@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { Numberish, Decimal, decimal } from "./utils/Decimal";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
-describeNonPool("Decimal Utils", () =>
+describeNonPool("Decimal", () =>
 {
   describe("Decimal", () =>
   {
@@ -54,12 +54,27 @@ describeNonPool("Decimal Utils", () =>
       equals(dec6('-100.12345678901234567890'), '-100.123456');
     });
 
-    it("toRounded: truncates excess digits", () =>
+    it("toTruncated: truncates excess digits", () =>
     {
-      equals(dec18('100.12345678901234567890').toRounded(6), '100.123456');
+      equals(dec18('100.12345678901234567890').toTruncated(), '100');
+      equals(dec18('100.12345678901234567890').toTruncated(6), '100.123456');
+      equals(dec6('100.123456').toTruncated(8), '100.123456');
+
+      equals(dec18('-100.12345678901234567890').toTruncated(), '-100');
+      equals(dec18('-100.12345678901234567890').toTruncated(6), '-100.123456');
+      equals(dec6('-100.123456').toTruncated(8), '-100.123456');
+    });
+
+    it("toRounded: rounds excess digits", () =>
+    {
+      equals(dec18('100.5432149898').toRounded(0), '100');
+      equals(dec18('100.5432149898').toRounded(6), '100.543215');
+      equals(dec18('100.5432141198').toRounded(6), '100.543214');
       equals(dec6('100.123456').toRounded(8), '100.123456');
 
-      equals(dec18('-100.12345678901234567890').toRounded(6), '-100.123456');
+      equals(dec18('-100.5432149898').toRounded(0), '-100');
+      equals(dec18('-100.12345678901234567890').toRounded(6), '-100.123457');
+      equals(dec18('-100.12345612901234567890').toRounded(6), '-100.123456');
       equals(dec6('-100.123456').toRounded(8), '-100.123456');
     });
 
@@ -75,7 +90,7 @@ describeNonPool("Decimal Utils", () =>
     function truncate(x:number, precision:number): string {
       const [whole, fract] = x.toFixed(precision + 6).split('.');
       if (!fract) return whole;
-      return whole + '.' + fract.substring(0, Math.min(fract.length, precision));
+      return whole + '.' + fract.slice(0, Math.min(fract.length, precision));
     }
 
     function generateAndTest(what:string, op1:BinaryOp<Decimal>, op2:BinaryOp<number>) {
