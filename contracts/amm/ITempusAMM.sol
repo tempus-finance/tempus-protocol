@@ -3,11 +3,10 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./IRateProvider.sol";
-import "../../token/IPoolShare.sol";
-import "../../utils/IOwnable.sol";
+import "../token/IPoolShare.sol";
+import "../utils/IOwnable.sol";
 
-interface ITempusAMM is IERC20, IRateProvider, IOwnable {
+interface ITempusAMM is IERC20, IOwnable {
     enum SwapType {
         GIVEN_IN,
         GIVEN_OUT

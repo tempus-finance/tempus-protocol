@@ -214,16 +214,6 @@ export class TempusController extends ContractBase {
     );
   }
 
-  async provideLiquidity(
-    pool: PoolTestFixture,
-    user: SignerOrAddress,
-    sharesAmount: Numberish
-  ): Promise<Transaction> {
-    await pool.yields.approve(user, this.address, sharesAmount);
-    await pool.principals.approve(user, this.address, sharesAmount);
-    return this.connect(user).provideLiquidity(pool.amm.address, pool.principals.toBigNum(sharesAmount));
-  }
-
   async exitAmmGivenAmountsOutAndEarlyRedeem(
     pool: PoolTestFixture,
     user: SignerOrAddress,

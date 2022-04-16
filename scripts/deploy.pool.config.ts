@@ -196,7 +196,8 @@ async function deployAmm(config:Config, deployerPrivateKey:string): Promise<Conf
   const ammConstructorArgs = [
     config.amm.lp.name,
     config.amm.lp.symbol,
-    [config.principal.address, config.yield.address],
+    config.principal.address,
+    config.yield.address,
     config.amm.initialAmplificationFactor * AMP_PRECISION,
     config.amm.finalAmplificationFactor * AMP_PRECISION,
     maturityTimestamp,

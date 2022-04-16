@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import "./amm/interfaces/ITempusAMM.sol";
+import "./amm/ITempusAMM.sol";
 import "./ITempusController.sol";
 import "./ITempusPool.sol";
 import "./math/Fixed256xVar.sol";

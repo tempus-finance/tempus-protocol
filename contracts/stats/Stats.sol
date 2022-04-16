@@ -7,7 +7,7 @@ import "./ChainlinkTokenPairPriceFeed/ChainlinkTokenPairPriceFeed.sol";
 import "../ITempusPool.sol";
 import "../math/Fixed256xVar.sol";
 import "../token/PoolShare.sol";
-import "../amm/interfaces/ITempusAMM.sol";
+import "../amm/ITempusAMM.sol";
 import "../utils/Versioned.sol";
 
 contract Stats is ChainlinkTokenPairPriceFeed, Versioned {

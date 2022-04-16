@@ -17,7 +17,7 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-import "./interfaces/ITempusAMM.sol";
+import "./ITempusAMM.sol";
 import "./../token/IPoolShare.sol";
 
 import "./math/StableMath.sol";
@@ -64,9 +64,9 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
     // All token balances are normalized to behave as if the token had 18 decimals. We assume a token's decimals will
     // not change throughout its lifetime, and store the corresponding scaling factor for each at construction time.
     // These factors are always greater than or equal to one: tokens with more than 18 decimals are not supported.
-    uint256 internal immutable scalingFactor;
+    uint256 private immutable scalingFactor;
 
-    uint256 internal immutable swapFeePercentage;
+    uint256 private immutable swapFeePercentage;
 
     constructor(
         string memory name,
@@ -292,13 +292,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         tokenOut.transfer(msg.sender, amountOut);
 
         emit Swap(tokenIn, amountIn, amountOut);
-    }
-
-    function getRate() external view override returns (uint256) {
-        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-
-        uint256 invariant = StableMath.invariant(_getAmplificationValue(), balance0, balance1, false);
-        return invariant.divDown(totalSupply());
     }
 
     // Query functions

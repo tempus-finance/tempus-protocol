@@ -77,10 +77,6 @@ export class TempusAMM extends ContractBase {
     return this.fromBigNum(await this.contract.totalSupply());
   }
 
-  async getRate(): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.getRate());
-  }
-
   async getExpectedReturnGivenIn(inAmount: Numberish, tokenIn: PoolShare) : Promise<Numberish> {
     return tokenIn.fromBigNum(await this.contract.getExpectedReturnGivenIn(tokenIn.toBigNum(inAmount), tokenIn.address));
   }
