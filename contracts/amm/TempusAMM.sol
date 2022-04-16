@@ -308,13 +308,6 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         token1Balance = (accountBalance * selfBalance1()) / supply;
     }
 
-    function getRate() external view override returns (uint256) {
-        (uint256 balance0, uint256 balance1) = getRateAdjustedBalancesStored();
-
-        uint256 invariant = StableMath.invariant(_getAmplificationValue(), balance0, balance1, false);
-        return invariant.divDown(totalSupply());
-    }
-
     function getExpectedReturnGivenIn(uint256 amount, IPoolShare tokenIn) public view override returns (uint256) {
         if (tokenIn != token0 && tokenIn != token1) {
             revert InvalidTokenIn(tokenIn);

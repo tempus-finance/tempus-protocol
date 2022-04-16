@@ -372,7 +372,6 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5, ammBalancePrincipal: 100, ammBalanceYield: 1000});
 
     expect(+await tempusAMM.balanceOf(owner)).to.be.within(181, 182);
-    expect(+await tempusAMM.getRate()).to.be.equal(1);
 
     await tempusAMM.swapGivenInOrOut(owner, tempusAMM.yieldShare.address, tempusAMM.principalShare.address, 100);
     await tempusAMM.swapGivenInOrOut(owner, tempusAMM.principalShare.address, tempusAMM.yieldShare.address, 10);
@@ -382,7 +381,6 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await tempusAMM.provideLiquidity(user, 100, 1000);
 
     expect(+await tempusAMM.balanceOf(user)).to.be.within(181, 182);
-    expect(+await tempusAMM.getRate()).to.be.within(1.0019, 1.002);
 
     // do more swaps
     await tempusAMM.swapGivenInOrOut(owner, tempusAMM.yieldShare.address, tempusAMM.principalShare.address, 100);
@@ -400,7 +398,6 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await tempusAMM.provideLiquidity(user1, 100, 1000);
     
     expect(+await tempusAMM.balanceOf(user1)).to.be.within(180, 181);
-    expect(+await tempusAMM.getRate()).to.be.within(1.005975, 1.0060);
   });
 
   it("test swaps principal in with balances aligned with Interest Rate", async () =>

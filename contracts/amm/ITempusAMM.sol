@@ -188,8 +188,6 @@ interface ITempusAMM is IERC20, IOwnable {
     /// @return token1Balance Amount of Token1 corresponding to the LP tokens
     function compositionBalanceOf(address account) external view returns (uint256 token0Balance, uint256 token1Balance);
 
-    function getRate() external view returns (uint256);
-
     /// Calculates the expected returned swap amount
     /// @param amount The given input amount of tokens
     /// @param tokenIn Specifies which token [token0 or token1] that @param amount refers to
