@@ -51,10 +51,10 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
             uint256 yields
         )
     {
-        uint256 shares = tempusPool.estimatedMintedShares(amount, isBackingToken);
-        (uint256 ammLPAmount0, uint256 ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(shares);
+        uint256 mintedShares = tempusPool.estimatedMintedShares(amount, isBackingToken);
+        (uint256 ammLPAmount0, uint256 ammLPAmount1) = tempusAMM.getTokensInGivenMaximum(mintedShares);
         lpTokens = tempusAMM.getLPTokensOutForTokensIn(ammLPAmount0, ammLPAmount1);
-        (principals, yields) = (shares - ammLPAmount0, shares - ammLPAmount1);
+        (principals, yields) = (mintedShares - ammLPAmount0, mintedShares - ammLPAmount1);
     }
 
     function estimatedDepositAndFix(
