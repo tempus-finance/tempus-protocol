@@ -74,7 +74,10 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 amount,
         bool isBackingToken
     ) external view override returns (uint256 principals, uint256 yields) {
-        require(leverage > 1e18, "invalid leverage");
+        if (leverage <= 1e18) {
+            revert InvalidLeverageMultiplier(leverage);
+        }
+
         uint256 mintedShares = tempusPool.estimatedMintedShares(amount, isBackingToken);
         yields = mintedShares.mulfV(leverage, 1e18);
 
@@ -153,7 +156,9 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         uint256 yieldsStaked,
         bool toBackingToken
     ) external view override returns (uint256 tokenAmount, uint256 lpTokensRedeemed) {
-        require(!tempusPool.matured(), "Pool already finalized!");
+        if (tempusPool.matured()) {
+            revert PoolAlreadyMatured(tempusPool);
+        }
 
         if (principalsStaked > 0 || yieldsStaked > 0) {
             lpTokensRedeemed = tempusAMM.getLPTokensInGivenTokensOut(principalsStaked, yieldsStaked);
