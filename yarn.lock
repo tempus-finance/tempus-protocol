@@ -8324,10 +8324,10 @@ solhint@^3.3.4:
   optionalDependencies:
     prettier "^1.14.3"
 
-solidity-ast@^0.4.30:
-  version "0.4.30"
-  resolved "https://registry.yarnpkg.com/solidity-ast/-/solidity-ast-0.4.30.tgz#402d8277311d6680c786f756ba27e1c19f809293"
-  integrity sha512-3xsQIbZEPx6w7+sQokuOvk1RkMb5GIpuK0GblQDIH6IAkU4+uyJQVJIRNP+8KwhzkViwRKq0hS4zLqQNLKpxOA==
+solidity-ast@^0.4.31:
+  version "0.4.31"
+  resolved "https://registry.yarnpkg.com/solidity-ast/-/solidity-ast-0.4.31.tgz#c63e42f894cd047826a05dbb8d1e1dfc17282d39"
+  integrity sha512-kX6o4XE4ihaqENuRRTMJfwQNHoqWusPENZUlX4oVb19gQdfi7IswFWnThONHSW/61umgfWdKtCBgW45iuOTryQ==
 
 solidity-comments-extractor@^0.0.7:
   version "0.0.7"
@@ -8358,13 +8358,13 @@ solidity-coverage@^0.7.20:
     shelljs "^0.8.3"
     web3-utils "^1.3.0"
 
-solidity-docgen@^0.6.0-beta.3:
-  version "0.6.0-beta.3"
-  resolved "https://registry.yarnpkg.com/solidity-docgen/-/solidity-docgen-0.6.0-beta.3.tgz#423e0c152b6fa780ef331975d0d3e230861c55a0"
-  integrity sha512-LPB0UcETR2w0LbhL7pRdPbJhOrCKGYJglwyoqdk5wDicSa3amSo95Y9ER3bh/o9MSQcGcdoRvPtFb5iRtSBI+A==
+solidity-docgen@^0.6.0-beta.8:
+  version "0.6.0-beta.8"
+  resolved "https://registry.yarnpkg.com/solidity-docgen/-/solidity-docgen-0.6.0-beta.8.tgz#2bcd16d9f318cede1a5b33e4943fbb207664f1fe"
+  integrity sha512-jeuO/lHnxCh3KuYr2iCNM0BS1aw2VYxIQyUbetVIdP7iX4GO4zZ1dBjlG1ytKhsGZ0V15L9k/rYXBY37A7+4uQ==
   dependencies:
     handlebars "^4.7.7"
-    solidity-ast "^0.4.30"
+    solidity-ast "^0.4.31"
 
 source-map-resolve@^0.5.0:
   version "0.5.3"
