@@ -2,6 +2,7 @@ import { expect, AssertionError } from 'chai';
 import { AsyncFunc } from 'mocha';
 import { Contract } from 'ethers';
 import { ContractBase } from "../utils/ContractBase";
+import { expectRevert } from "../utils/Utils";
 import { BigNumberish, fp, num, isBigNumberish } from './Numbers';
 import { Decimal } from 'decimal.js';
 import { describeNonPool } from '../pool-utils/MultiPoolTestSuite';
@@ -109,8 +110,8 @@ describeNonPool('StableMath', () =>
 
   it('invariant reverts if it does not converge', async () =>
   {
-    await expect(mockMath.invariant(amp(50000), [fp(1.777777777777), fp(18181818181818181818)], true))
-          .to.be.revertedWith('StableMath no convergence');
+    (await expectRevert(mockMath.invariant(amp(50000), [fp(1.777777777777), fp(18181818181818181818)], true)))
+          .to.equal(':StableMathNoConvergence');
   });
 
   it('outGivenIn', async () =>

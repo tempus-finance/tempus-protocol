@@ -59,6 +59,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
     /// Timestamp when the negative yield period was entered.
     uint256 private negativeYieldStartTime;
 
+    error YieldShareCalculationFailure();
+
     /// Constructs Pool with underlying token, start and maturity date
     /// @param _yieldBearingToken Yield Bearing Token, such as cDAI or aUSDC
     /// @param _backingToken backing token (or zero address if ETH)
@@ -139,7 +141,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
             }
         }
 
-        revert("YieldShare compute failed");
+        revert YieldShareCalculationFailure();
     }
 
     modifier onlyController() {
