@@ -12,6 +12,8 @@ library StableMath {
     uint256 internal constant _AMP_PRECISION = 1000;
     uint256 internal constant _NUM_TOKENS = 2;
 
+    error StableMathNoConvergence();
+
     // Note on unchecked arithmetic:
     // This contract performs a large number of additions, subtractions, multiplications and divisions, often inside
     // loops. Since many of these operations are gas-sensitive (as they happen e.g. during a swap), it is important to
@@ -64,7 +66,7 @@ library StableMath {
             }
         }
 
-        revert("StableMath no convergence");
+        revert StableMathNoConvergence();
     }
 
     // Computes how many tokens can be taken out of a pool if `tokenAmountIn` are sent, given the current balances.
@@ -339,6 +341,6 @@ library StableMath {
             }
         }
 
-        revert("StableMath no convergence");
+        revert StableMathNoConvergence();
     }
 }

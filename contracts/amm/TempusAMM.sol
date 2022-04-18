@@ -68,6 +68,8 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
 
     uint256 private immutable swapFeePercentage;
 
+    error SwapAmountNoConvergence();
+
     constructor(
         string memory name,
         string memory symbol,
@@ -380,7 +382,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
                     rate = (amountOut * TEMPUS_SHARE_PRECISION) / amountIn;
                 }
             }
-            revert("getSwapAmountToEndWithEqualShares did not converge.");
+            revert SwapAmountNoConvergence();
         }
     }
 

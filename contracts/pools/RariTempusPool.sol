@@ -21,6 +21,8 @@ contract RariTempusPool is TempusPool {
     uint256 private immutable backingTokenRariPoolIndex;
     uint256 private lastCalculatedInterestRate;
 
+    error BackingTokenRejected(IERC20Metadata token);
+
     constructor(
         IRariFundManager fundManager,
         IERC20Metadata backingToken,
@@ -185,6 +187,6 @@ contract RariTempusPool is TempusPool {
             }
         }
 
-        revert("backing token is not accepted by the rari pool");
+        revert BackingTokenRejected(token);
     }
 }
