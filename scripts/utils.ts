@@ -71,6 +71,10 @@ export async function promptNumber(message: string, defaultValue: number = null,
   return promptInput(message, defaultValue, validate);
 }
 
+export async function promptSelect(message: string, choices: string[], defaultValue: number = null, ) {
+  return promptInput(message, defaultValue, null, 'select', choices);
+}
+
 export async function promptPrivateKey(message: string) {
   const validate = (value: string) => {
     let sanitizedValue = value;
@@ -82,13 +86,14 @@ export async function promptPrivateKey(message: string) {
   return promptInput(message, null, validate, "password");
 }
 
-export async function promptInput(message: string, defaultValue: string|number = null, validate: (value: any) => boolean|string = null, type: string = "text") {
+export async function promptInput(message: string, defaultValue: string|number = null, validate: (value: any) => boolean|string = null, type: string = "text", choices: string[] = []) {
   const response = await prompts({
     type,
     name: 'value',
     message,
     ...(defaultValue ? { initial: defaultValue } : {}),
-    ...(validate ? { validate } : {})
+    ...(choices ? {choices: choices.map((choice) => ({title: choice, value: choice}))} : {}),
+    ...(validate ? { validate } : {}),
   });
 
   return response.value;
