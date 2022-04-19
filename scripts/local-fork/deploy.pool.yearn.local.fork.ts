@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat';
-import { TempusController } from '../test/utils/TempusController';
-import { ERC20 } from '../test/utils/ERC20';
-import { generateTempusSharesNames, TempusPool } from '../test/utils/TempusPool';
-import { HOUR } from '../test/utils/TempusAMM';
-import { ContractBase } from '../test/utils/ContractBase';
-import { toWei } from '../test/utils/Decimal';
-import { promptAddress, promptNumber } from './utils';
+import { TempusController } from '../../test/utils/TempusController';
+import { ERC20 } from '../../test/utils/ERC20';
+import { generateTempusSharesNames, TempusPool } from '../../test/utils/TempusPool';
+import { HOUR } from '../../test/utils/TempusAMM';
+import { ContractBase } from '../../test/utils/ContractBase';
+import { toWei } from '../../test/utils/Decimal';
+import { promptAddress, promptNumber } from '../utils';
 
 async function deployPool() {
     const owner = (await ethers.getSigners())[0];

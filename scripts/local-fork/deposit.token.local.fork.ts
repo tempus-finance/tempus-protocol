@@ -1,8 +1,8 @@
 import { ethers, network } from 'hardhat';
-import { ERC20 } from '../test/utils/ERC20';
-import { promptAddress, promptNumber, promptSelect } from './utils';
+import { ERC20 } from '../../test/utils/ERC20';
+import { promptAddress, promptNumber, promptSelect } from '../utils';
 
-async function depositToken() {
+export async function depositToken() {
     const tokenMap = new Map<string, ERC20>();
     tokenMap.set('DAI', new ERC20("ERC20", 18, (await ethers.getContract('Dai'))));
     tokenMap.set('USDC', new ERC20('ERC20FixedSupply', 6, (await ethers.getContract('Usdc'))));

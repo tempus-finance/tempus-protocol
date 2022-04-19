@@ -1,12 +1,13 @@
 import { ethers } from 'hardhat';
-import { TempusController } from '../test/utils/TempusController';
-import { ERC20 } from '../test/utils/ERC20';
-import { ERC20Ether } from '../test/utils/ERC20Ether';
-import { generateTempusSharesNames, TempusPool } from '../test/utils/TempusPool';
-import { HOUR } from '../test/utils/TempusAMM';
-import { ContractBase } from '../test/utils/ContractBase';
-import { toWei } from '../test/utils/Decimal';
-import { promptAddress, promptNumber } from './utils';
+import { ERC20 } from '../../test/utils/ERC20';
+import { ERC20Ether } from '../../test/utils/ERC20Ether';
+import { TempusController } from '../../test/utils/TempusController';
+import { generateTempusSharesNames, TempusPool } from '../../test/utils/TempusPool';
+import { HOUR } from '../../test/utils/TempusAMM';
+import { ContractBase } from '../../test/utils/ContractBase';
+import { toWei } from '../../test/utils/Decimal';
+import { promptAddress, promptNumber } from './../utils';
+import { increaseYield } from './utils/increase.lido.yield.local.fork';
 
 async function deployPool() {
     const owner = (await ethers.getSigners())[0];
@@ -51,12 +52,14 @@ async function deployPool() {
   
     await tempusController.register(owner, tempusAMM.address);
 
+    await increaseYield();
+
     console.log(`TempusPool: ${pool.address}`);
     console.log(`Principals: ${pool.principalShare.address}`);
     console.log(`Yields: ${pool.yieldShare.address}`);
     console.log(`PoolID: ${await tempusAMM.getPoolId()}`);
     console.log(`TempusAMM: ${tempusAMM.address}`);
-    console.log(`StartDate: ${Number(await pool.startTime()) * 1000}`);
-    console.log(`MaturityDate: ${Number(await pool.maturityTime()) * 1000}`)
+    console.log(`StartDate: ${Number(await pool.startTime()) * 1000} ms`);
+    console.log(`MaturityDate: ${Number(await pool.maturityTime()) * 1000} ms`)
 }
 deployPool();
