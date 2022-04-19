@@ -132,6 +132,8 @@ interface ITempusAMM is IERC20, IOwnable {
     function token1() external view returns (IPoolShare);
 
     /// Adds liquidity to TempusAMM
+    /// If there is no liquidity in AMM it does init with token ratio equal to amounts in this method
+    /// otherwise, if token amounts are not aligned to amm token ratio, fee will be charged
     /// @param amountToken0 Amount of token0 to add to TempusAMM
     /// @param amountToken1 Amount of token0 to add to TempusAMM
     /// @param minLpTokensOut Minimum amount of LP tokens to receive
