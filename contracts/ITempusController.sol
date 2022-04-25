@@ -232,7 +232,7 @@ interface ITempusController {
     /// @param tempusPool The Tempus Pool from which to redeem Tempus Shares
     /// @param principalAmount Amount of Tempus Principals to redeem in PrincipalShare decimal precision
     /// @param yieldAmount Amount of Tempus Yields to redeem in YieldShare decimal precision
-    /// @param recipient Address of user that will receive yield bearing tokens
+    /// @param recipient Address of user that will receive backing tokens
     /// @return Amount of Backing Tokens that were imbursed as a result of the redemption
     function redeemToBacking(
         ITempusPool tempusPool,
