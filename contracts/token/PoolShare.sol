@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+
 import "./ERC20OwnerMintableToken.sol";
 import "../ITempusPool.sol";
 
 /// Token representing the principal or yield shares of a pool.
-abstract contract PoolShare is IPoolShare, ERC20OwnerMintableToken {
+abstract contract PoolShare is IPoolShare, ERC20OwnerMintableToken, ERC20Permit {
     /// The kind of the share.
     ShareKind public immutable override kind;
 
@@ -20,7 +22,7 @@ abstract contract PoolShare is IPoolShare, ERC20OwnerMintableToken {
         string memory name,
         string memory symbol,
         uint8 _decimals
-    ) ERC20OwnerMintableToken(name, symbol) {
+    ) ERC20OwnerMintableToken(name, symbol) ERC20Permit(name) {
         kind = _kind;
         pool = _pool;
         tokenDecimals = _decimals;

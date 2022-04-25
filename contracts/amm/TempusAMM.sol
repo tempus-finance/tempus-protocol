@@ -14,7 +14,7 @@
 
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./ITempusAMM.sol";
@@ -25,7 +25,7 @@ import "../utils/Ownable.sol";
 import "../math/Fixed256x18.sol";
 import "../math/Fixed256xVar.sol";
 
-contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
+contract TempusAMM is ITempusAMM, ERC20Permit, Pausable, Ownable {
     using Fixed256x18 for uint256;
     using Fixed256xVar for uint256;
 
@@ -79,7 +79,7 @@ contract TempusAMM is ITempusAMM, ERC20, Pausable, Ownable {
         uint256 amplificationEndValue,
         uint256 amplificationEndTime,
         uint256 swapFeePerc
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) ERC20Permit(name) {
         if (swapFeePerc > MAX_SWAP_FEE_PERCENTAGE) {
             revert SwapFeeTooBig(swapFeePerc, MAX_SWAP_FEE_PERCENTAGE);
         }
