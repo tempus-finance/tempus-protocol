@@ -297,6 +297,23 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     await tempusAMM.provideLiquidity(owner, 100, 1000);
   });
 
+  it("checks setting amm swap fee percentage", async () => 
+  {
+    await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});
+    const newSwapFeePercentage = 0.04;
+    await tempusAMM.setSwapFeePercentage(newSwapFeePercentage);
+
+    expect(await tempusAMM.swapFeePercentage()).to.equal(newSwapFeePercentage);
+  })
+
+  it("checks setting amm swap fee percentage reverts with invalid args", async() =>
+  {
+    await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});
+    let invalidSwapFeePercentageUpdate = tempusAMM.setSwapFeePercentage(0.051);
+
+    (await expectRevert(invalidSwapFeePercentageUpdate)).to.equal(":SwapFeeTooBig");
+  });
+
   it("revert on invalid join kind", async () =>
   {
     await createPools({yieldEst:0.1, duration:ONE_MONTH, amplifyStart:5, amplifyEnd:5});

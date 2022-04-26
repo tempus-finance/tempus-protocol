@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract, Transaction } from "ethers";
-import { Numberish, toWei } from "./Decimal";
+import { Numberish, toWei, fromWei } from "./Decimal";
 import { ContractBase, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { blockTimestamp, setEvmTime } from "./Utils";
@@ -181,5 +181,13 @@ export class TempusAMM extends ContractBase {
 
   async getAmplificationParam(): Promise<{value:Numberish, isUpdating:Numberish, precision:Numberish}> {
     return this.contract.getAmplificationParameter();
+  }
+
+  async swapFeePercentage(): Promise<Numberish> {
+    return this.fromBigNum(await this.contract.swapFeePercentage());
+  }
+
+  async setSwapFeePercentage(newSwapFeePercentage: number): Promise<Transaction> {
+    return this.contract.setSwapFeePercentage(this.toBigNum(newSwapFeePercentage));
   }
 }
