@@ -66,7 +66,7 @@ contract TempusAMM is ITempusAMM, ERC20Permit, Pausable, Ownable {
     // These factors are always greater than or equal to one: tokens with more than 18 decimals are not supported.
     uint256 private immutable scalingFactor;
 
-    uint256 private immutable swapFeePercentage;
+    uint256 public swapFeePercentage;
 
     error SwapAmountNoConvergence();
 
@@ -538,6 +538,15 @@ contract TempusAMM is ITempusAMM, ERC20Permit, Pausable, Ownable {
         _setAmplificationData(currentValue, currentValue, block.timestamp, block.timestamp);
 
         emit AmpUpdateStopped(currentValue);
+    }
+
+    function setSwapFeePercentage(uint256 newSwapFeePercentage) external override onlyOwner {
+        if (newSwapFeePercentage > MAX_SWAP_FEE_PERCENTAGE) {
+            revert SwapFeeTooBig(newSwapFeePercentage, MAX_SWAP_FEE_PERCENTAGE);
+        }
+        swapFeePercentage = newSwapFeePercentage;
+
+        emit SwapFeePercentageChanged(newSwapFeePercentage);
     }
 
     function getAmplificationParameter()

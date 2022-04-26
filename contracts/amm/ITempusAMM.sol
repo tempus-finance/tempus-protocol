@@ -42,6 +42,10 @@ interface ITempusAMM is IERC20, IERC20Permit, IOwnable {
     /// @param amountOut Amount of tokensOut received by user
     event Swap(IPoolShare tokenIn, uint256 amountIn, uint256 amountOut);
 
+    /// Event triggered when swap fee percentage changes
+    /// @param newSwapFeePercentage The new swap fee percentage
+    event SwapFeePercentageChanged(uint256 newSwapFeePercentage);
+
     /// @dev Error thrown when proposed swap fee is bigger than the maximum
     /// @param swapFee The swap fee
     /// @param maxSwapFee The maximum swap fee
@@ -131,6 +135,9 @@ interface ITempusAMM is IERC20, IERC20Permit, IOwnable {
 
     /// second token in TempusAMM pair
     function token1() external view returns (IPoolShare);
+
+    /// the swap fee percentage
+    function swapFeePercentage() external view returns (uint256);
 
     /// Adds liquidity to TempusAMM
     /// If there is no liquidity in AMM it does init with token ratio equal to amounts in this method
@@ -250,6 +257,10 @@ interface ITempusAMM is IERC20, IERC20Permit, IOwnable {
 
     /// Stops the amplification parameter change process, keeping the current value
     function stopAmplificationParameterUpdate() external;
+
+    /// Updates the swap fee percentage
+    /// @param newSwapFeePercentage The new swap fee percentage
+    function setSwapFeePercentage(uint256 newSwapFeePercentage) external;
 
     /// Returns current state of amplification parameter
     /// @return value Current amplification value
