@@ -22,7 +22,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
 
-    constructor() Versioned(1, 1, 1) {}
+    constructor() Versioned(2, 0, 0) {}
 
     function register(address contractAddress, bool isValid) public override onlyOwner {
         registry[contractAddress] = isValid;
@@ -55,7 +55,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool isBackingToken,
         uint256 minTYSRate,
         uint256 deadline
-    ) external payable override nonReentrant returns (uint256) {
+    ) external payable override nonReentrant returns (uint256, uint256) {
         requireRegistered(address(tempusAMM));
         requireRegistered(address(tempusPool));
 
@@ -71,7 +71,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         assert(principalsBalance > 0);
 
         principalShares.transfer(msg.sender, principalsBalance);
-        return principalsBalance;
+        return (swapAmount, principalsBalance);
     }
 
     function depositAndLeverage(
@@ -82,7 +82,15 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         bool isBackingToken,
         uint256 minCapitalsRate,
         uint256 deadline
-    ) external payable returns (uint256, uint256) {
+    )
+        external
+        payable
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         requireRegistered(address(tempusAMM));
         requireRegistered(address(tempusPool));
 
@@ -106,7 +114,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
 
         principalShares.transfer(msg.sender, principalsBalance);
         yieldShares.transfer(msg.sender, yieldsBalance);
-        return (principalsBalance, yieldsBalance);
+        return (mintedShares, principalsBalance, yieldsBalance);
     }
 
     function depositYieldBearing(
