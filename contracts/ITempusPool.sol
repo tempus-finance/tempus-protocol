@@ -2,10 +2,10 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import "./token/IPoolShare.sol";
 import "./utils/IOwnable.sol";
-import "./utils/IVersioned.sol";
 
 /// Setting and transferring of fees are restricted to the owner.
 interface ITempusFees is IOwnable {
@@ -44,7 +44,7 @@ interface ITempusFees is IOwnable {
 }
 
 /// All state changing operations are restricted to the controller.
-interface ITempusPool is ITempusFees, IVersioned {
+interface ITempusPool is ITempusFees, IERC165 {
     /// @dev Error thrown when the given's pool maturity time has already passed
     /// @param maturity The maturity timestamp
     /// @param startTime The pool start timestamp

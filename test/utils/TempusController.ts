@@ -271,4 +271,8 @@ export class TempusController extends ContractBase {
       parseInt((deadline.getTime() / 1000).toFixed(0))
     );
   }
+  
+  async supportsInterface(interfaceId: string): Promise<Boolean> {
+    return this.contract.supportsInterface(interfaceId);
+  }
 }
