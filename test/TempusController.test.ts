@@ -65,9 +65,9 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("Version is correct", async () =>
     {
       const { major, minor, patch } = await controller.version();
-      expect(major).to.equal(1);
-      expect(minor).to.equal(1);
-      expect(patch).to.equal(1);
+      expect(major).to.equal(2);
+      expect(minor).to.equal(0);
+      expect(patch).to.equal(0);
     });
 
     it("Owner is correct", async () =>

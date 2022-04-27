@@ -158,6 +158,7 @@ interface ITempusController {
     /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
     /// @param minTYSRate Minimum exchange rate of TYS (denominated in TPS) to receive in exchange for TPS
     /// @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
+    /// @return Initial amount of shares minted, before Yields were sold for Capitals
     /// @return Amount of Principal Shares transferred to `msg.sender`
     function depositAndFix(
         ITempusAMM tempusAMM,
@@ -166,7 +167,7 @@ interface ITempusController {
         bool isBackingToken,
         uint256 minTYSRate,
         uint256 deadline
-    ) external payable returns (uint256);
+    ) external payable returns (uint256, uint256);
 
     /// @dev Atomically deposits YBT/BT to TempusPool and swaps Capitals for Yields to get leveraged exposure to yield
     /// @param tempusPool TempusPool to be used for depositing YBT/BT
@@ -176,7 +177,9 @@ interface ITempusController {
     /// @param isBackingToken specifies whether the deposited asset is the Backing Token or Yield Bearing Token
     /// @param maxCapitalsRate Maximum exchange rate of Capitals (denominated in Yields) when getting Yield in return
     /// @param deadline A timestamp by which the transaction must be completed, otherwise it would revert
-    /// @return Amount of Capitals and Yields transferred to `msg.sender`
+    /// @return Initial amount of shares minted, before Capitals were sold for Yields
+    /// @return Amount of Capitals transferred to `msg.sender`
+    /// @return Amount of Yields transferred to `msg.sender`
     function depositAndLeverage(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
@@ -185,7 +188,14 @@ interface ITempusController {
         bool isBackingToken,
         uint256 maxCapitalsRate,
         uint256 deadline
-    ) external payable returns (uint256, uint256);
+    )
+        external
+        payable
+        returns (
+            uint256,
+            uint256,
+            uint256
+        );
 
     /// @dev Deposits Yield Bearing Tokens to a Tempus Pool.
     /// @param tempusPool The Tempus Pool to which tokens will be deposited
