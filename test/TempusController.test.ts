@@ -62,17 +62,18 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
   }
 
   describe("deploy", async () => {
-    it("Version is correct", async () =>
-    {
-      const { major, minor, patch } = await controller.version();
-      expect(major).to.equal(2);
-      expect(minor).to.equal(0);
-      expect(patch).to.equal(0);
-    });
-
     it("Owner is correct", async () =>
     {
       expect(await controller.owner()).to.equal(addressOf(owner));
+    });
+
+    it("Should support ITempusController interface", async() => 
+    {
+      // should not support random interface
+      expect(await controller.supportsInterface("0x3c3dbb51")).to.be.false;
+  
+      // should support ITempusController interface
+      expect(await controller.supportsInterface("0xa78f56f5")).to.be.true;
     });
   });
   

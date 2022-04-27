@@ -31,14 +31,6 @@ describeForEachPool("Stats", (testPool:PoolTestFixture) =>
     await testPool.setupAccounts(owner, [[user1,/*ybt*/1000000],[user2,/*ybt*/100000]]);
     stats = await Stats.create();
   });
-
-  it("Version is correct", async () =>
-  {
-    const { major, minor, patch } = await stats.version();
-    expect(major).to.equal(2);
-    expect(minor).to.equal(0);
-    expect(patch).to.equal(0);
-  });
   
   it("Estimated Minted Shares returns expected values", async () =>
   {

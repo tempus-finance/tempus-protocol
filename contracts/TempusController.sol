@@ -11,18 +11,17 @@ import "./ITempusPool.sol";
 import "./math/Fixed256xVar.sol";
 import "./utils/UntrustedERC20.sol";
 import "./utils/Ownable.sol";
-import "./utils/Versioned.sol";
 
 /// @dev TempusController singleton with a transferrable ownership and re-entrancy guards
 ///      Owner is automatically set to the deployer of this contract
-contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versioned {
+contract TempusController is ITempusController, ReentrancyGuard, Ownable {
     using Fixed256xVar for uint256;
     using UntrustedERC20 for IERC20Metadata;
 
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
 
-    constructor() Versioned(2, 0, 0) {}
+    constructor() {}
 
     function register(address contractAddress, bool isValid) public override onlyOwner {
         registry[contractAddress] = isValid;
@@ -577,5 +576,9 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, Versio
         } else {
             return _redeemToYieldBearing(tempusPool, address(this), principals, yields, msg.sender);
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        return interfaceId == type(ITempusController).interfaceId;
     }
 }

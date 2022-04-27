@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
 
-interface ITempusController {
+interface ITempusController is IERC165 {
     /// @dev Event emitted on a successful BT/YBT deposit.
     /// @param pool The Tempus Pool to which assets were deposited
     /// @param depositor Address of the user who deposited Yield Bearing Tokens to mint

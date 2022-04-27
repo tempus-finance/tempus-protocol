@@ -596,4 +596,8 @@ export class TempusPool extends ContractBase {
   async transferFees(owner:SignerOrAddress, recipient:SignerOrAddress): Promise<void> {
     await this.contract.connect(owner).transferFees(addressOf(recipient));
   }
+
+  async supportsInterface(interfaceId: string): Promise<Boolean> {
+    return this.contract.supportsInterface(interfaceId);
+  }
 }

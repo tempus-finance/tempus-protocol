@@ -14,14 +14,6 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
     pool = await testPool.createDefault();
   });
 
-  it("Version is correct", async () =>
-  {
-    const { major, minor, patch } = await pool.version();
-    expect(major).to.equal(1);
-    expect(minor).to.equal(0);
-    expect(patch).to.equal(0);
-  });
-
   it("Underlying protocol name is correct", async () => 
   {
     const protocol:string = utils.parseBytes32String(await pool.protocolName());
@@ -92,5 +84,14 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
   {
     (await expectRevert(testPool.create({ initialRate:1.0, poolDuration:60, yieldEst:0 })))
       .to.equal(":ZeroEstimatedFinalYield");
+  });
+
+  it("Should support ITempusPool interface", async() => 
+  {
+    // should not support random interface
+    expect(await pool.supportsInterface("0x3c3dbb51")).to.be.false;
+
+    // should support ITempusPool interface
+    expect(await pool.supportsInterface("0xa79467db")).to.be.true;
   });
 });

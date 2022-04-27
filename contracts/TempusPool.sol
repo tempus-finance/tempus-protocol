@@ -12,7 +12,6 @@ import "./token/YieldShare.sol";
 import "./math/Fixed256xVar.sol";
 import "./utils/Ownable.sol";
 import "./utils/UntrustedERC20.sol";
-import "./utils/Versioned.sol";
 
 /// @dev helper struct to store name and symbol for the token
 struct TokenData {
@@ -22,7 +21,7 @@ struct TokenData {
 
 /// @author The tempus.finance team
 /// @title Implementation of Tempus Pool
-abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned {
+abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
@@ -84,7 +83,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
         TokenData memory principalsData,
         TokenData memory yieldsData,
         FeesConfig memory maxFeeSetup
-    ) Versioned(1, 0, 0) {
+    ) {
         if (maturity <= block.timestamp) {
             revert MaturityTimeBeforeStartTime(maturity, block.timestamp);
         }
@@ -618,4 +617,8 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, Versioned
 
     /// @return Converts an interest rate decimal into a Principal/Yield Share decimal
     function interestRateToSharePrice(uint256 interestRate) internal view virtual returns (uint256);
+
+    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
+        return interfaceId == type(ITempusPool).interfaceId;
+    }
 }

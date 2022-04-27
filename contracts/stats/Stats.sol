@@ -8,12 +8,11 @@ import "../ITempusPool.sol";
 import "../math/Fixed256xVar.sol";
 import "../token/PoolShare.sol";
 import "../amm/ITempusAMM.sol";
-import "../utils/Versioned.sol";
 
-contract Stats is ChainlinkTokenPairPriceFeed, Versioned {
+contract Stats is ChainlinkTokenPairPriceFeed {
     using Fixed256xVar for uint256;
 
-    constructor() Versioned(2, 0, 0) {}
+    constructor() {}
 
     /// @param tempusPool The TempusPool to fetch its TVL (total value locked)
     /// @return total value locked of a TempusPool (denominated in BackingTokens)
