@@ -10,7 +10,8 @@ export const DEFAULT_DECIMAL_PRECISION = 18;
 
  /**
   * Creates a new `Decimal` Fixed-Point Decimal type
-  * The default precision is 18 decimals. Any excess digits will be truncated.
+  * The default precision is 18 decimals.
+  * @warning Any EXCESS digits will ALWAYS be truncated, not rounded!
   * @param value Number-like value to convert to Decimal
   * @param decimals Decimals precision after the fraction, excess is truncated
   */
@@ -26,9 +27,18 @@ export class Decimal {
   readonly int: bigint; // big integer that holds the FixedPoint Decimal value
   readonly decimals: number; // number of decimal digits that form a fraction, can be 0
 
+  /**
+   * Creates a new `Decimal` Fixed-Point Decimal type with fixed decimals precision
+   * @warning Any EXCESS digits will ALWAYS be truncated, not rounded!
+   * @param value Any Number-like value.
+   *              BigInt and BigNumber pass through without any scaling.
+   *              Decimal types are upscaled/downscaled to this decimals precision
+   * @param decimals Fixed count of fractional decimal digits, eg 18 or 6.
+   *                 Excess digits are truncated.
+   */
   constructor(value:Numberish, decimals:number) {
     this.decimals = decimals;
-    this.int = Decimal.toFixedPointInteger(value, decimals);
+    this.int = Decimal.toScaledBigInt(value, decimals);
     Object.freeze(this);
   }
 
@@ -37,8 +47,9 @@ export class Decimal {
     return BigNumber.from(this.int.toString());
   }
 
-  private toDecimalBN(x:Numberish): bigint {
-    return Decimal.toFixedPointInteger(x, this.decimals);
+  /** @returns Numberish converted to this Decimal precision bigint */
+  private toScaledBigInt(x:Numberish): bigint {
+    return Decimal.toScaledBigInt(x, this.decimals);
   }
 
   /** @returns Number(x) converted to Decimal this precision */
@@ -51,6 +62,7 @@ export class Decimal {
     return new Decimal(this, decimals);
   }
 
+  /** @returns Decimal toString with full fractional part */
   public toString(): string {
     return this._toString(this.decimals);
   }
@@ -65,10 +77,16 @@ export class Decimal {
     return this._toString(maxDecimals, true);
   }
 
+  /*** @returns JSON representation of this Decimal as { type: "Decimal", value: "1.000000" } */
   public toJSON(key?: string): any {
       return { type: "Decimal", value: this.toString() };
   }
 
+  /**
+   * Converts this Decimal into a string and parses it as a number
+   * Some precision loss will occur for big decimals
+   * @returns This Decimal FixedPoint converted to a number.
+   */
   public toNumber(): number {
     return Number(this.toString());
   }
@@ -78,8 +96,8 @@ export class Decimal {
     18: BigInt("1000000000000000000"),
   };
 
-  /** 1.0 expressed as a scaled bigint */
-  public one(): bigint {
+  /** 1.0 expressed as a scaled bigint of this decimals precision */
+  private one(): bigint {
     return Decimal._one(this.decimals);
   }
 
@@ -94,27 +112,36 @@ export class Decimal {
 
   /** @return decimal(this) + decimal(x) */
   public add(x:Numberish): Decimal {
-    return this.toDecimal( this.int + this.toDecimalBN(x) );
+    return this.toDecimal( this.int + this.toScaledBigInt(x) );
   }
 
   /** @return decimal(this) - decimal(x) */
   public sub(x:Numberish): Decimal {
-    return this.toDecimal( this.int - this.toDecimalBN(x) );
+    return this.toDecimal( this.int - this.toScaledBigInt(x) );
   }
 
   /** @return decimal(this) * decimal(x) */
   public mul(x:Numberish): Decimal {
     // mulf = (a * b) / ONE
-    return this.toDecimal( (this.int * this.toDecimalBN(x)) / this.one() );
+    return this.toDecimal( (this.int * this.toScaledBigInt(x)) / this.one() );
   }
 
   /** @return decimal(this) / decimal(x) */
   public div(x:Numberish): Decimal {
     // divf = (a * ONE) / b
-    return this.toDecimal( (this.int * this.one()) / this.toDecimalBN(x) );
+    return this.toDecimal( (this.int * this.one()) / this.toScaledBigInt(x) );
   }
 
-  private static toFixedPointInteger(value:Numberish, decimals:number): bigint {
+  /**
+   * Main utility for converting numeric values into the internal
+   * scaled fixed point integer representation.
+   * The numeric `value` is scaled by pow(10, decimals), eg. 5.0 * 10^6 = bigint(5_000_000)
+   * @param value Any kind of numberish value
+   * @param decimals Fixed Point decimals precision, eg 18 or 6
+   * @returns BigInt scaled to decimals precision, 
+   *          ex: toScaledBigInt(1.0, 6) => bigint(1_000_000)
+   */
+  private static toScaledBigInt(value:Numberish, decimals:number): bigint {
     if (typeof(value) === "bigint") {
       return value; // accept BigInt without any validation, this is necessary to enable raw interop
     }
@@ -152,8 +179,9 @@ export class Decimal {
       return BigInt(val.padEnd(val.length + decimals, "0"));
     }
 
-    // input was a decimal eg "123.45678"
-    // extract the fractional part of the decimal string
+    // input was a decimal eg "123.456" (pad trail) or "1.23456789" (truncate fract)
+    // extract the fractional part of the decimal string up to `decimals` count of
+    // characters (truncating excess), or up to end of the string (pad trail)
     const fract = val.slice(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
     // if it's not long enough, create a trail of zeroes to satisfy decimals precision
     const trail = decimals > fract.length ? decimals - fract.length : 0;
@@ -165,13 +193,12 @@ export class Decimal {
       return this.int.toString();
     }
 
-    // get the BN digits and check if it's negative
-    const s = this.int.toString();
-    const neg = s[0] === '-';
-    const abs = neg ? s.slice(1) : s;
+    // get the BigInt digits and check if it's negative
+    const neg = this.int < 0;
+    const abs = (neg ? this.int * BigInt(-1) : this.int).toString();
 
-    // split the BN digits into whole and fractional parts
-    const gotWhole = abs.length > this.decimals; // is BN >= Decimal(1.000000)
+    // split the BigInt digits into whole and fractional parts
+    const gotWhole = abs.length > this.decimals; // is BigInt >= Decimal(1.000000)
     const whole = gotWhole ? abs.slice(0, abs.length - this.decimals) : "0";
 
     let fractPart = "";
@@ -242,13 +269,6 @@ export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): Numberi
   if (str.length <= MAX_NUMBER_DIGITS) 
     return Number(str);
   return str;
-}
-
-/**
- * Truncates a number directly into a BigNumber, without any scaling
- */
-export function bn(number:Numberish): BigNumber {
-  return BigNumber.from(number);
 }
 
 /** @return WEI BigNumber from an ETH decimal */
