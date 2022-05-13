@@ -7,14 +7,25 @@ import * as abstractSigner from "@ethersproject/abstract-signer/src.ts";
 export type AbstractSigner = abstractSigner.Signer;
 export type Signer = signers.SignerWithAddress;
 export type SignerOrAddress = Signer|string;
+export type Addressable = SignerOrAddress|ContractBase|Contract;
 
 /** @return Address field from signer or address string */
-export function addressOf(signer:SignerOrAddress) {
-  if (typeof(signer) === "string")
-    return signer;
-  if (signer.address)
-    return signer.address;
-  throw new Error("Invalid signer (no address): " + signer);
+export function addressOf(addressable: Addressable): string {
+  if (typeof(addressable) === "string")
+    return addressable;
+  if (addressable instanceof ContractBase || addressable instanceof Contract ||
+      addressable instanceof signers.SignerWithAddress)
+    return addressable.address;
+  throw new Error("Invalid addressable (no address): " + addressable);
+}
+
+/** @return Signer or an address string */
+export function signerOf(addressable: Addressable): SignerOrAddress {
+  if (typeof(addressable) === "string")
+    return addressable;
+  if (addressable instanceof ContractBase || addressable instanceof Contract)
+    return addressable.address;
+  return addressable; // Signer
 }
 
 /**
@@ -44,8 +55,9 @@ export abstract class ContractBase extends DecimalConvertible
   }
   
   /** Connects a user to the contract, so that transactions can be sent by the user */
-  connect(user:SignerOrAddress): Contract {
-    return this.contract.connect(user);
+  connect(user:Addressable): Contract {
+    const signerOrProvider = signerOf(user);
+    return this.contract.connect(signerOrProvider);
   }
 
   /**

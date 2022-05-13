@@ -1,6 +1,6 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish } from "./Decimal";
-import { ContractBase, SignerOrAddress, Signer, AbstractSigner, addressOf } from "./ContractBase";
+import { Decimal, Numberish } from "./Decimal";
+import { ContractBase, Signer, AbstractSigner, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 
 /**
@@ -10,25 +10,20 @@ export class ERC20 extends ContractBase implements IERC20 {
   constructor(contractName:string, decimals:number, contract?:Contract) {
     super(contractName, decimals/*default decimals*/, contract);
   }
-  
-  // initialize immutable fields
-  protected async initialize(contract:Contract): Promise<ERC20>
-  {
-    super.initialize(contract);
-    this.decimals = await this.contract.decimals();
-    return this;
-  }
 
   /**
    * Deploy a contract of type T which extends ERC20
-   * @param contractName Name of the solidity contract
+   * Example: const token = await MyERC20Token.deployClass(MyERC20Token);
    * @param type Type of the ERC20 instance
    */
   static async deployClass<T extends ERC20>(type: new() => T, ...args: any[]): Promise<T> {
-    const instance = new type();
-    const contract = await this.deployContract(instance.contractName, ...args);
-    await instance.initialize(contract);
-    return instance;
+    const erc20 = new type();
+    const contract = await this.deployContract(erc20.contractName, ...args);
+    erc20.initialize(contract);
+    if (!erc20.decimals) {
+      erc20.decimals = await erc20.getContractDecimals();
+    }
+    return erc20;
   }
 
   /**
@@ -36,7 +31,11 @@ export class ERC20 extends ContractBase implements IERC20 {
    */
   static async deploy(contractName:string, decimals:number, ...args: any[]): Promise<ERC20> {
     const contract = await this.deployContract(contractName, ...args);
-    return await new ERC20(contractName, decimals).initialize(contract);
+    const erc20 = new ERC20(contractName, decimals, contract);
+    if (!decimals) {
+      erc20.decimals = await erc20.getContractDecimals();
+    }
+    return erc20;
   }
 
   /**
@@ -49,8 +48,8 @@ export class ERC20 extends ContractBase implements IERC20 {
   static async attach(contractName:string, contractAddress:string, decimals:number): Promise<ERC20> {
     const contract = await this.attachContract(contractName, contractAddress);
     const erc20 = new ERC20(contractName, decimals, contract);
-    if (decimals == 0) {
-      erc20.decimals = Number(await erc20.contract.decimals()).valueOf();
+    if (!decimals) {
+      erc20.decimals = await erc20.getContractDecimals();
     }
     return erc20;
   }
@@ -67,8 +66,12 @@ export class ERC20 extends ContractBase implements IERC20 {
     }
     const contract = await this.attachContractWithSigner(contractName, contractAddress, signer);
     const erc20 = new ERC20(contractName, /*decimals*/0, contract);
-    erc20.decimals = Number(await erc20.contract.connect(signer).decimals()).valueOf();
+    erc20.decimals = await erc20.getContractDecimals();
     return erc20;
+  }
+
+  private async getContractDecimals(): Promise<number> {
+    return this.contract.decimals();
   }
 
   /** @return ERC20 name of this contract */
@@ -88,7 +91,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  async balanceOf(account:SignerOrAddress): Promise<Numberish> {
+  async balanceOf(account:Addressable): Promise<Numberish> {
     const amount = await this.contract.balanceOf(addressOf(account));
     return this.fromBigNum(amount);
   }
@@ -99,7 +102,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param recipient ERC20 transfer recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transfer(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any> {
+  async transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
     const connected = this.connect(sender);
     return await connected.transfer(addressOf(recipient), this.toBigNum(amount));
   }
@@ -110,7 +113,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  async allowance(owner:SignerOrAddress, spender:SignerOrAddress): Promise<Numberish> {
+  async allowance(owner:Addressable, spender:Addressable): Promise<Numberish> {
     const amount = await this.contract.allowance(addressOf(owner), addressOf(spender));
     return this.fromBigNum(amount);
   }
@@ -121,7 +124,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param spender ERC20 approve's, spender's address
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(caller:SignerOrAddress, spender:SignerOrAddress, amount:Numberish): Promise<any> {
+  async approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any> {
     const connected = this.connect(caller);
     return await connected.approve(addressOf(spender), this.toBigNum(amount));
   }
@@ -133,7 +136,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param recipient ERC20 transferFrom recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transferFrom(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any> {
+  async transferFrom(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
     await this.contract.transferFrom(addressOf(sender), addressOf(recipient), this.toBigNum(amount));
   }
 

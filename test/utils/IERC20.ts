@@ -1,5 +1,5 @@
 import { Numberish } from "./Decimal";
-import { SignerOrAddress } from "./ContractBase";
+import { Addressable } from "./ContractBase";
 import { BigNumber } from "@ethersproject/bignumber";
 
 /**
@@ -22,7 +22,7 @@ export interface IERC20 {
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  balanceOf(account:SignerOrAddress): Promise<Numberish>;
+  balanceOf(account:Addressable): Promise<Numberish>;
 
   /**
    * @dev Moves `amount` tokens from the sender's account to `recipient`.
@@ -30,7 +30,7 @@ export interface IERC20 {
    * @param recipient ERC20 transfer recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  transfer(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any>;
+  transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any>;
 
   /**
    * @param owner ERC20 owner's address
@@ -38,7 +38,7 @@ export interface IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  allowance(owner:SignerOrAddress, spender:SignerOrAddress): Promise<Numberish>;
+  allowance(owner:Addressable, spender:Addressable): Promise<Numberish>;
 
   /**
    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -46,7 +46,7 @@ export interface IERC20 {
    * @param spender ERC20 approve's, spender's address
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  approve(caller:SignerOrAddress, spender:SignerOrAddress, amount:Numberish): Promise<any>;
+  approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any>;
 
   /**
    * @dev Moves `amount` tokens from `sender` to `recipient` using the
@@ -55,7 +55,7 @@ export interface IERC20 {
    * @param recipient ERC20 transferFrom recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  transferFrom(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any>;
+  transferFrom(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any>;
 
   /** @return Converts a Number or String into this Contract's BigNumber decimal */
   toBigNum(amount:Numberish): BigNumber;
