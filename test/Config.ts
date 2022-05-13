@@ -13,8 +13,8 @@ export const ALL_POOLS = [
 // Set this to `PoolType.XXX` if you want to only run one specific pool's tests
 const ONLY_RUN_POOL:PoolType = undefined;
 
-// Set this to `aDAI` or `aUSDC` if you want to only run one specific YBT tests
-const ONLY_YIELD_TOKEN:string = undefined;
+// Set this to `DAI` or `USDC` if you want to only run one specific BT tests
+const ONLY_TOKEN_SYMBOL:string = undefined;
 
 // Is this an integration test run?
 const RUN_INTEGRATION_TESTS:boolean = false;
@@ -95,11 +95,11 @@ export function getOnlyRunPool(): string {
   return ONLY_RUN_POOL;
 }
 
-// Either specific Yield Token string eg aUSDC, or undefined
+// Either specific Backing Token string eg "USDC", or undefined
 export function getOnlyRunToken(): string {
   const env = process.env["ONLY_TOKEN"];
   if (env) return env;
-  return ONLY_YIELD_TOKEN;
+  return ONLY_TOKEN_SYMBOL;
 }
 
 // Either Mock tokens or mainnet fork integration tokens
