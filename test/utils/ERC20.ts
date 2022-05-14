@@ -1,4 +1,4 @@
-import { Contract } from "ethers";
+import { Contract, Transaction } from "ethers";
 import { Numberish } from "./Decimal";
 import { ContractBase, SignerOrAddress, Signer, AbstractSigner, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
@@ -139,7 +139,7 @@ export class ERC20 extends ContractBase implements IERC20 {
 
   /** Sends some ether directly to the contract,
    *  which is handled in the contract receive() function */
-  async sendToContract(signer:Signer, amount:Numberish) {
+  async sendToContract(signer:Signer, amount:Numberish): Promise<Transaction> {
     return signer.sendTransaction({
       from: signer.address,
       to: this.contract.address,

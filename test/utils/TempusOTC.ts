@@ -58,7 +58,7 @@ export class TempusOTC extends ContractBase {
    * @param user The caller who is sending this approve
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(token: ERC20, user:SignerOrAddress, amount:Numberish) {
+  async approve(token: ERC20, user:SignerOrAddress, amount:Numberish): Promise<void> {
     await token.approve(user, this.address, amount);
   }
   

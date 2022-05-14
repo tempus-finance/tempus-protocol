@@ -64,7 +64,7 @@ export class TempusPoolAMM extends TempusAMM {
     return super.getLPTokensInGivenTokensOut(principalStaked, yieldsStaked);
   }
 
-  async provideLiquidity(from: Signer, principals: Number, yields: Number) {
+  async provideLiquidity(from: Signer, principals: Number, yields: Number): Promise<void> {
     await super.provideLiquidity(from, principals, yields);
   }
 }
