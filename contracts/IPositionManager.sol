@@ -17,6 +17,8 @@ interface IPositionManager is IERC721, IERC721Metadata {
     error AmmSharesPoolMismatch();
     /// @dev An invalid Tempus Controller was provided
     error InvalidTempusController();
+    /// @dev The Ether supplied does not match the value provided in MintParams
+    error EtherDepositMismatch();
 
     /// @dev Holds information about an open position
     /// @param capitals Amount of Capitals owned by the position
