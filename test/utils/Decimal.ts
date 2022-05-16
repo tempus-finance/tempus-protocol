@@ -91,6 +91,25 @@ export class Decimal {
     return Number(this.toString());
   }
 
+  /**
+   * @brief To compare if two Decimals are equal.
+   *        For chai asserts use deep equality
+   *        Ex: expect(a).to.eql(b);  -- chai deep equality check
+   *        Ex: expect(a.equals(b)).to.be.true;  -- directly call equals
+   */
+  public equals(other:Decimal): boolean {
+    return this.decimals === other.decimals && this.int === other.int;
+  }
+
+  /**
+   * @brief To enable quick conversion from Decimal to a number
+   *        Ex: let x:string = +myDecimal;
+   *        Ex: expect(+myDecimal).to.equal(100);
+   */
+  public valueOf(): number {
+    return this.toNumber();
+  }
+
   private static readonly ONE_CACHE: { [key:number]: bigint } = {
     6: BigInt("1000000"),
     18: BigInt("1000000000000000000"),
@@ -329,5 +348,10 @@ export class DecimalConvertible {
   /** @return Converts a BN big decimal of this Contract into a String or Number */
   public fromBigNum(contractDecimal:BigNumber): Numberish {
     return formatDecimal(contractDecimal, this.decimals);
+  }
+
+  /** @return Converts a BN big decimal of this Contract into a Decimal with this contract's decimals precision */
+  public toDecimal(contractDecimal:BigNumber): Decimal {
+    return new Decimal(contractDecimal, this.decimals);
   }
 }

@@ -90,6 +90,14 @@ describeNonPool("Decimal", () =>
       equals(dec18('100.12345678901234567890').toNumber(), '100.12345678901235');
     });
 
+    it("chai equality tests", () =>
+    {
+      expect(dec18('100.123456')).to.eql(dec18('100.123456'));
+      expect(dec18('100.123456')).to.not.equal(dec18('100.123456'));
+      expect(+dec18('100.123456')).to.equal(100.123456);
+      expect(dec18('100.123456')).to.not.equal(100.123456);
+    });
+
     type BinaryOp<T> = (a:number, b:number) => T;
 
     // toFixed, but with BigNumber-like rounding

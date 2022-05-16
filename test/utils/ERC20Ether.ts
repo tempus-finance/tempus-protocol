@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { Numberish, DecimalConvertible } from "./Decimal";
-import { SignerOrAddress, Signer, addressOf } from "./ContractBase";
+import { Signer, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 
 /**
@@ -30,7 +30,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  async balanceOf(account:SignerOrAddress): Promise<Numberish> {
+  async balanceOf(account:Addressable): Promise<Numberish> {
     const balance = await ethers.provider.getBalance(addressOf(account));
     return this.fromBigNum(balance);
   }
@@ -41,7 +41,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param recipient ERC20 transfer recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transfer(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any> {
+  async transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
     const signer = <Signer>sender;
     return signer.sendTransaction({
       from: signer.address,
@@ -56,7 +56,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  async allowance(owner:SignerOrAddress, spender:SignerOrAddress): Promise<Numberish> {
+  async allowance(owner:Addressable, spender:Addressable): Promise<Numberish> {
     return 0;
   }
   
@@ -66,7 +66,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param spender ERC20 approve's, spender's address
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(caller:SignerOrAddress, spender:SignerOrAddress, amount:Numberish): Promise<any> {
+  async approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any> {
     return;
   }
 
@@ -77,7 +77,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param recipient ERC20 transferFrom recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transferFrom(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any> {
+  async transferFrom(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
     return this.transfer(sender, recipient, amount);
   }
 }
