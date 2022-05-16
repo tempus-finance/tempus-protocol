@@ -97,7 +97,7 @@ export abstract class LidoContract extends ERC20 {
     await this.connect(signer).withdraw(this.toBigNum(shareAmount), hash);
   }
 
-  async printState(title: string, owner: string, user: string) {
+  async printState(title: string, owner: string, user: string): Promise<void> {
     console.log("State:", title);
     console.log("  totalSupply:", await this.totalSupply());
     console.log("  totalShares:", await this.getTotalShares());

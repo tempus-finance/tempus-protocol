@@ -106,17 +106,17 @@ export class TempusAMM extends ContractBase {
     ));
   }
 
-  async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number) {
+  async provideLiquidity(from: Signer, token0Balance: Number, token1Balance: Number): Promise<void> {
     await this.token0.approve(from, this.address, token0Balance);
     await this.token1.approve(from, this.address, token1Balance);
     await this.connect(from).join(this.token0.toBigNum(token0Balance), this.token1.toBigNum(token1Balance), 0, from.address);
   }
 
-  async exitPoolExactLpAmountIn(from: Signer, lpTokensAmount: Number) {
+  async exitPoolExactLpAmountIn(from: Signer, lpTokensAmount: Number): Promise<void> {
     await this.connect(from).exitGivenLpIn(this.toBigNum(lpTokensAmount), 0, 0, from.address);
   }
 
-  async exitPoolExactAmountOut(from:Signer, amountsOut:Number[], maxAmountLpIn:Number) {
+  async exitPoolExactAmountOut(from:Signer, amountsOut:Number[], maxAmountLpIn:Number): Promise<void> {
     await this.connect(from).exitGivenTokensOut(
       this.token0.toBigNum(amountsOut[0]), 
       this.token1.toBigNum(amountsOut[1]), 
@@ -125,7 +125,7 @@ export class TempusAMM extends ContractBase {
     );
   }
 
-  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: Numberish, givenOut?:boolean) {
+  async swapGivenInOrOut(from: Signer, assetIn: string, assetOut: string, amount: Numberish, givenOut?:boolean): Promise<void> {
     await this.token0.approve(from, this.address, await this.token0.balanceOf(from));
     await this.token1.approve(from, this.address, await this.token1.balanceOf(from));
     const SWAP_KIND = (givenOut !== undefined && givenOut) ? 1 : 0;

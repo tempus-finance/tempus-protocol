@@ -416,7 +416,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns True if maturity has been reached and the pool was finalized.
    */
-  async matured() {
+  async matured(): Promise<Boolean> {
     return this.contract.matured();
   }
 
@@ -425,13 +425,6 @@ export class TempusPool extends ContractBase {
    */
   async finalize(): Promise<void> {
     await this.contract.finalize();
-  }
-
-  /**
-   * @returns The version of the pool
-   */
-  async version(): Promise<{ major: number; minor: number; patch: number }> {
-    return await this.contract.version();
   }
 
   async protocolName(): Promise<BytesLike> {

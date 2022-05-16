@@ -58,7 +58,7 @@ export interface IERC20 {
   transferFrom(sender:SignerOrAddress, recipient:SignerOrAddress, amount:Numberish): Promise<any>;
 
   /** @return Converts a Number or String into this Contract's BigNumber decimal */
-  toBigNum(amount:Numberish):BigNumber;
+  toBigNum(amount:Numberish): BigNumber;
 
   /** @return Converts a BN big decimal of this Contract into a String or Number */
   fromBigNum(contractDecimal:BigNumber): Numberish;

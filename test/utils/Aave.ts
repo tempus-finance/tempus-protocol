@@ -56,7 +56,7 @@ export class Aave extends ContractBase {
   /**
    * Sets the AAVE pool's MOCK liquidity index in RAY
    */
-  async setLiquidityIndex(liquidityIndex:Numberish, owner:SignerOrAddress = null) {
+  async setLiquidityIndex(liquidityIndex:Numberish, owner:SignerOrAddress = null): Promise<void> {
     if (owner !== null) {
       const prevLiquidityIndex = await this.liquidityIndex();
       const difference = (Number(liquidityIndex) / Number(prevLiquidityIndex)) - 1;
@@ -74,7 +74,7 @@ export class Aave extends ContractBase {
    * @param user User who wants to deposit ETH into AAVE Pool
    * @param amount # of ETH to deposit, eg: 1.0
    */
-  async deposit(user:SignerOrAddress, amount:Numberish) {
+  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
     await this.contract.connect(user).deposit(this.asset.address, this.toBigNum(amount), addressOf(user), 0);
   }
