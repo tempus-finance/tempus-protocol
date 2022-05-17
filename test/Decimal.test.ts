@@ -7,9 +7,9 @@ describeNonPool("Decimal", () =>
 {
   describe("Decimal", () =>
   {
-    const dec18 = (x):Decimal => decimal(x, 18);
-    const dec6 = (x):Decimal => decimal(x, 6);
-    const int = (x):Decimal => decimal(x, 0);
+    const dec18 = (x:Numberish):Decimal => decimal(x, 18);
+    const dec6 = (x:Numberish):Decimal => decimal(x, 6);
+    const int = (x:Numberish):Decimal => decimal(x, 0);
 
     // [-1.0; +1.0] * scale
     const rand = (scale:number):number => (Math.random() - 0.5) * 2.0 * scale;
@@ -88,6 +88,61 @@ describeNonPool("Decimal", () =>
     {
       // Number can carry 17 significant digits
       equals(dec18('100.12345678901234567890').toNumber(), '100.12345678901235');
+    });
+
+    it("abs", () =>
+    {
+      equals(dec6('100.543214').abs(), '100.543214');
+      equals(dec6('-100.543214').abs(), '100.543214');
+      equals(dec6('0').abs(), '0.000000');
+    });
+
+    it("gt", () =>
+    {
+      expect(dec6('50.5').gt('50.1')).to.be.true;
+      expect(dec6('50.5').gt('50.5')).to.be.false;
+      expect(dec6('50.5').gt('50.6')).to.be.false;
+      
+      expect(dec6('50.5').gt(dec6('50.1'))).to.be.true;
+      expect(dec6('50.5').gt(dec6('50.5'))).to.be.false;
+      expect(dec6('50.5').gt(dec6('50.6'))).to.be.false;
+
+      expect(dec6('-50.5').gt('50.1')).to.be.false;
+      expect(dec6('-50.5').gt('-50.1')).to.be.false;
+      expect(dec6('-50.5').gt('-50.9')).to.be.true;
+    });
+
+    it("lt", () =>
+    {
+      expect(dec6('50.5').lt('50.1')).to.be.false;
+      expect(dec6('50.5').lt('50.5')).to.be.false;
+      expect(dec6('50.5').lt('50.6')).to.be.true;
+      
+      expect(dec6('50.5').lt(dec6('50.1'))).to.be.false;
+      expect(dec6('50.5').lt(dec6('50.5'))).to.be.false;
+      expect(dec6('50.5').lt(dec6('50.6'))).to.be.true;
+
+      expect(dec6('-50.5').lt('50.1')).to.be.true;
+      expect(dec6('-50.5').lt('-50.1')).to.be.true;
+      expect(dec6('-50.5').lt('-50.9')).to.be.false;
+    });
+
+    it("gte", () =>
+    {
+      expect(dec6('50.5').gte('50.1')).to.be.true;
+      expect(dec6('50.1').gte('50.5')).to.be.false;
+
+      expect(dec6('50.5').gte('50.5')).to.be.true;
+      expect(dec6('-50.5').gte('-50.5')).to.be.true;
+    });
+
+    it("lte", () =>
+    {
+      expect(dec6('50.5').lte('50.1')).to.be.false;
+      expect(dec6('50.1').lte('50.5')).to.be.true;
+
+      expect(dec6('50.5').lte('50.5')).to.be.true;
+      expect(dec6('-50.5').lte('-50.5')).to.be.true;
     });
 
     it("chai equality tests", () =>
