@@ -277,7 +277,7 @@ describeForEachPool("TempusPool Redeem", (pool:PoolTestFixture) =>
     await redeem(user, { amount:{tps:100, tys:100}, pegged:{tps:0, tys:0, ybt:600}, unpegged:{tps:0, tys:0, ybt:150} }, "redeem 100+100 after maturity at rate 4.0");
 
     const expectedRemainingPoolYBT = pool.yieldPeggedToAsset ? 200 : 50;
-    expect(await pool.ybt.balanceOf(pool.tempus.address)).to.equal(expectedRemainingPoolYBT);
+    expect(+await pool.ybt.balanceOf(pool.tempus.address)).to.equal(expectedRemainingPoolYBT);
   });
 
   it.includeIntegration("Should redeem correct amount of tokens with multiple users depositing", async () =>

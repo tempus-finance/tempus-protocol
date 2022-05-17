@@ -30,8 +30,8 @@ describeNonPool("Tempus Token", async () => {
     });
     it("Should mint initial supply to owner", async () =>
     {
-      expect(await token.balanceOf(owner)).to.equal(1e9);
-      expect(await token.totalSupply()).to.equal(1e9);
+      expect(+await token.balanceOf(owner)).to.equal(1e9);
+      expect(+await token.totalSupply()).to.equal(1e9);
     });
 
     it("Should set name and symbol", async () =>
@@ -49,12 +49,12 @@ describeNonPool("Tempus Token", async () => {
       const initialTotalSupply = await token.totalSupply();
 
       await token.transfer(owner, user1, amount); // Owner transfers to User
-      expect(await token.balanceOf(user1)).to.equal(amount);
+      expect(+await token.balanceOf(user1)).to.equal(amount);
 
       // User tries to burn its own tokens
       await token.burn(user1, amount);
-      expect(await token.balanceOf(user1)).to.equal(0);
-      expect(await token.totalSupply()).to.equal(Number(initialTotalSupply) - amount);
+      expect(+await token.balanceOf(user1)).to.equal(0);
+      expect(+await token.totalSupply()).to.equal(+initialTotalSupply - amount);
     });
   });
 
@@ -81,14 +81,14 @@ describeNonPool("Tempus Token", async () => {
       const firstMintAmount = 2e7;
       await token.mint(owner, user1, firstMintAmount.toString());
       expect(await token.lastMintingTime()).gte(lastMintTime);
-      expect(await token.balanceOf(user1)).to.equal(firstMintAmount);
-      expect(await token.totalSupply()).to.equal(initialSupply + firstMintAmount);
+      expect(+await token.balanceOf(user1)).to.equal(firstMintAmount);
+      expect(+await token.totalSupply()).to.equal(initialSupply + firstMintAmount);
       
       await increaseTime(DAY * 365);
       const secontMintAmount = (initialSupply + firstMintAmount) / 50;
       await token.mint(owner, user1, secontMintAmount);
-      expect(await token.balanceOf(user1)).to.equal(firstMintAmount + secontMintAmount);
-      expect(await token.totalSupply()).to.equal(initialSupply + firstMintAmount + secontMintAmount);
+      expect(+await token.balanceOf(user1)).to.equal(firstMintAmount + secontMintAmount);
+      expect(+await token.totalSupply()).to.equal(initialSupply + firstMintAmount + secontMintAmount);
     });
   });
 });

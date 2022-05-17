@@ -367,9 +367,9 @@ export abstract class PoolTestFixture {
    */
   async userState(user:Signer): Promise<UserState> {
     let state = new UserState();
-    state.principalShares = Number(await this.principals.balanceOf(user));
-    state.yieldShares = Number(await this.yields.balanceOf(user));
-    state.yieldBearing = Number(await this.ybt.balanceOf(user));
+    state.principalShares = (await this.principals.balanceOf(user)).toNumber();
+    state.yieldShares = (await this.yields.balanceOf(user)).toNumber();
+    state.yieldBearing = (await this.ybt.balanceOf(user)).toNumber();
     state.yieldPeggedToAsset = this.yieldPeggedToAsset;
     return state;
   }

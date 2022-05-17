@@ -268,10 +268,10 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         9999 - userYRedeem,
         false
       );
-      expect(await pool.yieldShare.balanceOf(user2)).to.equal(0);
-      expect(await pool.principalShare.balanceOf(user2)).to.equal(0);
+      expect(+await pool.yieldShare.balanceOf(user2)).to.equal(0);
+      expect(+await pool.principalShare.balanceOf(user2)).to.equal(0);
       expect(+await amm.balanceOf(user2)).to.be.within(0.991, 0.993);
-      expect(await pool.yieldBearing.balanceOf(user2)).to.equal(99999);
+      expect(+await pool.yieldBearing.balanceOf(user2)).to.equal(99999);
     });
 
     it("Exit AMM and redeem to backing before maturity", async () => 
@@ -297,10 +297,10 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       }
       else {
         await reedemAction;
-        expect(await pool.yieldShare.balanceOf(user2)).to.equal(0);
-        expect(await pool.principalShare.balanceOf(user2)).to.equal(0);
+        expect(+await pool.yieldShare.balanceOf(user2)).to.equal(0);
+        expect(+await pool.principalShare.balanceOf(user2)).to.equal(0);
         expect(+await amm.balanceOf(user2)).to.be.within(0.991, 0.993);
-        expect(await testPool.asset.balanceOf(user2)).to.equal(109999);
+        expect(+await testPool.asset.balanceOf(user2)).to.equal(109999);
       }
     });
 
@@ -511,8 +511,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("Complete exit to yield bearing", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
-      expect(await testPool.yields.balanceOf(user1)).to.equal(0, "all yields are in amm");
-      expect(await testPool.principals.balanceOf(user1)).to.equal(
+      expect(+await testPool.yields.balanceOf(user1)).to.equal(0, "all yields are in amm");
+      expect(+await testPool.principals.balanceOf(user1)).to.equal(
         900000, 
         "balance should decrease as there is some of it locked in amm"
       );
@@ -521,7 +521,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await testPool.setInterestRate(1.1);
       await testPool.fastForwardToMaturity();
 
-      expect(await testPool.ybt.balanceOf(user1)).to.equal(0);
+      expect(+await testPool.ybt.balanceOf(user1)).to.equal(0);
 
       await controller.exitAmmGivenLpAndRedeem(
         testPool, 
@@ -533,9 +533,9 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         getDefaultLeftoverShares()
       );
 
-      expect(await testPool.yields.balanceOf(user1)).to.equal(0);
-      expect(await testPool.principals.balanceOf(user1)).to.equal(0);
-      expect(await testPool.amm.contract.balanceOf(user1.address)).to.equal(0);
+      expect(+await testPool.yields.balanceOf(user1)).to.equal(0);
+      expect(+await testPool.principals.balanceOf(user1)).to.equal(0);
+      expect(+await testPool.amm.contract.balanceOf(user1.address)).to.equal(0);
       if (testPool.yieldPeggedToAsset) {
         expect(+await testPool.ybt.balanceOf(user1)).to.be.within(1099000, 1101000);
       } else {
@@ -547,8 +547,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     it("Complete exit to backing", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
-      expect(await pool.yieldShare.balanceOf(user1)).to.equal(0, "all yields are in amm");
-      expect(await pool.principalShare.balanceOf(user1)).to.equal(
+      expect(+await pool.yieldShare.balanceOf(user1)).to.equal(0, "all yields are in amm");
+      expect(+await pool.principalShare.balanceOf(user1)).to.equal(
         900000,
         "balance should decrease as there is some of it locked in amm"
       );
@@ -573,7 +573,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       }
       else
       {
-        expect(await testPool.asset.balanceOf(user1)).to.equal(100000);
+        expect(+await testPool.asset.balanceOf(user1)).to.equal(100000);
         await controller.exitAmmGivenLpAndRedeem(
           testPool, 
           user1, 
@@ -583,9 +583,9 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           true,
           getDefaultLeftoverShares()
         );
-        expect(await pool.yieldShare.balanceOf(user1)).to.equal(0);
-        expect(await pool.principalShare.balanceOf(user1)).to.equal(0);
-        expect(await testPool.amm.contract.balanceOf(user1.address)).to.equal(0);
+        expect(+await pool.yieldShare.balanceOf(user1)).to.equal(0);
+        expect(+await pool.principalShare.balanceOf(user1)).to.equal(0);
+        expect(+await testPool.amm.contract.balanceOf(user1.address)).to.equal(0);
         expect(+await testPool.asset.balanceOf(user1)).to.be.within(1199000, 1200000);
       }
     });

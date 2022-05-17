@@ -151,6 +151,11 @@ export class Decimal {
     return this.toDecimal( (this.int * this.one()) / this.toScaledBigInt(x) );
   }
 
+  /** @return Absolute value of this decimal */
+  public abs(): Decimal {
+    return new Decimal(this.int >= 0 ? this.int : -this.int, this.decimals);
+  }
+
   /**
    * Main utility for converting numeric values into the internal
    * scaled fixed point integer representation.

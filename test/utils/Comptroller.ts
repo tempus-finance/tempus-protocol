@@ -1,5 +1,5 @@
 import { Contract, BigNumber } from "ethers";
-import { formatDecimal, Numberish, parseDecimal } from "./Decimal";
+import { Decimal, formatDecimal, Numberish, parseDecimal } from "./Decimal";
 import { addressOf, ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -39,14 +39,14 @@ export class Comptroller extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<Numberish> {
+  async assetBalance(user:SignerOrAddress): Promise<Decimal> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<Numberish> {
+  async yieldBalance(user:SignerOrAddress): Promise<Decimal> {
     return await this.yieldToken.balanceOf(user);
   }
 
@@ -67,7 +67,7 @@ export class Comptroller extends ContractBase {
       const difference = (Number(exchangeRate) / Number(prevExchangeRate)) - 1;
       if (difference > 0) {
         const totalSupply = await this.asset.balanceOf(this.yieldToken.address);
-        const increaseBy = Number(totalSupply) * difference;
+        const increaseBy = totalSupply.mul(difference);
         await this.asset.transfer(owner, this.yieldToken.address, increaseBy);
       }
     }

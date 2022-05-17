@@ -51,20 +51,20 @@ describeNonPool("TempusOTC", async() =>
 
   it("check create offer (contract deploy) works good", async () =>
   {
-    expect(await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(buyAmount);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(buyAmount);
   });
 
   it("check if [buy] works good", async () =>
   {
     await tempusOTC.buy(taker);
 
-    expect(await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(0);
-    expect(await tempusOTC.tokenToBuy.balanceOf(maker)).to.equal(tokenToBuyMakerAmount);
-    expect(await tempusOTC.tokenToBuy.balanceOf(taker)).to.equal(tokenToBuyTakerAmount + buyAmount);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(0);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(maker)).to.equal(tokenToBuyMakerAmount);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(taker)).to.equal(tokenToBuyTakerAmount + buyAmount);
 
-    expect(await tempusOTC.tokenToSell.balanceOf(tempusOTC.address)).to.equal(0);
-    expect(await tempusOTC.tokenToSell.balanceOf(maker)).to.equal(tokenToSellMakerAmount + sellAmount);
-    expect(await tempusOTC.tokenToSell.balanceOf(taker)).to.equal(tokenToSellTakerAmount - sellAmount);
+    expect(+await tempusOTC.tokenToSell.balanceOf(tempusOTC.address)).to.equal(0);
+    expect(+await tempusOTC.tokenToSell.balanceOf(maker)).to.equal(tokenToSellMakerAmount + sellAmount);
+    expect(+await tempusOTC.tokenToSell.balanceOf(taker)).to.equal(tokenToSellTakerAmount - sellAmount);
   });
 
   it("check if [buy] reverts", async () => 
@@ -85,13 +85,13 @@ describeNonPool("TempusOTC", async() =>
   {
     await tempusOTC.cancel(maker);
 
-    expect(await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(0);
-    expect(await tempusOTC.tokenToBuy.balanceOf(maker)).to.equal(tokenToBuyMakerAmount + buyAmount);
-    expect(await tempusOTC.tokenToBuy.balanceOf(taker)).to.equal(tokenToBuyTakerAmount);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(tempusOTC.address)).to.equal(0);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(maker)).to.equal(tokenToBuyMakerAmount + buyAmount);
+    expect(+await tempusOTC.tokenToBuy.balanceOf(taker)).to.equal(tokenToBuyTakerAmount);
 
-    expect(await tempusOTC.tokenToSell.balanceOf(tempusOTC.address)).to.equal(0);
-    expect(await tempusOTC.tokenToSell.balanceOf(maker)).to.equal(tokenToSellMakerAmount);
-    expect(await tempusOTC.tokenToSell.balanceOf(taker)).to.equal(tokenToSellTakerAmount);
+    expect(+await tempusOTC.tokenToSell.balanceOf(tempusOTC.address)).to.equal(0);
+    expect(+await tempusOTC.tokenToSell.balanceOf(maker)).to.equal(tokenToSellMakerAmount);
+    expect(+await tempusOTC.tokenToSell.balanceOf(taker)).to.equal(tokenToSellTakerAmount);
   });
 
   it("check if [cancel] reverts", async () => 

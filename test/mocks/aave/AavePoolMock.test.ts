@@ -26,8 +26,8 @@ describeForEachPool.type("AAVE Mock", [PoolType.Aave], async (testPool:PoolTestF
       expect(await pool.liquidityIndex()).to.equal(1.0);
       await pool.deposit(user, 4);
       
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(4);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(4);
     });
 
     it("Should receive 0.5x yield tokens if rate is 2.0", async () =>
@@ -37,8 +37,8 @@ describeForEachPool.type("AAVE Mock", [PoolType.Aave], async (testPool:PoolTestF
 
       // with 2.0 rate, user deposits 4 asset tokens and receives 2 yield tokens
       await pool.deposit(user, 4);
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(4);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(4);
     });
 
     it("Should receive same amount of yield tokens if rate is 0.5", async () =>
@@ -47,21 +47,21 @@ describeForEachPool.type("AAVE Mock", [PoolType.Aave], async (testPool:PoolTestF
       expect(await pool.liquidityIndex()).to.equal(0.5);
 
       await pool.deposit(user, 4);
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(4);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(4);
     });
 
     it("Should receive same amount of yield tokens if rate changes", async () =>
     {
       // with 1.0 rate, user deposits 4 assets and receives 4 yield tokens
       await pool.deposit(user, 4);
-      expect(await pool.yieldBalance(user)).to.equal(4);
+      expect(+await pool.yieldBalance(user)).to.equal(4);
       
       // with 2.0 rate, user deposits 4 asset tokens and receives 4 yield tokens
       await pool.setLiquidityIndex(2.0, owner);
-      expect(await pool.yieldBalance(user)).to.equal(8);
+      expect(+await pool.yieldBalance(user)).to.equal(8);
       await pool.deposit(user, 4);
-      expect(await pool.yieldBalance(user)).to.equal(12);
+      expect(+await pool.yieldBalance(user)).to.equal(12);
     });
   });
 });

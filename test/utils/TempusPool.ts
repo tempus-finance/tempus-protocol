@@ -1,5 +1,5 @@
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
+import { Decimal, Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { IERC20 } from "./IERC20";
@@ -364,7 +364,7 @@ export class TempusPool extends ContractBase {
   /**
    * @returns Number of YBT deposited into this TempusPool contract
    */
-  async contractBalance(): Promise<Numberish> {
+  async contractBalance(): Promise<Decimal> {
     return this.yieldBearing.balanceOf(this.contract.address);
   }
 
@@ -556,8 +556,8 @@ export class TempusPool extends ContractBase {
   /**
    * @returns Total accumulated fees
    */
-  async totalFees(): Promise<Numberish> {
-    return this.yieldBearing.fromBigNum(await this.contract.totalFees());
+  async totalFees(): Promise<Decimal> {
+    return this.yieldBearing.toDecimal(await this.contract.totalFees());
   }
 
   async getFeesConfig(): Promise<TempusFeesConfig> {

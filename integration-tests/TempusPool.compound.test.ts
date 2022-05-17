@@ -5,12 +5,11 @@ import {
   getNamedAccounts,
   getUnnamedAccounts
 } from 'hardhat';
-import { blockTimestamp, evmMine, evmSetAutomine, increaseTime } from '../test/utils/Utils';
+import { blockTimestamp, evmMine, evmSetAutomine } from '../test/utils/Utils';
 import { generateTempusSharesNames, TempusPool } from "../test/utils/TempusPool";
 import { ERC20 } from "../test/utils/ERC20";
 import { TempusController } from "../test/utils/TempusController";
-import { fromWei, toWei } from "../test/utils/Decimal";
-import Decimal from "decimal.js";
+import { decimal, toWei } from "../test/utils/Decimal";
 
 const setup = deployments.createFixture(async () => {
   await deployments.fixture(undefined, {
@@ -96,8 +95,8 @@ describe('TempusPool <> Compound <> DAI', function () {
     //    vs depositing to Compound via TempusPool
     const MAX_ALLOWED_INTEREST_DELTA_ERROR = 1e-6; // 0.000001% error
     const { signers: { signer1, signer2 }, contracts: { dai, cDai, tempusPool }} = await setup();
-    expect(await cDai.balanceOf(signer1)).to.equal(0);
-    expect(await cDai.balanceOf(signer2)).to.equal(0);
+    expect(+await cDai.balanceOf(signer1)).to.equal(0);
+    expect(+await cDai.balanceOf(signer2)).to.equal(0);
     
     
     const depositAmount: number = 100;
@@ -129,14 +128,10 @@ describe('TempusPool <> Compound <> DAI', function () {
     await evmMine();
     await evmSetAutomine(true);
 
-    const btBalancePostSigner1 = await dai.balanceOf(signer1);
-    const btBalancePostSigner2 = await dai.balanceOf(signer2);
-    const totalInterestSigner1 = toWei(btBalancePostSigner1).sub(toWei(btBalancePreSigner1));
-    const totalInterestSigner2 = toWei(btBalancePostSigner2).sub(toWei(btBalancePreSigner2));
-    
-    const error = new Decimal(1).sub(new Decimal(fromWei(totalInterestSigner2).toString())
-      .div(fromWei(totalInterestSigner1).toString())).abs();
-      
-    expect(error.lessThanOrEqualTo(MAX_ALLOWED_INTEREST_DELTA_ERROR)).is.true;
+    const totalInterestSigner1 = (await dai.balanceOf(signer1)).sub(btBalancePreSigner1);
+    const totalInterestSigner2 = (await dai.balanceOf(signer2)).sub(btBalancePreSigner2);
+
+    const error = decimal(1.0, dai.decimals).sub( totalInterestSigner2.div(totalInterestSigner1) ).abs();
+    expect(+error).to.be.lessThanOrEqual(MAX_ALLOWED_INTEREST_DELTA_ERROR);
   });
 });
