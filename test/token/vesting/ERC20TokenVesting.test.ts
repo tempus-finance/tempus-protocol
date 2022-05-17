@@ -159,7 +159,7 @@ describeNonPool("ERC20 Vesting", async () => {
       expect(terms.period).to.equal(period);
       expect(terms.claimed).to.equal(0);
 
-      expect(await token.balanceOf(owner)).to.equal(270);
+      expect(+await token.balanceOf(owner)).to.equal(270);
     });
 
     it("Expected claimable tokens is 0 after startVesting with startTime in future", async () => {
@@ -196,7 +196,7 @@ describeNonPool("ERC20 Vesting", async () => {
       expect(terms2.period).to.equal(period);
       expect(terms2.claimed).to.equal(0);
 
-      expect(await token.balanceOf(owner)).to.equal(210);
+      expect(+await token.balanceOf(owner)).to.equal(210);
     });
 
     it("Expected state after stopVesting (after period)", async () => {
@@ -221,8 +221,8 @@ describeNonPool("ERC20 Vesting", async () => {
 
       expect(await vesting.claimable(user)).to.equal(30);
 
-      expect(await token.balanceOf(user)).to.equal(0);
-      expect(await token.balanceOf(owner)).to.equal(270);
+      expect(+await token.balanceOf(user)).to.equal(0);
+      expect(+await token.balanceOf(owner)).to.equal(270);
     });
 
     it("Expected state after stopVesting called after vesting period expires and all tokens claimed", async () => {
@@ -235,7 +235,7 @@ describeNonPool("ERC20 Vesting", async () => {
       );
       await increaseTime(DAY);
       await vesting.claim(user);
-      expect(await token.balanceOf(user)).to.equal(30);
+      expect(+await token.balanceOf(user)).to.equal(30);
       
       await vesting.stopVesting(owner, user);
   
@@ -247,8 +247,8 @@ describeNonPool("ERC20 Vesting", async () => {
 
       expect(await vesting.claimable(user)).to.equal(0);
 
-      expect(await token.balanceOf(user)).to.equal(30);
-      expect(await token.balanceOf(owner)).to.equal(270);
+      expect(+await token.balanceOf(user)).to.equal(30);
+      expect(+await token.balanceOf(owner)).to.equal(270);
     });
 
     it("Claiming after period finished", async () => {
@@ -266,7 +266,7 @@ describeNonPool("ERC20 Vesting", async () => {
         vesting.contract,
         "VestingClaimed"
       ).withArgs(addressOf(user), vesting.toBigNum(amountToClaim));
-      expect(await token.balanceOf(user)).to.equal(30);
+      expect(+await token.balanceOf(user)).to.equal(30);
     });
 
     it("Claiming specific amount after half period", async () => {
@@ -342,7 +342,7 @@ describeNonPool("ERC20 Vesting", async () => {
         user,
         {startTime: startTime, period: period, amount: 30, claimed: 0}
       );
-      expect(await token.balanceOf(owner)).to.equal(270);
+      expect(+await token.balanceOf(owner)).to.equal(270);
 
       expect(await vesting.transferVesting(owner, user, user2)).to.emit(
         vesting.contract, 
@@ -370,7 +370,7 @@ describeNonPool("ERC20 Vesting", async () => {
         user,
         {startTime: startTime, period: period, amount: 30, claimed: 0}
       );
-      expect(await token.balanceOf(owner)).to.equal(270);
+      expect(+await token.balanceOf(owner)).to.equal(270);
 
       await increaseTime(period / 2);
       await vesting.claim(user, await vesting.claimable(user));
@@ -408,7 +408,7 @@ describeNonPool("ERC20 Vesting", async () => {
         user2,
         {startTime: startTime + 10, period: period + 10, amount: 10, claimed: 0}
       );
-      expect(await token.balanceOf(owner)).to.equal(260);
+      expect(+await token.balanceOf(owner)).to.equal(260);
 
       (await expectRevert(vesting.transferVesting(owner, user, user2))).to.equal("Vesting already started for receiver.");
 

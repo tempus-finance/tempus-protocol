@@ -83,17 +83,17 @@ export class ERC20 extends ContractBase implements IERC20 {
   /**
    * @returns Total supply of this ERC20 token as a decimal, such as 10.0
    */
-  async totalSupply(): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.totalSupply());
+  async totalSupply(): Promise<Decimal> {
+    return this.toDecimal(await this.contract.totalSupply());
   }
 
   /**
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  async balanceOf(account:Addressable): Promise<Numberish> {
+  async balanceOf(account:Addressable): Promise<Decimal> {
     const amount = await this.contract.balanceOf(addressOf(account));
-    return this.fromBigNum(amount);
+    return this.toDecimal(amount);
   }
 
   /**

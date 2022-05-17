@@ -18,10 +18,10 @@ describeForEachPool.except("TempusPool Redeem", [PoolType.Lido], (pool:PoolTestF
 
     await pool.asset.approve(user, pool.tempus.controller.address, 100);
     await depositBT(user, {btAmount:100, pegged:{tps:100, tys:100, ybt:0}, unpegged:{tps:100, tys:100, ybt:0}}, "0 YBT because we did BT deposit");
-    expect(await pool.asset.balanceOf(user)).to.equal(900);
+    expect(+await pool.asset.balanceOf(user)).to.equal(900);
 
     await redeemBT(user, {amount:{tps:100, tys:100}, pegged:{tps:0, tys:0, ybt:0}, unpegged:{tps:0, tys:0, ybt:0}}, "0 YBT because we did BT redeem");
-    expect(await pool.asset.balanceOf(user)).to.equal(1000, "user must receive all of their BT back");
+    expect(+await pool.asset.balanceOf(user)).to.equal(1000, "user must receive all of their BT back");
   });
 
   it("Should redeem more BackingTokens after changing rate to 2.0", async () =>
@@ -41,7 +41,7 @@ describeForEachPool.except("TempusPool Redeem", [PoolType.Lido], (pool:PoolTestF
     (await pool.depositBT(owner, 200));
 
     await redeemBT(user, {amount:{tps:100, tys:100}, pegged:{tps:0, tys:0, ybt:0}, unpegged:{tps:0, tys:0, ybt:0}}, "0 YBT because we did BT redeem");
-    expect(await pool.asset.balanceOf(user)).to.equal(1100, "gain extra 100 backing tokens due to interest 2.0x");
+    expect(+await pool.asset.balanceOf(user)).to.equal(1100, "gain extra 100 backing tokens due to interest 2.0x");
   });
 });
 

@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { Numberish, DecimalConvertible } from "./Decimal";
+import { Decimal, Numberish, DecimalConvertible } from "./Decimal";
 import { Signer, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 
@@ -30,9 +30,9 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  async balanceOf(account:Addressable): Promise<Numberish> {
+  async balanceOf(account:Addressable): Promise<Decimal> {
     const balance = await ethers.provider.getBalance(addressOf(account));
-    return this.fromBigNum(balance);
+    return this.toDecimal(balance);
   }
 
   /**

@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
-import { formatDecimal, Numberish, parseDecimal } from "./Decimal";
+import { Decimal, Numberish, parseDecimal } from "./Decimal";
 import { SignerOrAddress, Signer, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { ERC20Ether } from "./ERC20Ether";
@@ -16,28 +16,28 @@ export abstract class LidoContract extends ERC20 {
   }
 
   /** @return stETH balance of an user */
-  async sharesOf(user:SignerOrAddress): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.sharesOf(addressOf(user)));
+  async sharesOf(user:SignerOrAddress): Promise<Decimal> {
+    return this.toDecimal(await this.contract.sharesOf(addressOf(user)));
   }
 
   /** @return total stETH shares minted */
-  async getTotalShares(): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.getTotalShares());
+  async getTotalShares(): Promise<Decimal> {
+    return this.toDecimal(await this.contract.getTotalShares());
   }
 
   /** @return the amount of Ether that corresponds to `_sharesAmount` token shares. */
-  async getPooledEthByShares(sharesAmount:Numberish): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.getPooledEthByShares(this.toBigNum(sharesAmount)));
+  async getPooledEthByShares(sharesAmount:Numberish): Promise<Decimal> {
+    return this.toDecimal(await this.contract.getPooledEthByShares(this.toBigNum(sharesAmount)));
   }
 
   /** @return the amount of shares that corresponds to `_ethAmount` protocol-controlled Ether. */
-  async getSharesByPooledEth(_ethAmount:Numberish): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.getSharesByPooledEth(this.toBigNum(_ethAmount)));
+  async getSharesByPooledEth(_ethAmount:Numberish): Promise<Decimal> {
+    return this.toDecimal(await this.contract.getSharesByPooledEth(this.toBigNum(_ethAmount)));
   }
 
   /** @return total pooled ETH: beaconBalance + bufferedEther */
-  async totalSupply(): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.totalSupply());
+  async totalSupply(): Promise<Decimal> {
+    return this.toDecimal(await this.contract.totalSupply());
   }
 
   // Interest rate as 1e18 BigNumber
@@ -49,8 +49,8 @@ export abstract class LidoContract extends ERC20 {
   }
 
   /** @return Stored Interest Rate */
-  async interestRate(): Promise<Numberish> {
-    return this.fromBigNum(await this.interestRateBigNum());
+  async interestRate(): Promise<Decimal> {
+    return this.toDecimal(await this.interestRateBigNum());
   }
 
   /**

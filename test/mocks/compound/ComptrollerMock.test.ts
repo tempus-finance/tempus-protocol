@@ -31,8 +31,8 @@ describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:P
       expect(await pool.isParticipant(user)).to.be.true;
       await pool.mint(user, 4);
 
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(200);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(200);
     });
 
     it("Should receive 0.5x yield tokens if rate is 0.04", async () =>
@@ -44,8 +44,8 @@ describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:P
       await pool.enterMarkets(user);
       await pool.mint(user, 4);
 
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(100);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(100);
     });
 
     it("Should receive 2.0x yield tokens if rate is 0.01", async () =>
@@ -57,8 +57,8 @@ describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:P
       await pool.enterMarkets(user);
       await pool.mint(user, 4);
 
-      expect(await pool.assetBalance(user)).to.equal(6);
-      expect(await pool.yieldBalance(user)).to.equal(400);
+      expect(+await pool.assetBalance(user)).to.equal(6);
+      expect(+await pool.yieldBalance(user)).to.equal(400);
     });
 
     it("Should receive different amount of yield tokens if rate changes", async () =>
@@ -66,12 +66,12 @@ describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:P
       // with default 0.02 rate, user deposits 4 assets and receives 4/0.02=200 yield tokens
       await pool.enterMarkets(user);
       await pool.mint(user, 4);
-      expect(await pool.yieldBalance(user)).to.equal(200);
+      expect(+await pool.yieldBalance(user)).to.equal(200);
       
       // with 0.04 rate, user deposits 4 asset tokens and receives 4/0.04=100 yield tokens
       await pool.setExchangeRate(0.04);
       await pool.mint(user, 4);
-      expect(await pool.yieldBalance(user)).to.equal(200 + 100);
+      expect(+await pool.yieldBalance(user)).to.equal(200 + 100);
     });
     
     it("Should be non-participant after exitMarket was called", async () =>

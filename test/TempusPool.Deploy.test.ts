@@ -48,14 +48,14 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
 
   it("Principal shares initial details", async () =>
   {
-    expect(await pool.principalShare.totalSupply()).to.equal(0);
+    expect(+await pool.principalShare.totalSupply()).to.equal(0);
     expect(await pool.principalShare.name()).to.equal(testPool.names.principalName);
     expect(await pool.principalShare.symbol()).to.equal(testPool.names.principalSymbol);
   });
 
   it("Yield shares initial details", async () =>
   {
-    expect(await pool.yieldShare.totalSupply()).to.equal(0);
+    expect(+await pool.yieldShare.totalSupply()).to.equal(0);
     expect(await pool.yieldShare.name()).to.equal(testPool.names.yieldName);
     expect(await pool.yieldShare.symbol()).to.equal(testPool.names.yieldSymbol);
   });
@@ -64,8 +64,8 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
   {
     let [owner] = testPool.signers;
     await pool.transferFees(owner, owner);
-    expect(await pool.yieldBearing.balanceOf(owner)).to.equal(0);
-    expect(await pool.totalFees()).to.equal(0);
+    expect(+await pool.yieldBearing.balanceOf(owner)).to.equal(0);
+    expect(+await pool.totalFees()).to.equal(0);
   });
 
   it("Should revert if maturity is less than current time", async () =>

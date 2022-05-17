@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { Numberish, toRay, fromRay, parseDecimal } from "./Decimal";
+import { Decimal, Numberish, toRay, fromRay, parseDecimal } from "./Decimal";
 import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -33,16 +33,15 @@ export class Aave extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<Numberish> {
+  async assetBalance(user:SignerOrAddress): Promise<Decimal> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<Numberish> {
-    let wei = await this.contract.getDeposit(addressOf(user));
-    return this.fromBigNum(wei);
+  async yieldBalance(user:SignerOrAddress): Promise<Decimal> {
+    return this.toDecimal(await this.contract.getDeposit(addressOf(user)));
   }
 
   /**
@@ -62,7 +61,7 @@ export class Aave extends ContractBase {
       const difference = (Number(liquidityIndex) / Number(prevLiquidityIndex)) - 1;
       if (difference > 0) {
         const totalSupply = await this.asset.balanceOf(this.yieldToken.address);
-        const increaseBy = Number(totalSupply) * difference;
+        const increaseBy = totalSupply.mul(difference);
         await this.asset.transfer(owner, this.yieldToken.address, increaseBy);
       }
     }

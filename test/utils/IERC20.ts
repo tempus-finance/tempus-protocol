@@ -1,4 +1,4 @@
-import { Numberish } from "./Decimal";
+import { Decimal, Numberish } from "./Decimal";
 import { Addressable } from "./ContractBase";
 import { BigNumber } from "@ethersproject/bignumber";
 
@@ -22,7 +22,7 @@ export interface IERC20 {
    * @param account ERC20 account's address
    * @returns Balance of ERC20 address in decimals, eg 2.0
    */
-  balanceOf(account:Addressable): Promise<Numberish>;
+  balanceOf(account:Addressable): Promise<Decimal>;
 
   /**
    * @dev Moves `amount` tokens from the sender's account to `recipient`.

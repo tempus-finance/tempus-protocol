@@ -42,7 +42,7 @@ export class YearnVault extends ContractBase {
       const difference = (Number(pricePerShare) / Number(prevExchangeRate)) - 1;
       if (difference > 0) {
         const totalSupply = await this.asset.balanceOf(this.yieldToken.address);
-        const increaseBy = Number(totalSupply) * difference;
+        const increaseBy = totalSupply.mul(difference);
         await this.asset.transfer(owner, this.yieldToken.address, increaseBy);
       }
     }

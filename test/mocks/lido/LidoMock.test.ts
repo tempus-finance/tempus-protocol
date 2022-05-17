@@ -23,10 +23,10 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
   {
     it("Should have correct initial values", async () =>
     {
-      expect(await lido.totalSupply()).to.equal(0.0); // alias to getTotalPooledEther()
-      expect(await lido.getTotalShares()).to.equal(0.0);
-      expect(await lido.getPooledEthByShares(1.0)).to.equal(1.0);
-      expect(await lido.getSharesByPooledEth(1.0)).to.equal(1.0);
+      expect(+await lido.totalSupply()).to.equal(0.0); // alias to getTotalPooledEther()
+      expect(+await lido.getTotalShares()).to.equal(0.0);
+      expect(+await lido.getPooledEthByShares(1.0)).to.equal(1.0);
+      expect(+await lido.getSharesByPooledEth(1.0)).to.equal(1.0);
     });
   });
 
@@ -37,14 +37,14 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
       await lido.sendToContract(owner, 4.0); // join Lido
       await lido.submit(user, 2.0); // join Lido
 
-      expect(await lido.totalSupply()).to.equal(6.0); // alias to getTotalPooledEther()
-      expect(await lido.getTotalShares()).to.equal(6.0);
+      expect(+await lido.totalSupply()).to.equal(6.0); // alias to getTotalPooledEther()
+      expect(+await lido.getTotalShares()).to.equal(6.0);
 
-      expect(await lido.balanceOf(owner)).to.equal(4.0);
-      expect(await lido.balanceOf(user)).to.equal(2.0);
+      expect(+await lido.balanceOf(owner)).to.equal(4.0);
+      expect(+await lido.balanceOf(user)).to.equal(2.0);
 
-      expect(await lido.sharesOf(owner)).to.equal(4.0);
-      expect(await lido.sharesOf(user)).to.equal(2.0);
+      expect(+await lido.sharesOf(owner)).to.equal(4.0);
+      expect(+await lido.sharesOf(user)).to.equal(2.0);
     });
 
     it("Should reject ZERO deposit", async () =>
@@ -56,13 +56,13 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
     {
       await lido.submit(owner, 8.0);
       await lido.depositBufferedEther2(1);
-      expect(await lido.totalSupply()).to.equal(8.0);
-      expect(await lido.sharesOf(owner)).to.equal(8.0);
+      expect(+await lido.totalSupply()).to.equal(8.0);
+      expect(+await lido.sharesOf(owner)).to.equal(8.0);
       
       await lido.submit(owner, 32.0);
       await lido.depositBufferedEther();
-      expect(await lido.totalSupply()).to.equal(40.0);
-      expect(await lido.sharesOf(owner)).to.equal(40.0);
+      expect(+await lido.totalSupply()).to.equal(40.0);
+      expect(+await lido.sharesOf(owner)).to.equal(40.0);
     });
 
     it("Should increase account balances after rewards in fixed proportion", async () =>
@@ -77,13 +77,11 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
       await lido.pushBeaconRewards(owner, 1, rewards);
       //await lido.printState("after pushBeaconRewards (1 eth)");
 
-      expect(await lido.totalSupply()).to.equal(initial + rewards);
-      expect(await lido.getTotalShares()).to.equal('50.098231827111984282');
+      expect(+await lido.totalSupply()).to.equal(initial + rewards);
+      expect((await lido.getTotalShares()).toString()).to.equal('50.098231827111984282');
 
-      const ownerBalance = await lido.balanceOf(owner);
-      const userBalance  = await lido.balanceOf(user);
-      expect(ownerBalance).to.equal(10.18);
-      expect(userBalance).to.equal(40.72);
+      expect(+await lido.balanceOf(owner)).to.equal(10.18);
+      expect(+await lido.balanceOf(user)).to.equal(40.72);
     });
   });
 
@@ -98,13 +96,13 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
 
       // Three validators and total balance of 34, i.e accrued 2 eth of yield
       await lido.pushBeacon(owner, 1, 34.0);
-      expect(await lido.sharesOf(owner)).to.equal(32.0);
-      expect(await lido.sharesOf(user)).to.equal(66.0);
+      expect(+await lido.sharesOf(owner)).to.equal(32.0);
+      expect(+await lido.sharesOf(user)).to.equal(66.0);
 
       // Withdraw some ether
       await lido.withdraw(owner, 32.0);
-      expect(await lido.sharesOf(owner)).to.equal(0.0);
-      expect(await lido.sharesOf(user)).to.equal(66.0);
+      expect(+await lido.sharesOf(owner)).to.equal(0.0);
+      expect(+await lido.sharesOf(user)).to.equal(66.0);
 
       (await expectRevert(lido.withdraw(owner, 100.0)))
         .to.equal("Can only withdraw up to the buffered ether.");
@@ -116,13 +114,13 @@ describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture
     it("Should have different redeemable ETH with exchangeRate 1.25", async () =>
     {
       await lido.submit(user, 32.0);
-      expect(await lido.sharesOf(user)).to.equal(32.0);
+      expect(+await lido.sharesOf(user)).to.equal(32.0);
       
       await lido.setInterestRate(1.25);
-      expect(await lido.interestRate()).to.equal(1.25);
+      expect(+await lido.interestRate()).to.equal(1.25);
 
       const redeemable = await lido.getPooledEthByShares(10);
-      expect(redeemable).to.equal(12.5, "redeemable ETH should increase by 1.25x with interestRate 1.25x");
+      expect(+redeemable).to.equal(12.5, "redeemable ETH should increase by 1.25x with interestRate 1.25x");
     });
 
     it("Should revert if underlying pool has a random error", async () =>
