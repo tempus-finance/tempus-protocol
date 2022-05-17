@@ -153,7 +153,27 @@ export class Decimal {
 
   /** @return Absolute value of this decimal */
   public abs(): Decimal {
-    return new Decimal(this.int >= 0 ? this.int : -this.int, this.decimals);
+    return new Decimal((this.int >= 0 ? this.int : -this.int), this.decimals);
+  }
+
+  /** @return TRUE if Decimal(this) > Decimal(x) */
+  public gt(x:Numberish): boolean {
+    return this.int > this.toScaledBigInt(x);
+  }
+
+  /** @return TRUE if Decimal(this) < Decimal(x) */
+  public lt(x:Numberish): boolean {
+    return this.int < this.toScaledBigInt(x);
+  }
+
+  /** @return TRUE if Decimal(this) >= Decimal(x) */
+  public gte(x:Numberish): boolean {
+    return this.int >= this.toScaledBigInt(x);
+  }
+
+  /** @return TRUE if Decimal(this) <= Decimal(x) */
+  public lte(x:Numberish): boolean {
+    return this.int <= this.toScaledBigInt(x);
   }
 
   /**
