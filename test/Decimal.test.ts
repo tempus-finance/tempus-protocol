@@ -98,6 +98,16 @@ describeNonPool("Decimal", () =>
       equals(dec6('0').abs(), '0.000000');
     });
 
+    it("equals", () =>
+    {
+      expect(dec6('100.543214').equals('100.543214')).to.be.true;
+      expect(dec6('100.543214').equals('100.5')).to.be.false;
+      expect(dec6(1.0).equals(1.0)).to.be.true;
+      expect(dec6(1.0).equals(-1.0)).to.be.false;
+      expect(dec6(-1.0).equals(-1.0)).to.be.true;
+      expect(dec6(100.5).equals('100.5')).to.be.true;
+    });
+
     it("gt", () =>
     {
       expect(dec6('50.5').gt('50.1')).to.be.true;
