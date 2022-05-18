@@ -90,13 +90,16 @@ export class Decimal {
   }
 
   /**
-   * @brief To compare if two Decimals are equal.
+   * @brief To compare if two Decimals or Numbers are equal.
    *        For chai asserts use deep equality
    *        Ex: expect(a).to.eql(b);  -- chai deep equality check
    *        Ex: expect(a.equals(b)).to.be.true;  -- directly call equals
+   *        Ex: expect(decimal(1.0).equals(1.0)).to.be.true;
    */
-  public equals(other:Decimal): boolean {
-    return this.decimals === other.decimals && this.int === other.int;
+  public equals(other:Numberish): boolean {
+    if (other instanceof Decimal)
+      return this.decimals === other.decimals && this.int === other.int;
+    return this.int == this.toScaledBigInt(other);
   }
 
   /**
