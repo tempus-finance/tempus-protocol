@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { Numberish, toWei } from "./Decimal";
+import { Numberish, toWei } from "./DecimalUtils";
 import { ContractBase, Signer } from "./ContractBase";
 import { AMP_PRECISION, TempusAMM } from "./TempusAMM";
 import { PoolShare } from "./PoolShare";

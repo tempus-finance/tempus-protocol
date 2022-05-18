@@ -6,7 +6,6 @@ import { ethers, getUnnamedAccounts } from "hardhat";
 import { LidoContract } from "../utils/LidoContract";
 import { LidoMock } from "../utils/LidoMock";
 import { LidoFork } from "../utils/LidoFork";
-import { Transaction } from "ethers";
 
 export class LidoTestPool extends PoolTestFixture {
   lido:LidoContract;

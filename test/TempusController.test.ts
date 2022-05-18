@@ -8,7 +8,7 @@ import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
 import { TempusPoolAMM } from "./utils/TempusPoolAMM";
-import { Numberish } from "./utils/Decimal";
+import { Numberish } from "./utils/DecimalUtils";
 
 describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 {

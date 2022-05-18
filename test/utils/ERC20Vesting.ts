@@ -1,6 +1,6 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish } from "./Decimal";
-import { ContractBase, SignerOrAddress, Signer, addressOf } from "./ContractBase";
+import { Numberish } from "./DecimalUtils";
+import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 
 export interface VestingTerms {

@@ -1,6 +1,5 @@
-import { ethers } from "hardhat";
-import { BigNumber, Contract, Transaction } from "ethers";
-import { Numberish, toWei, fromWei } from "./Decimal";
+import { Contract, Transaction } from "ethers";
+import { Numberish, toWei } from "./DecimalUtils";
 import { ContractBase, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { blockTimestamp, setEvmTime } from "./Utils";

@@ -6,7 +6,7 @@ import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } fr
 import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
 import { ERC20 } from "../utils/ERC20";
 import { IERC20 } from "../utils/IERC20";
-import { Numberish, formatDecimal } from "../utils/Decimal";
+import { Numberish } from "../utils/DecimalUtils";
 import { getRevertMessage } from "../utils/Utils";
 import { TempusController } from "../utils/TempusController";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";

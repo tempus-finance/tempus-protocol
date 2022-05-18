@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
-import { Decimal, Numberish, parseDecimal } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish, parseDecimal } from "./DecimalUtils";
 import { SignerOrAddress, Signer, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { ERC20Ether } from "./ERC20Ether";

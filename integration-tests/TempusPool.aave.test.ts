@@ -5,7 +5,7 @@ import { blockTimestamp, evmMineInSingleBlock, increaseTime } from '../test/util
 import { generateTempusSharesNames, TempusPool, PoolType } from "../test/utils/TempusPool";
 import { TempusController } from "../test/utils/TempusController";
 import { ERC20 } from "../test/utils/ERC20";
-import { toWei } from "../test/utils/Decimal";
+import { toWei } from "../test/utils/DecimalUtils";
 import { Balances, getAccounts } from "./IntegrationUtils";
 
 const setup = deployments.createFixture(async () => {

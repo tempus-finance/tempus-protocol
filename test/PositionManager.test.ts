@@ -5,7 +5,7 @@ import { PoolType, TempusPool } from "./utils/TempusPool";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { TempusPoolAMM } from "./utils/TempusPoolAMM";
-import { parseDecimal, toWei } from "./utils/Decimal";
+import { parseDecimal, toWei } from "./utils/DecimalUtils";
 import { Contract, constants } from "ethers";
 
 

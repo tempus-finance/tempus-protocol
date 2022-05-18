@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { Numberish } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 

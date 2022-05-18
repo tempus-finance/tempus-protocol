@@ -1,5 +1,6 @@
 import { Contract } from "ethers";
-import { Decimal, Numberish, toRay, fromRay, parseDecimal } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish, toRay, fromRay, parseDecimal } from "./DecimalUtils";
 import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";

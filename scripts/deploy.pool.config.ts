@@ -3,7 +3,7 @@ import { ethers, network } from 'hardhat';
 import { Contract } from '@ethersproject/contracts';
 import * as utils from './utils';
 import * as chalk from "chalk";
-import { parseDecimal } from "../test/utils/Decimal";
+import { parseDecimal } from "../test/utils/DecimalUtils";
 import { ERC20 } from "../test/utils/ERC20";
 import { AMP_PRECISION } from '../test/utils/TempusAMM';
 

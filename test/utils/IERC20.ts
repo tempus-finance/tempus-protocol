@@ -1,4 +1,5 @@
-import { Decimal, Numberish } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { Addressable } from "./ContractBase";
 import { BigNumber } from "@ethersproject/bignumber";
 

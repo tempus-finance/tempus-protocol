@@ -1,5 +1,7 @@
 import { ethers } from "hardhat";
-import { Decimal, Numberish, DecimalConvertible } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
+import { DecimalConvertible } from "./DecimalConvertible";
 import { Signer, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 

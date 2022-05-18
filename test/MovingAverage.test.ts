@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { ContractBase } from "./utils/ContractBase";
 import { expect } from "chai";
-import { Numberish, toWei } from "./utils/Decimal";
+import { Numberish, toWei } from "./utils/DecimalUtils";
 import { increaseTime } from "./utils/Utils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 

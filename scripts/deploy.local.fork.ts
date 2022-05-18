@@ -7,7 +7,7 @@ import { generateTempusSharesNames, PoolType, TempusPool } from '../test/utils/T
 import { ContractBase, Signer } from '../test/utils/ContractBase';
 import { TempusController } from '../test/utils/TempusController';
 import { DAY, MONTH, AMP_PRECISION } from '../test/utils/TempusAMM';
-import { toWei } from '../test/utils/Decimal';
+import { toWei } from '../test/utils/DecimalUtils';
 import { ERC20Ether } from '../test/utils/ERC20Ether';
 
 export interface DeployedPoolInfo {

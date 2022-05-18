@@ -1,5 +1,6 @@
 import { Contract, Transaction } from "ethers";
-import { Decimal, Numberish } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { ContractBase, Signer, AbstractSigner, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 

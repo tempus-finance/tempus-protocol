@@ -1,5 +1,5 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { ContractBase, SignerOrAddress, Signer } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { getContractAddress } from '@ethersproject/address';

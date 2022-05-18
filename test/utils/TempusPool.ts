@@ -1,5 +1,6 @@
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { Decimal, Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./Decimal";
+import { Decimal } from "./Decimal";
+import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./DecimalUtils";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { IERC20 } from "./IERC20";
