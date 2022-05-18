@@ -12,7 +12,7 @@ export async function blockTimestamp() : Promise<number> {
 /**
  * Mines a block
  */
- export async function evmMine(): Promise<void> {
+export async function evmMine(): Promise<void> {
   await ethers.provider.send("evm_mine", []);
 }
 
@@ -20,8 +20,19 @@ export async function blockTimestamp() : Promise<number> {
  * sets the current EVM automining behavior.
  * if true - a block is mined for every sent transaction (default is true)
  */
- export async function evmSetAutomine(automine: boolean): Promise<void> {
+export async function evmSetAutomine(automine: boolean): Promise<void> {
   await ethers.provider.send("evm_setAutomine", [automine]);
+}
+
+/**
+ * Disables Automine until the block `fn` is finished executing.
+ * Then manually processes all pending transactions.
+ */
+export async function evmMineInSingleBlock(fn: ()=>Promise<void>): Promise<void> {
+  await evmSetAutomine(false);
+  await fn();
+  await evmMine();
+  await evmSetAutomine(true);
 }
 
 /**

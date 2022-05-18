@@ -21,6 +21,33 @@ function poolTypesFromExcept(except:PoolType[]): PoolType[] {
   return ALL_POOLS.filter(type => !except.includes(type));
 }
 
+function _getSuiteTitle(title:string, type:PoolType, symbol:string): string {
+  // we want to describe suites by underlying pool type Prefix
+  // this means tests are grouped and run by pool type, making fixtures faster
+  return type.toString() + " " + symbol + " <> " + title;
+}
+
+function _finalizeSuite(suite:Suite): Suite {
+  // make sure to sort all suites by title
+  suite?.suites.sort((a:Suite, b:Suite) => a.title.localeCompare(b.title));
+  return suite;
+}
+
+// this makes use of the `onlyRun` pool and `onlyToken` system for a single pool and asset pair
+// this way these tests can be ignored if needed by the test runner
+function _describeForSinglePoolType(title:string, type:PoolType, asset:string, only:boolean, fn:() => void): Suite
+{
+  if (onlyRun && onlyRun !== type) {
+    return;
+  }
+  if (onlyToken && onlyToken !== asset) {
+    return;
+  }
+  const suiteTitle = _getSuiteTitle(title, type, asset);
+  const suite:Suite = only ? describe.only(suiteTitle, fn) : describe(suiteTitle, fn);
+  return _finalizeSuite(suite.parent);
+}
+
 function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boolean, fn:(pool:PoolTestFixture) => void)
 {
   let parent:Suite = null;
@@ -37,8 +64,8 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
     }
 
     for (let pair of tokens[type]) {
-      let asset:TokenInfo = pair[0];
-      let yieldToken:TokenInfo = pair[1];
+      const asset:TokenInfo = pair[0];
+      const yieldToken:TokenInfo = pair[1];
 
       if (onlyToken && onlyToken !== asset.symbol) {
         continue;
@@ -56,18 +83,13 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
         }
         fn(pool);
       };
-  
-      // we want to describe suites by underlying pool type Prefix
-      // this means tests are grouped and run by pool type, making fixtures faster
-      const suiteTitle = type.toString() + " " + yieldToken.symbol + " <> " + title;
-      let suite:Suite = only ? describe.only(suiteTitle, describeTestBody) : describe(suiteTitle, describeTestBody);
+
+      const suiteTitle = _getSuiteTitle(title, type, yieldToken.symbol);
+      const suite:Suite = only ? describe.only(suiteTitle, describeTestBody) : describe(suiteTitle, describeTestBody);
       parent = suite.parent;
     }
   }
-
-  // make sure to sort these suites by title
-  parent?.suites.sort((a:Suite, b:Suite) => a.title.localeCompare(b.title));
-  return parent;
+  return _finalizeSuite(parent);
 }
 
 function _describeForNonePoolType(title:string, only:boolean, fn:() => void)
@@ -84,6 +106,18 @@ function _describeForNonePoolType(title:string, only:boolean, fn:() => void)
       describe(title, fn);
     }
   }
+}
+
+interface SinglePoolSuiteFunction {
+  /**
+   * Describes unit test block only for a single PoolType and Asset pair
+   */
+  (title:string, type:PoolType, asset:string, fn:() => void): void;
+
+  /**
+   * Indicates this suite should be executed exclusively.
+   */
+  only: (title:string, type:PoolType, asset:string, fn:() => void) => void;
 }
 
 interface MultiPoolSuiteFunction {
@@ -135,9 +169,23 @@ interface IntegrationExclusiveTestFunction extends TestFunction {
 }
 
 /**
- * Batch describes unit test block for all PoolTypes
+ * Batch describes unit test block for a single PoolType and Asset pair
  */
-export const describeForEachPool: MultiPoolSuiteFunction = (() => {
+export const describeForSinglePool: SinglePoolSuiteFunction = (() => {
+  const f:SinglePoolSuiteFunction = (title:string, type:PoolType, asset:string, fn:() => void) => {
+    _describeForSinglePoolType(title, type, asset, /*only*/false, fn);
+  };
+  f.only = (title:string, type:PoolType, asset:string, fn:() => void) => {
+    _describeForSinglePoolType(title, type, asset, /*only*/true, fn);
+  };
+  return f;
+})();
+
+/**
+ * Describes unit test block for a single PoolType
+ * Allowing it to be filtered out by the global `getOnlyRunPool()`
+ */
+ export const describeForEachPool: MultiPoolSuiteFunction = (() => {
   const f:MultiPoolSuiteFunction = (title:string, fn:(pool:PoolTestFixture) => void) => {
     _describeForEachPoolType(title, ALL_POOLS, /*only*/false, fn);
   };

@@ -12,7 +12,7 @@ ENVS=""
 REPORTER="progress"
 ONLY_TOKEN=""
 ONLY_POOL=""
-TOKENS="DAI USDC ETH"
+VALID_TOKENS="DAI USDC ETH all"
 POOLS="Aave Lido Compound Yearn Rari"
 # @see test/Config.ts
 declare -A POOL_TOKENS
@@ -37,12 +37,11 @@ while [ -n "$1" ]; do
     ENVS="$ENVS INTEGRATION=1 ETH_NODE_URI_MAINNET=$ETH_NODE_URI_MAINNET"
     ENVS="$ENVS HARDHAT_FORK=$HARDHAT_FORK HARDHAT_FORK_NUMBER=$HARDHAT_FORK_NUMBER "
     TESTS_PATH="integration-tests"
-    ONLY_POOL="all"
-    REPORTER="spec"
+    ONLY_TOKEN="all" # handle all tokens in a single process instead of spawning multiple
 
   elif [[ "$POOLS" =~ "$1" ]]; then # only pool
     ONLY_POOL="$1"
-  elif [[ "$TOKENS" =~ "$1" ]]; then # only token
+  elif [[ "$VALID_TOKENS" =~ "$1" ]]; then # only token
     ONLY_TOKEN="$1"
   fi
   shift
@@ -65,10 +64,10 @@ PIDS=()
 for pool in $pools; do
   tokens=${POOL_TOKENS[$pool]}
   if [ "$ONLY_TOKEN" ]; then
-    if [[ "$TOKENS" =~ "$ONLY_TOKEN" ]]; then
+    if [[ "$VALID_TOKENS" =~ "$ONLY_TOKEN" ]]; then
       tokens="$ONLY_TOKEN"
     else # ONLY_TOKEN is not a valid token for this pool
-      echo Skipping $ONLY_TOKEN for $pool
+      echo Skipping $ONLY_TOKEN for $pool - $ONLY_TOKEN
       continue
     fi
   fi

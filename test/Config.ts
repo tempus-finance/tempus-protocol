@@ -91,14 +91,14 @@ export function isIntegrationTestsEnabled(): boolean {
 // Either specific PoolType string, or undefined
 export function getOnlyRunPool(): string {
   const env = process.env["ONLY_POOL"];
-  if (env) return env;
+  if (env && env != "all") return env;
   return ONLY_RUN_POOL;
 }
 
 // Either specific Backing Token string eg "USDC", or undefined
 export function getOnlyRunToken(): string {
   const env = process.env["ONLY_TOKEN"];
-  if (env) return env;
+  if (env && env != "all") return env;
   return ONLY_TOKEN_SYMBOL;
 }
 

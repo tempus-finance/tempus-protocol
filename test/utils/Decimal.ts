@@ -287,6 +287,26 @@ export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffff
 export const ONE_WEI:BigNumber = ethers.utils.parseUnits('1.0', 18);
 
 /**
+ * Converts any input number into an ethers.BigNumber.
+ * Regular numbers are simply truncated to integer.
+ * To create scaled BigNumbers, pass a Decimal to this function.
+ * Example: bn(decimal(1.0, 18)) -> 1000000000000000000
+ * 
+ * @param number Any number-like value
+ */
+export function bn(number:Numberish): BigNumber {
+  if (number instanceof BigNumber)
+    return number;
+  if (number instanceof Decimal)
+    return number.toBigNumber();
+  if (typeof(number) === "bigint")
+    return BigNumber.from(number);
+  // truncate decimal part
+  const integer = number.toString().split('.')[0];
+  return BigNumber.from(integer);
+}
+
+/**
  * Parses a decimal string into specified base precision
  * @example let wei = parseDecimal("0.000001", 18);
  * @param decimal Decimal such as 1.25 or "12.1234777777"

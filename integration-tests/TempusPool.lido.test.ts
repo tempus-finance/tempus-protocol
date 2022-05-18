@@ -1,27 +1,21 @@
 import { expect } from "chai";
-import {
-  ethers,
-  deployments,
-  getNamedAccounts,
-  getUnnamedAccounts
-} from 'hardhat';
+import { ethers, deployments } from 'hardhat';
+import { describeForSinglePool } from "../test/pool-utils/MultiPoolTestSuite";
 import { blockTimestamp } from '../test/utils/Utils';
-import { generateTempusSharesNames, TempusPool } from "../test/utils/TempusPool";
+import { generateTempusSharesNames, TempusPool, PoolType } from "../test/utils/TempusPool";
+import { TempusController } from "../test/utils/TempusController";
 import { ERC20 } from "../test/utils/ERC20";
 import { ERC20Ether } from "../test/utils/ERC20Ether";
-import { TempusController } from "../test/utils/TempusController";
-import { fromWei, parseDecimal, toWei } from "../test/utils/Decimal";
-import { BigNumber } from "ethers";
-import Decimal from 'decimal.js';
+import { parseDecimal, toWei, bn } from "../test/utils/Decimal";
+import { Balances, getNamedSigners, getAccounts } from "./IntegrationUtils";
 
 const setup = deployments.createFixture(async () => {
-  await deployments.fixture(undefined, {
-    keepExistingDeployments: true, // global option to test network like that
-  });
+  await deployments.fixture(undefined, { keepExistingDeployments: true });
   
-  const owner = (await ethers.getSigners())[0];
-  const { lidoOracleMember1, lidoOracleMember2, lidoOracleMember3 } = await getNamedAccounts();
-  const [ account1, account2 ] = await getUnnamedAccounts();
+  const { owner, signer1, signer2 } = await getAccounts();
+  const [ lidoOracleMember1, lidoOracleMember2, lidoOracleMember3 ] = await getNamedSigners([
+    'lidoOracleMember1', 'lidoOracleMember2', 'lidoOracleMember3'
+  ]);
 
   // NOTE: using Weth here as a mock ETH ticker for the testing system
   // Lido actually uses native ETH
@@ -39,58 +33,41 @@ const setup = deployments.createFixture(async () => {
   );
 
   return {
-    contracts: {
-      lido,
-      tempusPool,
-      lidoOracle
-    },
-    signers: {
-      signer1: await ethers.getSigner(account1),
-      signer2: await ethers.getSigner(account2),
-      lidoOracleMember1: await ethers.getSigner(lidoOracleMember1),
-      lidoOracleMember2: await ethers.getSigner(lidoOracleMember2),
-      lidoOracleMember3: await ethers.getSigner(lidoOracleMember3),
-    }
+    contracts: { lido, tempusPool, lidoOracle },
+    signers: { signer1, signer2, lidoOracleMember1, lidoOracleMember2, lidoOracleMember3, }
   };
 });
 
-describe('TempusPool <> Lido', function () {
+describeForSinglePool('TempusPool', PoolType.Lido, 'ETH', () => {
   it('Verifies that depositing directly to Lido accrues equal interest compared to depositing via TempusPool', async () => {
     // The maximum discrepancy to allow between accrued interest from depositing directly to Lido
     //    vs depositing to Lido via TempusPool
     const MAX_ALLOWED_INTEREST_DELTA_ERROR = 1e-18; // 0.0000000000000001% error
+    const { 
+      signers: { signer1, signer2, lidoOracleMember1, lidoOracleMember2, lidoOracleMember3 },
+      contracts: { lido, tempusPool, lidoOracle }
+    } = await setup();
 
-    const { signers: { signer1, signer2, lidoOracleMember1, lidoOracleMember2, lidoOracleMember3 }, contracts: { lido, tempusPool, lidoOracle }} = await setup();
     const depositAmount: number = 100;
     const initialPoolYieldBearingBalance = "12345.678901234";
     await tempusPool.controller.depositBacking(signer2, tempusPool, initialPoolYieldBearingBalance, signer2, initialPoolYieldBearingBalance); // deposit some BT to the pool before 
-    
-    const btBalancePreSigner1 = await tempusPool.yieldBearing.balanceOf(signer1);
-    const btBalancePreSigner2 = await tempusPool.yieldBearing.balanceOf(signer2);
-    
+
+    const preBalances = await Balances.getBalances(tempusPool.yieldBearing, signer1, signer2);
+
     await tempusPool.controller.depositBacking(signer1, tempusPool, depositAmount, signer1, depositAmount); // deposit some BT to the pool before 
     await lido.connect(signer2).submit('0x1234567895e8bbcfc9581d2e864a68feb6a076d3', { value: toWei(depositAmount) }); // deposit directly to Lido
-    
+
     // This increases Lido's yield
     const { beaconValidators, beaconBalance } = await lido.contract.getBeaconStat();
-    const newBeaconBalance = BigNumber.from(beaconBalance.toString()).add(toWei(100)).div(parseDecimal('1', 9));
+    const newBeaconBalance = bn(beaconBalance).add(toWei(100)).div(parseDecimal('1', 9));
     await lidoOracle.connect(lidoOracleMember1).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);
     await lidoOracle.connect(lidoOracleMember2).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);
     await lidoOracle.connect(lidoOracleMember3).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);
-    
-    const yieldShareBalanceSigner1 = await tempusPool.yieldShare.balanceOf(signer1);
 
-    await tempusPool.controller.redeemToYieldBearing(signer1, tempusPool, yieldShareBalanceSigner1, yieldShareBalanceSigner1, signer1.address)
-    
-    const btBalancePostSigner1 = await tempusPool.yieldBearing.balanceOf(signer1);
-    const btBalancePostSigner2 = await tempusPool.yieldBearing.balanceOf(signer2);
-    
-    const totalInterestSigner1 = toWei(btBalancePostSigner1).sub(toWei(btBalancePreSigner1));
-    const totalInterestSigner2 = toWei(btBalancePostSigner2).sub(toWei(btBalancePreSigner2));
+    const signer1yields = await tempusPool.yieldShare.balanceOf(signer1);
+    await tempusPool.controller.redeemToYieldBearing(signer1, tempusPool, signer1yields, signer1yields, signer1)
 
-    const error = new Decimal(1).sub(new Decimal(fromWei(totalInterestSigner2).toString())
-      .div(fromWei(totalInterestSigner1).toString())).abs();
-    
-    expect(error.lessThanOrEqualTo(MAX_ALLOWED_INTEREST_DELTA_ERROR)).is.true;
+    const error = await preBalances.getInterestDeltaError();
+    expect(+error).to.be.lessThanOrEqual(MAX_ALLOWED_INTEREST_DELTA_ERROR, `error is too high - ${error}`);
   });
 });
