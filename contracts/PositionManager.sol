@@ -57,9 +57,10 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
 
         uint256 capitalsReceived;
         uint256 yieldsReceived;
+        uint256 mintedShares;
         if (params.leverageMultiplier == 0) {
             uint256 backingTokenONE = tempusPool.backingTokenONE();
-            (, capitalsReceived) = controller.depositAndFix{value: msg.value}(
+            (mintedShares, capitalsReceived) = controller.depositAndFix{value: msg.value}(
                 params.tempusAMM,
                 tempusPool,
                 tokenAmountToDeposit,
@@ -68,7 +69,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
                 params.deadline
             );
         } else if (params.leverageMultiplier > 1e18) {
-            (, capitalsReceived, yieldsReceived) = controller.depositAndLeverage{value: msg.value}(
+            (mintedShares, capitalsReceived, yieldsReceived) = controller.depositAndLeverage{value: msg.value}(
                 params.tempusAMM,
                 tempusPool,
                 params.leverageMultiplier,
@@ -87,8 +88,7 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
             yields: SafeCast.toUint128(yieldsReceived),
             tempusAMM: params.tempusAMM
         });
-
-        _safeMint(params.recipient, tokenId);
+        _safeMint(params.recipient, tokenId, abi.encode(mintedShares));
     }
 
     function burn(uint256 tokenId, BurnParams calldata params)
