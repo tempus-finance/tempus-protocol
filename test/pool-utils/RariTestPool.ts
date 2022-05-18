@@ -2,7 +2,6 @@ import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
 import { ContractBase, Signer } from "../utils/ContractBase";
 import { TempusPool, PoolType } from "../utils/TempusPool";
 import { TokenInfo } from "./TokenInfo";
-import { ethers } from "hardhat";
 import { RariFundManager } from "../utils/RariFundManager";
 
 export class RariTestPool extends PoolTestFixture {

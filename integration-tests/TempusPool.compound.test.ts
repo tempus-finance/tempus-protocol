@@ -5,7 +5,7 @@ import { blockTimestamp, evmMine, evmMineInSingleBlock } from '../test/utils/Uti
 import { generateTempusSharesNames, TempusPool, PoolType } from "../test/utils/TempusPool";
 import { TempusController } from "../test/utils/TempusController";
 import { ERC20 } from "../test/utils/ERC20";
-import { bn, Numberish, toWei } from "../test/utils/Decimal";
+import { bn, Numberish, toWei } from "../test/utils/DecimalUtils";
 import { Balances, getAccounts } from "./IntegrationUtils";
 import { SignerOrAddress } from "test/utils/ContractBase";
 

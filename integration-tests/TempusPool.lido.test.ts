@@ -6,7 +6,7 @@ import { generateTempusSharesNames, TempusPool, PoolType } from "../test/utils/T
 import { TempusController } from "../test/utils/TempusController";
 import { ERC20 } from "../test/utils/ERC20";
 import { ERC20Ether } from "../test/utils/ERC20Ether";
-import { parseDecimal, toWei, bn } from "../test/utils/Decimal";
+import { parseDecimal, toWei, bn } from "../test/utils/DecimalUtils";
 import { Balances, getNamedSigners, getAccounts } from "./IntegrationUtils";
 
 const setup = deployments.createFixture(async () => {

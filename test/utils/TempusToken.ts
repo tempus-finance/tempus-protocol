@@ -1,7 +1,6 @@
-import { Numberish } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { SignerOrAddress, addressOf } from "./ContractBase";
 import { ERC20 } from "./ERC20";
-import { Signer } from "crypto";
 import { Transaction } from "@ethersproject/transactions";
 
 /**

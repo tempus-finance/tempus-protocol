@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
-import { DecimalConvertible } from "./Decimal";
+import { DecimalConvertible } from "./DecimalConvertible";
 import * as signers from "@nomiclabs/hardhat-ethers/dist/src/signers";
 import * as abstractSigner from "@ethersproject/abstract-signer/src.ts";
 

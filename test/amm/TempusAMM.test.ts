@@ -1,13 +1,12 @@
 import { expect } from "chai";
-import { BigNumber, Contract, ethers } from "ethers";
-import { Numberish } from "../utils/Decimal";
+import { BigNumber, ethers } from "ethers";
+import { Numberish } from "../utils/DecimalUtils";
 import { Signer } from "../utils/ContractBase";
 import { TempusPool } from "../utils/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
 import { TempusPoolAMM } from "../utils/TempusPoolAMM";
-import { TempusAMM } from "../utils/TempusAMM";
 import { PoolShare, ShareKind } from "../utils/PoolShare";
 import { ContractBase } from "../utils/ContractBase";
 

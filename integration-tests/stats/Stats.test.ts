@@ -4,7 +4,7 @@ import { blockTimestamp } from '../../test/utils/Utils';
 import { generateTempusSharesNames, TempusPool } from "../../test/utils/TempusPool";
 import { ERC20 } from "../../test/utils/ERC20";
 import { ContractBase } from "../../test/utils/ContractBase";
-import { decimal, toWei } from '../../test/utils/Decimal';
+import { decimal } from '../../test/utils/Decimal';
 import { EthPriceQuoteProvider } from '../EthPriceQuoteProvider';
 import { TempusController } from "../../test/utils/TempusController";
 import { describeNonPool } from "../../test/pool-utils/MultiPoolTestSuite";

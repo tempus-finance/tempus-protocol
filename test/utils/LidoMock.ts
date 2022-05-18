@@ -1,5 +1,5 @@
 import { BigNumber, Contract } from "ethers";
-import { Numberish } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { ContractBase } from "./ContractBase";
 import { ERC20Ether } from "./ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";

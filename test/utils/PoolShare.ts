@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { Numberish } from "./Decimal";
+import { Numberish } from "./DecimalUtils";
 import { ERC20OwnerMintable } from "./ERC20OwnerMintable";
 
 export enum ShareKind {

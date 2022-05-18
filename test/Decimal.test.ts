@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
-import { Numberish, Decimal, decimal } from "./utils/Decimal";
+import { Decimal, decimal } from "./utils/Decimal";
+import { Numberish } from "./utils/DecimalUtils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Decimal", () =>

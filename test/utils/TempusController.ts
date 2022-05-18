@@ -1,5 +1,5 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish, toWei } from "./Decimal";
+import { Numberish, toWei } from "./DecimalUtils";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
 import { TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";

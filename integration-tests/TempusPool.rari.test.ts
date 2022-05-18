@@ -5,7 +5,8 @@ import { blockTimestamp } from '../test/utils/Utils';
 import { generateTempusSharesNames, PoolType, TempusPool } from "../test/utils/TempusPool";
 import { TempusController } from "../test/utils/TempusController";
 import { ERC20 } from "../test/utils/ERC20";
-import { toWei, Decimal, decimal, Numberish, bn } from "../test/utils/Decimal";
+import { Decimal, decimal } from "../test/utils/Decimal";
+import { toWei, Numberish, bn } from "../test/utils/DecimalUtils";
 import { Balances, getAccounts, getNamedSigners } from "./IntegrationUtils";
 
 const setupWithRariWithdrawalFee = async (rariFee:Decimal) => await deployments.createFixture(async () => {

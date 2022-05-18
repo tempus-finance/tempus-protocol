@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
-import { Numberish, parseDecimal } from "./Decimal";
+import { Numberish, parseDecimal } from "./DecimalUtils";
 import { setStorageField } from "./Utils";
 import { ERC20Ether } from "./ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
