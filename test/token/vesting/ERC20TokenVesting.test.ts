@@ -3,8 +3,8 @@ import { expect } from "chai";
 import { addressOf, Signer } from "../../utils/ContractBase";
 import { blockTimestamp, expectRevert, increaseTime, setEvmTime } from "../../utils/Utils";
 import { ERC20 } from "../../utils/ERC20";
-import { ERC20OwnerMintable } from "../../utils/ERC20OwnerMintable";
-import { ERC20Vesting, VestingTerms } from "../../utils/ERC20Vesting";
+import { ERC20OwnerMintable } from "../../tempus/ERC20OwnerMintable";
+import { ERC20Vesting, VestingTerms } from "../../tempus/ERC20Vesting";
 import { describeNonPool } from "../../pool-utils/MultiPoolTestSuite";
 
 describeNonPool("ERC20 Vesting", async () => {

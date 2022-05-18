@@ -2,8 +2,8 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { blockTimestamp, expectRevert, increaseTime } from "../utils/Utils";
 import { Signer } from "../utils/ContractBase";
-import { TempusToken } from "../utils/TempusToken";
-import { DAY } from "../utils/TempusAMM";
+import { TempusToken } from "../tempus/TempusToken";
+import { DAY } from "../tempus/TempusAMM";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Tempus Token", async () => {

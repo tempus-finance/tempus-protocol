@@ -1,5 +1,5 @@
 import { TokenInfo } from "./pool-utils/TokenInfo";
-import { PoolType } from "./utils/TempusPool";
+import { PoolType } from "./tempus/TempusPool";
 
 // Default list of all Pool Types that will be run during tests
 export const ALL_POOLS = [

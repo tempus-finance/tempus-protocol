@@ -1,7 +1,7 @@
 import { BigNumber, Contract } from "ethers";
-import { Numberish } from "./DecimalUtils";
-import { ContractBase } from "./ContractBase";
-import { ERC20Ether } from "./ERC20Ether";
+import { Numberish } from "../utils/DecimalUtils";
+import { ContractBase } from "../utils/ContractBase";
+import { ERC20Ether } from "../utils/ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 import { LidoContract } from "./LidoContract";
 

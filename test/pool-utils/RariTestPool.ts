@@ -1,8 +1,8 @@
 import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
 import { ContractBase, Signer } from "../utils/ContractBase";
-import { TempusPool, PoolType } from "../utils/TempusPool";
+import { TempusPool, PoolType } from "../tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
-import { RariFundManager } from "../utils/RariFundManager";
+import { RariFundManager } from "../protocols/RariFundManager";
 
 export class RariTestPool extends PoolTestFixture {
   rari:RariFundManager;

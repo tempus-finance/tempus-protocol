@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
-import { Numberish, formatDecimal, parseDecimal } from "./DecimalUtils";
-import { ContractBase, SignerOrAddress } from "./ContractBase";
-import { ERC20 } from "./ERC20";
+import { Numberish, formatDecimal, parseDecimal } from "../utils/DecimalUtils";
+import { ContractBase, SignerOrAddress } from "../utils/ContractBase";
+import { ERC20 } from "../utils/ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
 
 export class YearnVault extends ContractBase {

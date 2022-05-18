@@ -1,8 +1,8 @@
 import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
 import { ContractBase, Signer } from "../utils/ContractBase";
-import { TempusPool, PoolType } from "../utils/TempusPool";
+import { TempusPool, PoolType } from "../tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
-import { Aave } from "../utils/Aave";
+import { Aave } from "../protocols/Aave";
 
 export class AaveTestPool extends PoolTestFixture {
   aave:Aave;

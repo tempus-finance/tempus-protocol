@@ -1,6 +1,6 @@
 import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
 import { ContractBase, Signer } from "../utils/ContractBase";
-import { TempusPool, PoolType } from "../utils/TempusPool";
+import { TempusPool, PoolType } from "../tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
 import { Comptroller } from "../utils/Comptroller";
 

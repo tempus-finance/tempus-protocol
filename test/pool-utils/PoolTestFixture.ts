@@ -2,15 +2,15 @@ import { expect } from "chai";
 import { Transaction } from "ethers";
 import { deployments, ethers } from "hardhat";
 import { ContractBase, Signer, SignerOrAddress } from "../utils/ContractBase";
-import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../utils/TempusPool";
+import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "../tempus/TempusPool";
 import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
 import { ERC20 } from "../utils/ERC20";
 import { IERC20 } from "../utils/IERC20";
 import { Numberish } from "../utils/DecimalUtils";
 import { getRevertMessage } from "../utils/Utils";
-import { TempusController } from "../utils/TempusController";
-import { TempusPoolAMM } from "../utils/TempusPoolAMM";
-import { PoolShare } from "../utils/PoolShare";
+import { TempusController } from "../tempus/TempusController";
+import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
+import { PoolShare } from "../tempus/PoolShare";
 import { strict as assert } from 'assert';
 
 const ROUNDING_ERROR_TOLERANCE_THRESHOLD = 0.00000001; /// allow for 0.000001% error in YBT amounts 

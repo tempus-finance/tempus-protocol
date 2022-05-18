@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { ethers, deployments } from 'hardhat';
 import { blockTimestamp } from '../../test/utils/Utils';
-import { generateTempusSharesNames, TempusPool } from "../../test/utils/TempusPool";
+import { generateTempusSharesNames, TempusPool } from "../../test/tempus/TempusPool";
 import { ERC20 } from "../../test/utils/ERC20";
 import { ContractBase } from "../../test/utils/ContractBase";
 import { decimal } from '../../test/utils/Decimal';
 import { EthPriceQuoteProvider } from '../EthPriceQuoteProvider';
-import { TempusController } from "../../test/utils/TempusController";
+import { TempusController } from "../../test/tempus/TempusController";
 import { describeNonPool } from "../../test/pool-utils/MultiPoolTestSuite";
 import { getAccounts } from "../IntegrationUtils";
 

@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Signer } from "../utils/ContractBase";
 import { expectRevert } from "../utils/Utils";
-import { ERC20OwnerMintable } from "../utils/ERC20OwnerMintable";
+import { ERC20OwnerMintable } from "../tempus/ERC20OwnerMintable";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Owner Mintable Token", async () => {

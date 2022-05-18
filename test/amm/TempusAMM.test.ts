@@ -2,12 +2,12 @@ import { expect } from "chai";
 import { BigNumber, ethers } from "ethers";
 import { Numberish } from "../utils/DecimalUtils";
 import { Signer } from "../utils/ContractBase";
-import { TempusPool } from "../utils/TempusPool";
+import { TempusPool } from "../tempus/TempusPool";
 import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
-import { TempusPoolAMM } from "../utils/TempusPoolAMM";
-import { PoolShare, ShareKind } from "../utils/PoolShare";
+import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
+import { PoolShare, ShareKind } from "../tempus/PoolShare";
 import { ContractBase } from "../utils/ContractBase";
 
 interface SwapTestRun {

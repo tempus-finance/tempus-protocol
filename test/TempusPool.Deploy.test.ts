@@ -2,7 +2,7 @@ import { utils } from "ethers";
 import { expect } from "chai";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
-import { TempusPool } from "./utils/TempusPool";
+import { TempusPool } from "./tempus/TempusPool";
 import { expectRevert, blockTimestamp } from "./utils/Utils";
 
 describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>

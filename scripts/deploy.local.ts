@@ -1,7 +1,7 @@
 import { blockTimestamp } from "./../test/utils/Utils";
-import { Aave } from "../test/utils/Aave";
-import { generateTempusSharesNames, TempusPool } from "./../test/utils/TempusPool";
-import { TempusController } from "./../test/utils/TempusController";
+import { Aave } from "../test/protocols/Aave";
+import { generateTempusSharesNames, TempusPool } from "./../test/tempus/TempusPool";
+import { TempusController } from "./../test/tempus/TempusController";
 import { TokenInfo } from "../test/pool-utils/TokenInfo";
 import { ethers } from 'hardhat';
 

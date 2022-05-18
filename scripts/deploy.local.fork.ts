@@ -3,10 +3,10 @@ import { join } from 'path';
 import { ethers } from 'hardhat';
 import { Contract } from '@ethersproject/contracts';
 import { ERC20 } from '../test/utils/ERC20';
-import { generateTempusSharesNames, PoolType, TempusPool } from '../test/utils/TempusPool';
+import { generateTempusSharesNames, PoolType, TempusPool } from '../test/tempus/TempusPool';
 import { ContractBase, Signer } from '../test/utils/ContractBase';
-import { TempusController } from '../test/utils/TempusController';
-import { DAY, MONTH, AMP_PRECISION } from '../test/utils/TempusAMM';
+import { TempusController } from '../test/tempus/TempusController';
+import { DAY, MONTH, AMP_PRECISION } from '../test/tempus/TempusAMM';
 import { toWei } from '../test/utils/DecimalUtils';
 import { ERC20Ether } from '../test/utils/ERC20Ether';
 
