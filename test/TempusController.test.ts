@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { addressOf, Signer } from "./utils/ContractBase";
 import { expectRevert } from "./utils/Utils";
-import { PoolType, TempusPool } from "./utils/TempusPool";
-import { TempusController } from "./utils/TempusController";
+import { PoolType, TempusPool } from "./tempus/TempusPool";
+import { TempusController } from "./tempus/TempusController";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
-import { TempusPoolAMM } from "./utils/TempusPoolAMM";
+import { TempusPoolAMM } from "./tempus/TempusPoolAMM";
 import { Numberish } from "./utils/DecimalUtils";
 
 describeForEachPool("TempusController", (testPool:PoolTestFixture) =>

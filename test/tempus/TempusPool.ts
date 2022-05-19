@@ -1,9 +1,9 @@
 import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
-import { Decimal } from "./Decimal";
-import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "./DecimalUtils";
-import { ContractBase, Signer, SignerOrAddress, addressOf } from "./ContractBase";
-import { ERC20 } from "./ERC20";
-import { IERC20 } from "./IERC20";
+import { Decimal } from "../utils/Decimal";
+import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "../utils/DecimalUtils";
+import { ContractBase, Signer, SignerOrAddress, addressOf } from "../utils/ContractBase";
+import { ERC20 } from "../utils/ERC20";
+import { IERC20 } from "../utils/IERC20";
 import { PoolShare, ShareKind } from "./PoolShare";
 import { TempusController } from "./TempusController";
 

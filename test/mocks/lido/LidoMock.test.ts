@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { LidoMock } from "../../utils/LidoMock";
+import { LidoMock } from "../../protocols/LidoMock";
 import { Signer } from "../../utils/ContractBase";
 import { expectRevert } from "../../utils/Utils";
-import { PoolType } from "../../utils/TempusPool";
+import { PoolType } from "../../tempus/TempusPool";
 import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "../../pool-utils/MultiPoolTestSuite";
 

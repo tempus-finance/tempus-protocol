@@ -1,11 +1,11 @@
 import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
 import { ContractBase, Signer } from "../utils/ContractBase";
-import { TempusPool, PoolType } from "../utils/TempusPool";
+import { TempusPool, PoolType } from "../tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
 import { ethers, getUnnamedAccounts } from "hardhat";
-import { LidoContract } from "../utils/LidoContract";
-import { LidoMock } from "../utils/LidoMock";
-import { LidoFork } from "../utils/LidoFork";
+import { LidoContract } from "../protocols/LidoContract";
+import { LidoMock } from "../protocols/LidoMock";
+import { LidoFork } from "../protocols/LidoFork";
 
 export class LidoTestPool extends PoolTestFixture {
   lido:LidoContract;

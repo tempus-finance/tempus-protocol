@@ -5,7 +5,7 @@ import * as utils from './utils';
 import * as chalk from "chalk";
 import { parseDecimal } from "../test/utils/DecimalUtils";
 import { ERC20 } from "../test/utils/ERC20";
-import { AMP_PRECISION } from '../test/utils/TempusAMM';
+import { AMP_PRECISION } from '../test/tempus/TempusAMM';
 
 interface YBTConfig {
   address: string;

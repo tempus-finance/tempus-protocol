@@ -1,7 +1,7 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish } from "./DecimalUtils";
-import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
-import { ERC20 } from "./ERC20";
+import { Numberish } from "../utils/DecimalUtils";
+import { ContractBase, SignerOrAddress, addressOf } from "../utils/ContractBase";
+import { ERC20 } from "../utils/ERC20";
 
 export interface VestingTerms {
   startTime:number;

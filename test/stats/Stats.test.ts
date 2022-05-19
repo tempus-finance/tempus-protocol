@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import { Signer } from "../utils/ContractBase";
-import { TempusPool } from "../utils/TempusPool";
+import { TempusPool } from "../tempus/TempusPool";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
-import { Stats } from "../utils/Stats";
-import { TempusController } from "../utils/TempusController";
-import { TempusPoolAMM } from "../utils/TempusPoolAMM";
+import { Stats } from "../tempus/Stats";
+import { TempusController } from "../tempus/TempusController";
+import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
 
 describeForEachPool("Stats", (testPool:PoolTestFixture) =>
 {

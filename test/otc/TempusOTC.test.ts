@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { Signer } from "../utils/ContractBase";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
-import { TempusOTC } from "../utils/TempusOTC";
+import { TempusOTC } from "../tempus/TempusOTC";
 import { ethers } from "hardhat";
-import { ERC20OwnerMintable } from "../utils/ERC20OwnerMintable";
+import { ERC20OwnerMintable } from "../tempus/ERC20OwnerMintable";
 import { expectRevert } from "../utils/Utils";
 
 describeNonPool("TempusOTC", async() =>

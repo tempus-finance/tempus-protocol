@@ -1,8 +1,8 @@
 import { Contract } from "ethers";
-import { Decimal } from "./Decimal";
-import { Numberish, toRay, fromRay, parseDecimal } from "./DecimalUtils";
-import { ContractBase, SignerOrAddress, addressOf } from "./ContractBase";
-import { ERC20 } from "./ERC20";
+import { Decimal } from "../utils/Decimal";
+import { Numberish, toRay, fromRay, parseDecimal } from "../utils/DecimalUtils";
+import { ContractBase, SignerOrAddress, addressOf } from "../utils/ContractBase";
+import { ERC20 } from "../utils/ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 
 export class Aave extends ContractBase {

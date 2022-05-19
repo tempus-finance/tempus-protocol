@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Comptroller } from "../../utils/Comptroller";
 import { Signer } from "../../utils/ContractBase";
 import { expectRevert } from "../../utils/Utils";
-import { PoolType } from "../../utils/TempusPool";
+import { PoolType } from "../../tempus/TempusPool";
 import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
 import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
