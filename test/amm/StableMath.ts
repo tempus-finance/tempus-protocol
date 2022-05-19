@@ -5,13 +5,13 @@ import { BigNumberish, decimal, bn, fp, fromFp, toFp } from './Numbers';
 /** @dev Multiplies the value by 1e3 converting it to AmplificationParameter BigNumber,
  *       suitable for Solidity StableMath contract  */
 export function amp(value:number): BigNumber {
-  return bn(value).mul(1e3);
+  return bn(value).mul(1000);
 }
 
 /** @dev Divides the amp value by 1e3 into a Decimal, 
  *       suitable for use in TypeScript calculations */
 function deamp(amp:BigNumber): Decimal {
-  return decimal(amp.div(1e3));
+  return decimal(amp.div(1000));
 }
 
 /** @returns 1e18 bignum (FP) */ 
