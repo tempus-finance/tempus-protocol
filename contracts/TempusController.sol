@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "./amm/ITempusAMM.sol";
 import "./ITempusController.sol";
@@ -14,7 +15,7 @@ import "./utils/Ownable.sol";
 
 /// @dev TempusController singleton with a transferrable ownership and re-entrancy guards
 ///      Owner is automatically set to the deployer of this contract
-contract TempusController is ITempusController, ReentrancyGuard, Ownable {
+contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165 {
     using Fixed256xVar for uint256;
     using UntrustedERC20 for IERC20Metadata;
 
@@ -578,7 +579,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable {
         }
     }
 
-    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
-        return interfaceId == type(ITempusController).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(ITempusController).interfaceId || super.supportsInterface(interfaceId);
     }
 }

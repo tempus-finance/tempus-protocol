@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 import "./ITempusPool.sol";
 import "./token/PrincipalShare.sol";
@@ -21,7 +22,7 @@ struct TokenData {
 
 /// @author The tempus.finance team
 /// @title Implementation of Tempus Pool
-abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
+abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, ERC165 {
     using SafeERC20 for IERC20Metadata;
     using UntrustedERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
@@ -618,7 +619,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable {
     /// @return Converts an interest rate decimal into a Principal/Yield Share decimal
     function interestRateToSharePrice(uint256 interestRate) internal view virtual returns (uint256);
 
-    function supportsInterface(bytes4 interfaceId) external view override returns (bool) {
-        return interfaceId == type(ITempusPool).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(ITempusPool).interfaceId || super.supportsInterface(interfaceId);
     }
 }

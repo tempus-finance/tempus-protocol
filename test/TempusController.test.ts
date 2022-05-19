@@ -67,13 +67,16 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       expect(await controller.owner()).to.equal(addressOf(owner));
     });
 
-    it("Should support ITempusController interface", async() => 
+    it("Should support ITempusController and ERC165 interface", async() => 
     {
       // should not support random interface
       expect(await controller.supportsInterface("0x3c3dbb51")).to.be.false;
   
       // should support ITempusController interface
       expect(await controller.supportsInterface("0xa78f56f5")).to.be.true;
+
+      // should support ERC165 interface
+      expect(await controller.supportsInterface("0x01ffc9a7")).to.be.true;
     });
   });
   
