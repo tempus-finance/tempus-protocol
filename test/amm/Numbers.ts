@@ -47,20 +47,6 @@ export function num(x: BigNumberish | Decimal): number {
   return decimal(x).div(SCALING_FACTOR).toNumber();
 }
 
-// truncates `a` and `b` to BigNumber and returns the bigger BigNumber
-export function max(a: BigNumberish, b: BigNumberish): BigNumber {
-  const x:BigNumber = bn(a);
-  const y:BigNumber = bn(b);
-  return x.gt(y) ? x : y;
-};
-
-// truncates `a` and `b` to BigNumber and returns the smaller BigNumber
-export function min(a: BigNumberish, b: BigNumberish): BigNumber {
-  const x:BigNumber = bn(a);
-  const y:BigNumber = bn(b);
-  return x.lt(y) ? x : y;
-};
-
 function parseScientific(num: string): string {
   // If the number is not in scientific notation return it as it is
   if (!/\d+\.?\d*e[+-]*\d+/i.test(num))
