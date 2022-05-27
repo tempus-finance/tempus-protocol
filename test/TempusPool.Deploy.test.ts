@@ -86,12 +86,15 @@ describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
       .to.equal(":ZeroEstimatedFinalYield");
   });
 
-  it("Should support ITempusPool interface", async() => 
+  it("Should support ITempusPool and ERC165 interface", async() => 
   {
     // should not support random interface
     expect(await pool.supportsInterface("0x3c3dbb51")).to.be.false;
 
     // should support ITempusPool interface
     expect(await pool.supportsInterface("0xa79467db")).to.be.true;
+      
+    // should support ERC165 interface
+    expect(await pool.supportsInterface("0x01ffc9a7")).to.be.true;
   });
 });
