@@ -218,8 +218,6 @@ export class TempusController extends ContractBase {
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus;
     await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
-    await t.principalShare.approve(user, t.address, principals);
-    await t.yieldShare.approve(user, t.address, yields);
     return this.connect(user).exitAmmGivenAmountsOutAndEarlyRedeem(
       amm.address,
       pool.tempus.address,
