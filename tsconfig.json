@@ -2,6 +2,9 @@
   "compilerOptions": {
     // Need this for VS Code to properly detect external library type definitions
     "baseUrl": ".",
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@tempus-sdk/*": [ "tempus-sdk/*" ],
+  }
   }
 }

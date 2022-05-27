@@ -1,4 +1,4 @@
-import { blockTimestamp, increaseTime } from "../test/utils/Utils";
+import { blockTimestamp, increaseTime } from "@tempus-sdk/utils/Utils";
 
 async function main() {
   console.log('Block timestamp before: ', await blockTimestamp());

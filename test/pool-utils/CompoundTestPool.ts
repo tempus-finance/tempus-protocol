@@ -1,8 +1,8 @@
 import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
-import { ContractBase, Signer } from "../utils/ContractBase";
-import { TempusPool, PoolType } from "../tempus/TempusPool";
+import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
+import { TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
-import { Comptroller } from "../utils/Comptroller";
+import { Comptroller } from "@tempus-sdk/utils/Comptroller";
 
 // Compound CErc20
 export class CompoundTestPool extends PoolTestFixture {

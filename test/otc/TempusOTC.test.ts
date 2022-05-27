@@ -1,10 +1,10 @@
 import { expect } from "chai";
-import { Signer } from "../utils/ContractBase";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
-import { TempusOTC } from "../tempus/TempusOTC";
+import { TempusOTC } from "@tempus-sdk/tempus/TempusOTC";
 import { ethers } from "hardhat";
-import { ERC20OwnerMintable } from "../tempus/ERC20OwnerMintable";
-import { expectRevert } from "../utils/Utils";
+import { ERC20OwnerMintable } from "@tempus-sdk/tempus/ERC20OwnerMintable";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
 
 describeNonPool("TempusOTC", async() =>
 {

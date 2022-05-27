@@ -1,8 +1,8 @@
 import { Contract } from "ethers";
-import { ContractBase } from "./utils/ContractBase";
+import { ContractBase } from "@tempus-sdk/utils/ContractBase";
 import { expect } from "chai";
-import { Numberish, toWei } from "./utils/DecimalUtils";
-import { increaseTime } from "./utils/Utils";
+import { Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
+import { increaseTime } from "@tempus-sdk/utils/Utils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
 describeNonPool("MovingAverage", async () => {

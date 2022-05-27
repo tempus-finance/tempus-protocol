@@ -3,7 +3,7 @@ import { Decimal } from "./Decimal";
 import { formatDecimal, Numberish, parseDecimal } from "./DecimalUtils";
 import { addressOf, ContractBase, SignerOrAddress } from "./ContractBase";
 import { ERC20 } from "./ERC20";
-import { TokenInfo } from "../pool-utils/TokenInfo";
+import { TokenInfo } from "../../test/pool-utils/TokenInfo";
 
 export class Comptroller extends ContractBase {
   asset:ERC20; // backing asset DAI or null if ETH

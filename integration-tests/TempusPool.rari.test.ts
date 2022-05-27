@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { ethers, deployments } from 'hardhat';
 import { describeForSinglePool } from "../test/pool-utils/MultiPoolTestSuite";
-import { blockTimestamp } from '../test/utils/Utils';
-import { generateTempusSharesNames, PoolType, TempusPool } from "../test/tempus/TempusPool";
-import { TempusController } from "../test/tempus/TempusController";
-import { ERC20 } from "../test/utils/ERC20";
-import { Decimal, decimal } from "../test/utils/Decimal";
-import { toWei, Numberish, bn } from "../test/utils/DecimalUtils";
+import { blockTimestamp } from '@tempus-sdk/utils/Utils';
+import { generateTempusSharesNames, PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
+import { TempusController } from "@tempus-sdk/tempus/TempusController";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
+import { toWei, Numberish, bn } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getAccounts, getNamedSigners } from "./IntegrationUtils";
 
 const setupWithRariWithdrawalFee = async (rariFee:Decimal) => await deployments.createFixture(async () => {

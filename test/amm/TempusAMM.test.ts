@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import { BigNumber, ethers } from "ethers";
-import { Numberish } from "../utils/DecimalUtils";
-import { Signer } from "../utils/ContractBase";
-import { TempusPool } from "../tempus/TempusPool";
-import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "../utils/Utils";
+import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
+import { evmMine, evmSetAutomine, expectRevert, increaseTime, blockTimestamp } from "@tempus-sdk/utils/Utils";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
-import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
-import { PoolShare, ShareKind } from "../tempus/PoolShare";
-import { ContractBase } from "../utils/ContractBase";
+import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
+import { PoolShare, ShareKind } from "@tempus-sdk/tempus/PoolShare";
+import { ContractBase } from "@tempus-sdk/utils/ContractBase";
 
 interface SwapTestRun {
   amplification:number;

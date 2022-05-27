@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { addressOf, Signer } from "../../utils/ContractBase";
-import { blockTimestamp, expectRevert, increaseTime, setEvmTime } from "../../utils/Utils";
-import { ERC20 } from "../../utils/ERC20";
-import { ERC20OwnerMintable } from "../../tempus/ERC20OwnerMintable";
-import { ERC20Vesting, VestingTerms } from "../../tempus/ERC20Vesting";
+import { addressOf, Signer } from "../@tempus-sdk/utils/ContractBase";
+import { blockTimestamp, expectRevert, increaseTime, setEvmTime } from "../@tempus-sdk/utils/Utils";
+import { ERC20 } from "../@tempus-sdk/utils/ERC20";
+import { ERC20OwnerMintable } from "../@tempus-sdk/tempus/ERC20OwnerMintable";
+import { ERC20Vesting, VestingTerms } from "../@tempus-sdk/tempus/ERC20Vesting";
 import { describeNonPool } from "../../pool-utils/MultiPoolTestSuite";
 
 describeNonPool("ERC20 Vesting", async () => {

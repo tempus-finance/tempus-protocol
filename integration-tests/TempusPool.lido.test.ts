@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { ethers, deployments } from 'hardhat';
 import { describeForSinglePool } from "../test/pool-utils/MultiPoolTestSuite";
-import { blockTimestamp } from '../test/utils/Utils';
-import { generateTempusSharesNames, TempusPool, PoolType } from "../test/tempus/TempusPool";
-import { TempusController } from "../test/tempus/TempusController";
-import { ERC20 } from "../test/utils/ERC20";
-import { ERC20Ether } from "../test/utils/ERC20Ether";
-import { parseDecimal, toWei, bn } from "../test/utils/DecimalUtils";
+import { blockTimestamp } from '@tempus-sdk/utils/Utils';
+import { generateTempusSharesNames, TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
+import { TempusController } from "@tempus-sdk/tempus/TempusController";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
+import { parseDecimal, toWei, bn } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getNamedSigners, getAccounts } from "./IntegrationUtils";
 
 const setup = deployments.createFixture(async () => {

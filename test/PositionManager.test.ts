@@ -1,11 +1,11 @@
 import { expect } from "chai";
-import { ContractBase, Signer } from "./utils/ContractBase";
-import { expectRevert } from "./utils/Utils";
-import { PoolType, TempusPool } from "./tempus/TempusPool";
+import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
+import { PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
-import { TempusPoolAMM } from "./tempus/TempusPoolAMM";
-import { parseDecimal, toWei } from "./utils/DecimalUtils";
+import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
+import { parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Contract, constants } from "ethers";
 
 

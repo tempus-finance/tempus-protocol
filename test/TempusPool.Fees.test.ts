@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 
-import { Signer } from "./utils/ContractBase";
-import { expectRevert } from "./utils/Utils";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
 
 describeForEachPool("TempusPool Fees", (pool:PoolTestFixture) =>
 {

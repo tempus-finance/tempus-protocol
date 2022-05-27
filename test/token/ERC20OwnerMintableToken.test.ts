@@ -1,8 +1,8 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Signer } from "../utils/ContractBase";
-import { expectRevert } from "../utils/Utils";
-import { ERC20OwnerMintable } from "../tempus/ERC20OwnerMintable";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
+import { ERC20OwnerMintable } from "@tempus-sdk/tempus/ERC20OwnerMintable";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Owner Mintable Token", async () => {
