@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { PoolType } from "./tempus/TempusPool";
+import { PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { PoolTestFixture, BTDepositExpectation, RedeemExpectation, WalletExpectation } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
-import { expectRevert } from "./utils/Utils";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
 
 describeForEachPool.except("TempusPool Redeem", [PoolType.Lido], (pool:PoolTestFixture) =>
 {

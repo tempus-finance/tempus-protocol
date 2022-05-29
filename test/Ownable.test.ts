@@ -1,9 +1,9 @@
 import { beforeEach } from "mocha";
 import { Contract } from "ethers";
-import { ContractBase, Signer } from "./utils/ContractBase";
+import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { expectRevert } from "./utils/Utils";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Ownable", async () => {

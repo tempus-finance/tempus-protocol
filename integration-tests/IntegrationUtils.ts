@@ -1,7 +1,7 @@
 import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
-import { ERC20 } from "../test/utils/ERC20";
-import { Decimal, decimal } from "../test/utils/Decimal";
-import { Signer } from '../test/utils/ContractBase';
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
+import { Signer } from '@tempus-sdk/utils/ContractBase';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 
 export class Balances

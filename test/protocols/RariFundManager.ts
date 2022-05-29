@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
-import { Numberish, parseDecimal } from "../utils/DecimalUtils";
-import { ContractBase, SignerOrAddress } from "../utils/ContractBase";
-import { ERC20 } from "../utils/ERC20";
+import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
+import { ContractBase, SignerOrAddress } from "@tempus-sdk/utils/ContractBase";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
 
 export class RariFundManager extends ContractBase {

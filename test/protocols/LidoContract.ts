@@ -1,10 +1,10 @@
 import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
-import { Decimal } from "../utils/Decimal";
-import { Numberish, parseDecimal } from "../utils/DecimalUtils";
-import { SignerOrAddress, Signer, addressOf } from "../utils/ContractBase";
-import { ERC20 } from "../utils/ERC20";
-import { ERC20Ether } from "../utils/ERC20Ether";
+import { Decimal } from "@tempus-sdk/utils/Decimal";
+import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
+import { SignerOrAddress, Signer, addressOf } from "@tempus-sdk/utils/ContractBase";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
 
 export abstract class LidoContract extends ERC20 {
   asset:ERC20Ether; // ERC20 Ether Wrapper (not WETH!)

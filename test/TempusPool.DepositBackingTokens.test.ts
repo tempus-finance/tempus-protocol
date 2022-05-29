@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
-import { expectRevert } from "./utils/Utils";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
 
 describeForEachPool("TempusPool DepositBackingTokens", (pool:PoolTestFixture) =>
 {

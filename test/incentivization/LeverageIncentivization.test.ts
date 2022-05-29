@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import { MockContract } from "@ethereum-waffle/mock-contract";
-import { ContractBase, Signer } from "../utils/ContractBase";
-import { blockTimestamp, expectRevert, setEvmTime } from "../utils/Utils";
-import { Numberish, parseDecimal, toWei } from "../utils/DecimalUtils";
+import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
+import { blockTimestamp, expectRevert, setEvmTime } from "@tempus-sdk/utils/Utils";
+import { Numberish, parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Contract, BigNumber } from "ethers";
-import { ERC20 } from "../utils/ERC20";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { ethers, network, waffle } from "hardhat";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 

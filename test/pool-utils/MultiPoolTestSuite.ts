@@ -5,7 +5,7 @@ import { RariTestPool } from "./RariTestPool";
 import { YearnTestPool } from "./YearnTestPool";
 import { TokenInfo } from "./TokenInfo";
 import { CompoundTestPool } from "./CompoundTestPool";
-import { PoolType } from "../tempus/TempusPool";
+import { PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { Suite, TestFunction, Func, Test } from "mocha";
 import { 
   isIntegrationTestsEnabled, getOnlyRunPool, getOnlyRunToken, getTokens, ALL_POOLS

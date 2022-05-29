@@ -1,14 +1,14 @@
 import { expect } from "chai";
-import { addressOf, Signer } from "./utils/ContractBase";
-import { expectRevert } from "./utils/Utils";
-import { PoolType, TempusPool } from "./tempus/TempusPool";
-import { TempusController } from "./tempus/TempusController";
+import { addressOf, Signer } from "@tempus-sdk/utils/ContractBase";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
+import { PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
+import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
-import { TempusPoolAMM } from "./tempus/TempusPoolAMM";
-import { Numberish } from "./utils/DecimalUtils";
+import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
+import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
 
 describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 {

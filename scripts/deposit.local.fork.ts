@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
-import { ERC20 } from '../test/utils/ERC20';
+import { ERC20 } from '@tempus-sdk/utils/ERC20';
 import depositConfig from '../deposit.local.config';
 
 class DepositLocalForked {

@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { Comptroller } from "../../utils/Comptroller";
-import { Signer } from "../../utils/ContractBase";
-import { expectRevert } from "../../utils/Utils";
-import { PoolType } from "../../tempus/TempusPool";
+import { Comptroller } from "@tempus-sdk/utils/Comptroller";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { expectRevert } from "@tempus-sdk/utils/Utils";
+import { PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
 import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
