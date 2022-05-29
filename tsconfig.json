@@ -4,7 +4,7 @@
     "baseUrl": ".",
     "sourceMap": true,
     "paths": {
-      "@tempus-sdk/*": [ "tempus-sdk/*" ],
-  }
+      "@tempus-sdk/*": ["tempus-sdk/*"],
+    }
   }
 }

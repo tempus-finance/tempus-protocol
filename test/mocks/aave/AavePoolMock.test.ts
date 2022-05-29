@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Aave } from "../../protocols/Aave";
-import { Signer } from "../@tempus-sdk/utils/ContractBase";
-import { PoolType } from "../@tempus-sdk/tempus/TempusPool";
+import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
 import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 

@@ -1,4 +1,4 @@
-import { task } from 'hardhat/config';
+import { task, HardhatUserConfig } from 'hardhat/config';
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
@@ -8,6 +8,9 @@ import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import 'dotenv/config';
+
+// This adds support for typescript paths mappings
+import "tsconfig-paths/register";
 
 if (process.env.HARDHAT_FORK) {
   process.env['HARDHAT_DEPLOY_FORK'] = process.env.HARDHAT_FORK;
@@ -46,10 +49,7 @@ task("accounts", "Prints the list of accounts", async (args: any, hre: any) => {
   }
 });
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-module.exports = {
+const config: HardhatUserConfig = {
   typechain: {
     outDir: `./typechain`,
   },
@@ -129,3 +129,5 @@ module.exports = {
     timeout: 120000
   }
 };
+
+export default config;
