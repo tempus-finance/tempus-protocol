@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish, toRay, fromRay, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, SignerOrAddress, addressOf } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Addressable, addressOf } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 
@@ -34,14 +34,14 @@ export class Aave extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<Decimal> {
+  async assetBalance(user:Addressable): Promise<Decimal> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<Decimal> {
+  async yieldBalance(user:Addressable): Promise<Decimal> {
     return this.toDecimal(await this.contract.getDeposit(addressOf(user)));
   }
 
@@ -56,7 +56,7 @@ export class Aave extends ContractBase {
   /**
    * Sets the AAVE pool's MOCK liquidity index in RAY
    */
-  async setLiquidityIndex(liquidityIndex:Numberish, owner:SignerOrAddress = null): Promise<void> {
+  async setLiquidityIndex(liquidityIndex:Numberish, owner:Addressable = null): Promise<void> {
     if (owner !== null) {
       const prevLiquidityIndex = await this.liquidityIndex();
       const difference = (Number(liquidityIndex) / Number(prevLiquidityIndex)) - 1;
@@ -74,8 +74,8 @@ export class Aave extends ContractBase {
    * @param user User who wants to deposit ETH into AAVE Pool
    * @param amount # of ETH to deposit, eg: 1.0
    */
-  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
+  async deposit(user:Addressable, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
-    await this.contract.connect(user).deposit(this.asset.address, this.toBigNum(amount), addressOf(user), 0);
+    await this.connect(user).deposit(this.asset.address, this.toBigNum(amount), addressOf(user), 0);
   }
 }

@@ -1,7 +1,7 @@
 import { Contract, Transaction } from "ethers";
 import { Decimal } from "./Decimal";
 import { Numberish } from "./DecimalUtils";
-import { ContractBase, Signer, AbstractSigner, Addressable, addressOf } from "./ContractBase";
+import { ContractBase, Signer, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
 
 /**
@@ -61,7 +61,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param contractAddress Address of the contract
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
-  static async attachWithSigner(contractName:string, contractAddress:string, signer:AbstractSigner): Promise<ERC20> {
+  static async attachWithSigner(contractName:string, contractAddress:string, signer:Addressable): Promise<ERC20> {
     if (!signer) {
       throw new Error("attachWithSigner: `signer` must not be null");
     }

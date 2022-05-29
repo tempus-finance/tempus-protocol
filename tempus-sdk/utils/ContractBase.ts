@@ -2,12 +2,16 @@ import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { DecimalConvertible } from "./DecimalConvertible";
 import * as signers from "@nomiclabs/hardhat-ethers/dist/src/signers";
-import * as abstractSigner from "@ethersproject/abstract-signer/src.ts";
+import * as signer from "@ethersproject/abstract-signer/src.ts";
 
-export type AbstractSigner = abstractSigner.Signer;
+/** Alias for ethers Signer with Address */
 export type Signer = signers.SignerWithAddress;
-export type SignerOrAddress = Signer|string;
-export type Addressable = SignerOrAddress|ContractBase|Contract;
+
+/** Alias for accepting abstract signer or an address */
+export type SignerOrAddress = signer.Signer|Signer|string;
+
+/** Alias for all types that can provide an address to the contracts. @see addressOf(addressable) */
+export type Addressable = Signer|string|ContractBase|Contract;
 
 /** @return Address field from signer or address string */
 export function addressOf(addressable: Addressable): string {
@@ -20,7 +24,7 @@ export function addressOf(addressable: Addressable): string {
 }
 
 /** @return Signer or an address string */
-export function signerOf(addressable: Addressable): SignerOrAddress {
+export function signerOf(addressable: Addressable): signer.Signer|Signer|string {
   if (typeof(addressable) === "string")
     return addressable;
   if (addressable instanceof ContractBase || addressable instanceof Contract)
@@ -97,8 +101,9 @@ export abstract class ContractBase extends DecimalConvertible
    * @param contractAddress Address of the contract
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
-  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:AbstractSigner): Promise<Contract> {
-    const factory = await ethers.getContractFactory(contractName, signer);
+  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Addressable): Promise<Contract> {
+    const signerOrProvider = signerOf(signer);
+    const factory = await ethers.getContractFactory(contractName, signerOrProvider);
     return factory.attach(contractAddress);
   }
 }

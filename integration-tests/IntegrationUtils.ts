@@ -2,7 +2,6 @@ import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
 import { Signer } from '@tempus-sdk/utils/ContractBase';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 
 export class Balances
 {
@@ -58,9 +57,9 @@ export async function getAccounts(holderName?:string) {
 /**
  * Maps account names into Signers
  */
-export async function getNamedSigners(accounts:string[]): Promise<SignerWithAddress[]> {
+export async function getNamedSigners(accounts:string[]): Promise<Signer[]> {
   const namedAccounts = await getNamedAccounts();
-  const signers:SignerWithAddress[] = [];
+  const signers:Signer[] = [];
   for (const account of accounts) {
     const signer = await ethers.getSigner(namedAccounts[account]);
     signers.push(signer);

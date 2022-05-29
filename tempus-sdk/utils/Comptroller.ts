@@ -1,7 +1,7 @@
 import { Contract, BigNumber } from "ethers";
 import { Decimal } from "./Decimal";
 import { formatDecimal, Numberish, parseDecimal } from "./DecimalUtils";
-import { addressOf, ContractBase, SignerOrAddress } from "./ContractBase";
+import { addressOf, ContractBase, Addressable } from "./ContractBase";
 import { ERC20 } from "./ERC20";
 import { TokenInfo } from "../../test/pool-utils/TokenInfo";
 
@@ -40,14 +40,14 @@ export class Comptroller extends ContractBase {
   /**
    * @return Current Asset balance of the user as a decimal, eg. 1.0
    */
-  async assetBalance(user:SignerOrAddress): Promise<Decimal> {
+  async assetBalance(user:Addressable): Promise<Decimal> {
     return await this.asset.balanceOf(user);
   }
 
   /**
    * @return Yield Token balance of the user as a decimal, eg. 2.0
    */
-  async yieldBalance(user:SignerOrAddress): Promise<Decimal> {
+  async yieldBalance(user:Addressable): Promise<Decimal> {
     return await this.yieldToken.balanceOf(user);
   }
 
@@ -62,7 +62,7 @@ export class Comptroller extends ContractBase {
   /**
    * Sets the pool Exchange Rate, converting it to exchange rate decimal which has variable decimal precision
    */
-  async setExchangeRate(exchangeRate:Numberish, owner:SignerOrAddress = null): Promise<void> {
+  async setExchangeRate(exchangeRate:Numberish, owner:Addressable = null): Promise<void> {
     if (owner !== null) {
       const prevExchangeRate = await this.exchangeRate();
       const difference = (Number(exchangeRate) / Number(prevExchangeRate)) - 1;
@@ -79,8 +79,8 @@ export class Comptroller extends ContractBase {
    * @notice Add assets to be included in account liquidity calculation
    * @return Success indicator for whether each corresponding market was entered
    */
-  async enterMarkets(user:SignerOrAddress): Promise<boolean> {
-    const results:BigNumber[] = await this.contract.connect(user).enterMarkets([this.yieldToken.address]);
+  async enterMarkets(user:Addressable): Promise<boolean> {
+    const results:BigNumber[] = await this.connect(user).enterMarkets([this.yieldToken.address]);
     return results[0] == BigNumber.from("0"); // no error
   }
 
@@ -91,8 +91,8 @@ export class Comptroller extends ContractBase {
    * @param cTokenAddress The address of the asset to be removed
    * @return Whether or not the account successfully exited the market
    */
-  async exitMarket(user:SignerOrAddress): Promise<boolean> {
-    const result:BigNumber = await this.contract.connect(user).exitMarket(this.yieldToken.address);
+  async exitMarket(user:Addressable): Promise<boolean> {
+    const result:BigNumber = await this.connect(user).exitMarket(this.yieldToken.address);
     return result == BigNumber.from("0"); // no error
   }
 
@@ -100,7 +100,7 @@ export class Comptroller extends ContractBase {
    * @dev MOCK ONLY
    * @return True if user is particiapnt in cToken market
    */
-  async isParticipant(user:SignerOrAddress): Promise<boolean> {
+  async isParticipant(user:Addressable): Promise<boolean> {
     return await this.contract.isParticipant(this.yieldToken.address, addressOf(user));
   }
 
@@ -109,15 +109,15 @@ export class Comptroller extends ContractBase {
    * @param user User to check
    * @param mintAmount How much he wants to mint
    */
-  async mintAllowed(user:SignerOrAddress, mintAmount:Numberish): Promise<boolean> {
+  async mintAllowed(user:Addressable, mintAmount:Numberish): Promise<boolean> {
     return await this.contract.mintAllowed(this.yieldToken.address, addressOf(user), this.asset.toBigNum(mintAmount)) == 0;
   }
 
   /**
    * Calls CErc20 mint() on the CToken, which means CToken must be CErc20 (like cDAI)
    */
-  async mint(user:SignerOrAddress, amount:Numberish) {
+  async mint(user:Addressable, amount:Numberish) {
     await this.asset.approve(user, this.yieldToken.address, amount);
-    await this.yieldToken.contract.connect(user).mint(this.asset.toBigNum(amount));
+    await this.yieldToken.connect(user).mint(this.asset.toBigNum(amount));
   }
 }

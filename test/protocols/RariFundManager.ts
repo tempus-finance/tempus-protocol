@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, SignerOrAddress } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Addressable } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
 
@@ -36,8 +36,8 @@ export class RariFundManager extends ContractBase {
     await this.contract.setInterestRate(parseDecimal(interest.toString(), 18));
   }
 
-  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
+  async deposit(user:Addressable, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
-    await this.contract.connect(user).deposit((await this.asset.symbol()), this.asset.toBigNum(amount));
+    await this.connect(user).deposit((await this.asset.symbol()), this.asset.toBigNum(amount));
   }
 }
