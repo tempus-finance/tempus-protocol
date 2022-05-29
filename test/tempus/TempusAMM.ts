@@ -15,7 +15,7 @@ export const MONTH = DAY * 30;
 
 export const AMP_PRECISION = 1e3;
 
-export class TempusAMM extends ContractBase {
+export class TempusAMM extends ERC20 {
   token0: ERC20;
   token1: ERC20;
   startAmp: number;
@@ -60,20 +60,12 @@ export class TempusAMM extends ContractBase {
     return new TempusAMM(tempusAMM, token0, token1);
   }
 
-  async balanceOf(user:Signer): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.balanceOf(user.address));
-  }
-
   /**
    * @dev Returns the amount of token0/token1 the users' LP tokens represent.
    */
   async compositionBalanceOf(user:Signer): Promise<{token0: Numberish, token1: Numberish}> {
     const [token0, token1] = await this.contract.compositionBalanceOf(user.address);
     return {token0: this.token0.fromBigNum(token0), token1: this.token1.fromBigNum(token1)};
-  }
-
-  async totalSupply(): Promise<Numberish> {
-    return this.fromBigNum(await this.contract.totalSupply());
   }
 
   async getExpectedReturnGivenIn(inAmount: Numberish, tokenIn: PoolShare) : Promise<Numberish> {

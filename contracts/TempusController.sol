@@ -178,11 +178,22 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165
         uint256 yields,
         uint256 principalsStaked,
         uint256 yieldsStaked,
+        ERC20PermitSignature calldata lpPermit,
         uint256 maxLpTokensToRedeem,
         bool toBackingToken
     ) external override nonReentrant returns (uint256) {
         requireRegistered(address(tempusAMM));
         requireRegistered(address(tempusPool));
+
+        tempusAMM.permit(
+            lpPermit.owner, 
+            lpPermit.spender, 
+            lpPermit.value, 
+            lpPermit.deadline, 
+            lpPermit.v, 
+            lpPermit.r, 
+            lpPermit.s
+        );
 
         return
             _exitAmmGivenAmountsOutAndEarlyRedeem(

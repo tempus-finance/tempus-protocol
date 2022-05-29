@@ -1,8 +1,19 @@
-import { Contract, Transaction } from "ethers";
+import { Contract, Transaction, BigNumberish } from "ethers";
 import { Decimal } from "./Decimal";
 import { Numberish } from "./DecimalUtils";
 import { ContractBase, Signer, AbstractSigner, Addressable, addressOf } from "./ContractBase";
 import { IERC20 } from "./IERC20";
+import { keccak256, defaultAbiCoder, toUtf8Bytes, solidityPack } from 'ethers/lib/utils';
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
+
+
+interface PermitStruct {
+  owner: string;
+  spender: string;
+  value: BigNumberish;
+  nonce: BigNumberish;
+  deadline: BigNumberish;
+};
 
 /**
  * Typed wrapper for ERC20 contracts
@@ -149,5 +160,34 @@ export class ERC20 extends ContractBase implements IERC20 {
       to: this.contract.address,
       value: this.toBigNum(amount)
     });
+  }
+
+  permitTypes = {
+    Permit: [
+      {name: "owner", type: "address"},
+      {name: "spender", type: "address"},
+      {name: "value", type: "uint256"},
+      {name: "nonce", type: "uint256"},
+      {name: "deadline", type: "uint256"}
+    ]
+  };
+
+  async getPermitStruct(owner: SignerWithAddress, spender: Addressable, value: Numberish, deadline: BigNumberish): Promise<PermitStruct> {  
+    return {
+      owner: owner.address,
+      spender: addressOf(spender),
+      value: this.toBigNum(value),
+      nonce: await this.contract.nonces(owner.address),
+      deadline: deadline
+    };
+  }
+
+  async getDomain(chainId: number): Promise<any> {
+    return {
+      name: await this.name(),
+      version: '1',
+      chainId: chainId,
+      verifyingContract: this.address
+    };
   }
 }

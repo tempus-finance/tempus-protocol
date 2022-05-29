@@ -251,7 +251,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
   describe("Exit AMM and Reedem", () => 
   {
-    it("Exit AMM and redeem before maturity", async () => 
+    it.only("Exit AMM and redeem before maturity", async () => 
     {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
 

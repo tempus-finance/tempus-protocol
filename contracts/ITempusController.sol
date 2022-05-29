@@ -4,6 +4,18 @@ pragma solidity 0.8.10;
 import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
 
+
+/// Parameters for ERC20Permit.permit call
+struct ERC20PermitSignature {
+    address owner;
+    address spender;
+    uint256 value;
+    uint256 deadline;
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
+}
+
 interface ITempusController {
     /// @dev Event emitted on a successful BT/YBT deposit.
     /// @param pool The Tempus Pool to which assets were deposited
@@ -265,6 +277,7 @@ interface ITempusController {
     /// @param yields Amount of Yields to redeem
     /// @param principalsStaked Amount of staked principals (in TempusAMM) to redeem
     /// @param yieldsStaked Amount of staked yields (in TempusAMM) to redeem
+    /// @param lpPermit Permit signature for spending yields
     /// @param maxLpTokensToRedeem Maximum amount of LP tokens to spend for staked shares redemption
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
     /// @return Amount of Yield Bearing Tokens (if `toBackingToken == false`) or
@@ -276,6 +289,7 @@ interface ITempusController {
         uint256 yields,
         uint256 principalsStaked,
         uint256 yieldsStaked,
+        ERC20PermitSignature calldata lpPermit,
         uint256 maxLpTokensToRedeem,
         bool toBackingToken
     ) external returns (uint256);

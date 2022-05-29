@@ -1,8 +1,11 @@
-import { Contract, Transaction } from "ethers";
+import { Contract, Transaction, Wallet } from "ethers";
 import { Numberish, toWei } from "../utils/DecimalUtils";
 import { ContractBase, Signer, SignerOrAddress, addressOf } from "../utils/ContractBase";
 import { TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
+import { ethers, getChainId } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
+import { splitSignature } from "ethers/lib/utils";
 
 /**
  * Wrapper around TempusController
@@ -209,7 +212,7 @@ export class TempusController extends ContractBase {
 
   async exitAmmGivenAmountsOutAndEarlyRedeem(
     pool: PoolTestFixture,
-    user: SignerOrAddress,
+    user: SignerWithAddress,
     principals: Numberish,
     yields: Numberish,
     principalsLp: Numberish,
@@ -217,7 +220,25 @@ export class TempusController extends ContractBase {
     toBackingToken: boolean
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus;
-    await amm.contract.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
+    const value = await amm.balanceOf(user);
+
+    const permitData = await amm.getPermitStruct(user, this, value, "100000000000");
+    const signature = splitSignature(await user._signTypedData(
+      await amm.getDomain(await user.getChainId()), 
+      amm.permitTypes, 
+      permitData
+    ));
+
+    const lpPermit = {
+      owner: permitData.owner,
+      spender: permitData.spender,
+      value: permitData.value,
+      deadline: permitData.deadline,
+      v: signature.v,
+      r: signature.r,
+      s: signature.s
+    };
+
     return this.connect(user).exitAmmGivenAmountsOutAndEarlyRedeem(
       amm.address,
       pool.tempus.address,
@@ -225,7 +246,8 @@ export class TempusController extends ContractBase {
       t.yieldShare.toBigNum(yields),
       t.principalShare.toBigNum(principalsLp),
       t.yieldShare.toBigNum(yieldsLp),
-      amm.contract.balanceOf(addressOf(user)),
+      lpPermit,
+      amm.toBigNum(value),
       toBackingToken
     );
   }
