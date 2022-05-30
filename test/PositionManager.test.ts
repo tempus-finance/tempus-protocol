@@ -3,7 +3,7 @@ import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
 import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
-import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
 import { parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Contract, constants } from "ethers";

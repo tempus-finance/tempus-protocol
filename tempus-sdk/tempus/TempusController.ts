@@ -2,7 +2,7 @@ import { Contract, Transaction } from "ethers";
 import { Numberish, toWei } from "../utils/DecimalUtils";
 import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
 import { TempusPool } from "./TempusPool";
-import { PoolTestFixture } from "../../test/pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "./PoolTestFixture";
 
 /**
  * Wrapper around TempusController

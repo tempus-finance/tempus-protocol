@@ -1,4 +1,4 @@
-import { PoolTestFixture } from "./PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { AaveTestPool } from "./AaveTestPool";
 import { LidoTestPool } from "./LidoTestPool";
 import { RariTestPool } from "./RariTestPool";

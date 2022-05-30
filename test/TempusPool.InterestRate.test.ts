@@ -1,6 +1,6 @@
 
 import { expect } from "chai";
-import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 
 describeForEachPool("TempusPool InterestRate", (pool:PoolTestFixture) =>

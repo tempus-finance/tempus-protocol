@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Aave } from "../../protocols/Aave";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { PoolType } from "@tempus-sdk/tempus/TempusPool";
-import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
 describeForEachPool.type("AAVE Mock", [PoolType.Aave], async (testPool:PoolTestFixture) =>

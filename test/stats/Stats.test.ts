@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
-import { PoolTestFixture } from "../pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { Stats } from "@tempus-sdk/tempus/Stats";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";

@@ -1,4 +1,4 @@
-import { PoolTestFixture, TempusAMMParams } from "./PoolTestFixture";
+import { PoolTestFixture, TempusAMMParams } from "@tempus-sdk/tempus/PoolTestFixture";
 import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
 import { TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";

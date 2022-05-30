@@ -1,16 +1,16 @@
 import { expect } from "chai";
 import { Transaction } from "ethers";
 import { deployments, ethers } from "hardhat";
-import { ContractBase, Signer, Addressable } from "@tempus-sdk/utils/ContractBase";
-import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "@tempus-sdk/tempus/TempusPool";
-import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "@tempus-sdk/utils/Utils";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { IERC20 } from "@tempus-sdk/utils/IERC20";
-import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
-import { getRevertMessage } from "@tempus-sdk/utils/Utils";
-import { TempusController } from "@tempus-sdk/tempus/TempusController";
-import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
-import { PoolShare } from "@tempus-sdk/tempus/PoolShare";
+import { ContractBase, Signer, Addressable } from "../utils/ContractBase";
+import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "./TempusPool";
+import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
+import { ERC20 } from "../utils/ERC20";
+import { IERC20 } from "../utils/IERC20";
+import { Numberish } from "../utils/DecimalUtils";
+import { getRevertMessage } from "../utils/Utils";
+import { TempusController } from "../tempus/TempusController";
+import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
+import { PoolShare } from "../tempus/PoolShare";
 import { strict as assert } from 'assert';
 
 const ROUNDING_ERROR_TOLERANCE_THRESHOLD = 0.00000001; /// allow for 0.000001% error in YBT amounts 

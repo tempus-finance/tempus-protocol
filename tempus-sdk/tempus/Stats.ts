@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { Numberish, toWei } from "../utils/DecimalUtils";
 import { ContractBase } from "../utils/ContractBase";
-import { PoolTestFixture } from "../../test/pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "./PoolTestFixture";
 
 export class Stats extends ContractBase {
   constructor(contract:Contract) {
