@@ -1,9 +1,9 @@
 import { Contract, BigNumber } from "ethers";
-import { Decimal } from "./Decimal";
-import { formatDecimal, Numberish, parseDecimal } from "./DecimalUtils";
-import { addressOf, ContractBase, Addressable } from "./ContractBase";
-import { ERC20 } from "./ERC20";
-import { TokenInfo } from "../../test/pool-utils/TokenInfo";
+import { Decimal } from "@tempus-sdk/utils/Decimal";
+import { formatDecimal, Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
+import { addressOf, ContractBase, Addressable } from "@tempus-sdk/utils/ContractBase";
+import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { TokenInfo } from "../pool-utils/TokenInfo";
 
 export class Comptroller extends ContractBase {
   asset:ERC20; // backing asset DAI or null if ETH
