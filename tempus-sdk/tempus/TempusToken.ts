@@ -1,5 +1,5 @@
 import { Numberish } from "../utils/DecimalUtils";
-import { SignerOrAddress, addressOf } from "../utils/ContractBase";
+import { Addressable, addressOf } from "../utils/ContractBase";
 import { ERC20 } from "../utils/ERC20";
 import { Transaction } from "@ethersproject/transactions";
 
@@ -16,7 +16,7 @@ export class TempusToken extends ERC20 {
    * @param sender Account that is issuing the burn.
    * @param amount Number of tokens to burn
    */
-  async burn(sender:SignerOrAddress, amount:Numberish): Promise<void> {
+  async burn(sender:Addressable, amount:Numberish): Promise<void> {
     await this.connect(sender).burn(this.toBigNum(amount));
   }
 
@@ -26,7 +26,7 @@ export class TempusToken extends ERC20 {
    * @param account Account to which we issue tokens
    * @param amount Number of tokens to mint
    */
-  async mint(sender:SignerOrAddress, account:SignerOrAddress, amount:Numberish): Promise<Transaction> {
+  async mint(sender:Addressable, account:Addressable, amount:Numberish): Promise<Transaction> {
     return this.connect(sender).mint(addressOf(account), this.toBigNum(amount));
   }
 

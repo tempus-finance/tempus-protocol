@@ -7,7 +7,7 @@ import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { bn, Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getAccounts } from "./IntegrationUtils";
-import { SignerOrAddress } from "@tempus-sdk/utils/ContractBase";
+import { Addressable } from "@tempus-sdk/utils/ContractBase";
 
 const setupDai = deployments.createFixture(async () => {
   await deployments.fixture(undefined, { keepExistingDeployments: true, });
@@ -51,7 +51,7 @@ const setupUsdc = deployments.createFixture(async () => {
   return { contracts: { tempusPool, usdc, cUsdc }, signers: { signer1, signer2 } };
 });
 
-async function depositBacking(user:SignerOrAddress, pool:TempusPool, amount:Numberish) {
+async function depositBacking(user:Addressable, pool:TempusPool, amount:Numberish) {
   await pool.asset.approve(user, pool.controller, amount);
   await pool.controller.depositBacking(user, pool, amount, user);
 }

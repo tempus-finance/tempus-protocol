@@ -1,10 +1,10 @@
 import { ethers, network } from 'hardhat';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signers';
 import { ERC20 } from '@tempus-sdk/utils/ERC20';
+import { Signer } from '@tempus-sdk/utils/ContractBase';
 import depositConfig from '../deposit.local.config';
 
 class DepositLocalForked {
-  private owner: SignerWithAddress;
+  private owner: Signer;
 
   public async deploy() {
     this.owner = (await ethers.getSigners())[0];

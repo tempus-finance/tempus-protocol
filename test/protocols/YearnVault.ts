@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 import { Numberish, formatDecimal, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, SignerOrAddress } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Addressable } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
 
@@ -36,7 +36,7 @@ export class YearnVault extends ContractBase {
   /**
    * Sets the pool price per share
    */
-  async setPricePerShare(pricePerShare:Numberish, owner:SignerOrAddress = null): Promise<void> {
+  async setPricePerShare(pricePerShare:Numberish, owner:Addressable = null): Promise<void> {
     if (owner !== null) {
       const prevExchangeRate = await this.pricePerShare();
       const difference = (Number(pricePerShare) / Number(prevExchangeRate)) - 1;
@@ -49,12 +49,12 @@ export class YearnVault extends ContractBase {
     await this.contract.setPricePerShare(parseDecimal(pricePerShare.toString(), this.yieldToken.decimals));
   }
 
-  async deposit(user:SignerOrAddress, amount:Numberish): Promise<void> {
+  async deposit(user:Addressable, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
-    await this.contract.connect(user).deposit(this.asset.toBigNum(amount));
+    await this.connect(user).deposit(this.asset.toBigNum(amount));
   }
 
-  async withdraw(user:SignerOrAddress, maxShares:Numberish, recipient: SignerOrAddress): Promise<void> {
-    await this.contract.connect(user).deposit(this.yieldToken.toBigNum(maxShares), recipient);
+  async withdraw(user:Addressable, maxShares:Numberish, recipient: Addressable): Promise<void> {
+    await this.connect(user).deposit(this.yieldToken.toBigNum(maxShares), recipient);
   }
 }

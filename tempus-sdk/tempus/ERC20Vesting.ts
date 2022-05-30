@@ -1,6 +1,6 @@
 import { Contract, Transaction } from "ethers";
 import { Numberish } from "../utils/DecimalUtils";
-import { ContractBase, SignerOrAddress, addressOf } from "../utils/ContractBase";
+import { ContractBase, Addressable, addressOf } from "../utils/ContractBase";
 import { ERC20 } from "../utils/ERC20";
 
 export interface VestingTerms {
@@ -29,7 +29,7 @@ export class ERC20Vesting extends ContractBase {
     }
   }
 
-  static async create(token:ERC20, wallet: SignerOrAddress): Promise<ERC20Vesting> {
+  static async create(token:ERC20, wallet: Addressable): Promise<ERC20Vesting> {
     const contractName = "ERC20Vesting";
     const contract = await this.deployContract(contractName, token.address, addressOf(wallet));
     return new ERC20Vesting(contractName, token, contract);
@@ -44,8 +44,8 @@ export class ERC20Vesting extends ContractBase {
   }
 
   async startVesting(
-    sender:SignerOrAddress, 
-    receiver:SignerOrAddress,
+    sender:Addressable, 
+    receiver:Addressable,
     terms:VestingTerms
   ):Promise<Transaction> {
     this.erc20.approve(sender, this.address, terms.amount);
@@ -56,8 +56,8 @@ export class ERC20Vesting extends ContractBase {
   }
 
   async startVestingBatch(
-    sender:SignerOrAddress, 
-    receivers:SignerOrAddress[],
+    sender:Addressable, 
+    receivers:Addressable[],
     terms:VestingTerms[]
   ):Promise<Transaction> {
     let amountToVest = 0;
@@ -69,15 +69,11 @@ export class ERC20Vesting extends ContractBase {
     }
     await this.erc20.approve(sender, this.address, amountToVest);
 
-    let convertedReceivers:String[] = [];
-    for(let i = 0; i < receivers.length; i++) {
-      convertedReceivers.push(addressOf(receivers[i]));
-    }
-
-    return this.connect(sender).startVestingBatch(convertedReceivers, convertedTerms);
+    const receiverAddrs:string[] = receivers.map(addr => addressOf(addr));
+    return this.connect(sender).startVestingBatch(receiverAddrs, convertedTerms);
   }
 
-  async getVestingTerms(receiver:SignerOrAddress): Promise<VestingTerms> {
+  async getVestingTerms(receiver:Addressable): Promise<VestingTerms> {
     const terms = await this.contract.getVestingTerms(addressOf(receiver));
     return {
       startTime: terms.startTime,
@@ -87,19 +83,19 @@ export class ERC20Vesting extends ContractBase {
     }
   }
 
-  async stopVesting(sender:SignerOrAddress, receiver:SignerOrAddress): Promise<Transaction> {
+  async stopVesting(sender:Addressable, receiver:Addressable): Promise<Transaction> {
     return this.connect(sender).stopVesting(addressOf(receiver));
   }
 
-  async transferVesting(sender:SignerOrAddress, oldAddress:SignerOrAddress, newAddress:SignerOrAddress): Promise<Transaction> {
+  async transferVesting(sender:Addressable, oldAddress:Addressable, newAddress:Addressable): Promise<Transaction> {
     return this.connect(sender).transferVesting(addressOf(oldAddress), addressOf(newAddress));
   }
 
-  async claimable(receiver:SignerOrAddress): Promise<Numberish> {
+  async claimable(receiver:Addressable): Promise<Numberish> {
     return this.fromBigNum(await this.contract.claimable(addressOf(receiver)));
   }
 
-  async claim(sender:SignerOrAddress, amount?:Numberish): Promise<any> {
+  async claim(sender:Addressable, amount?:Numberish): Promise<any> {
     if (amount === undefined) {
       return this.connect(sender)['claim()']();
     } else {

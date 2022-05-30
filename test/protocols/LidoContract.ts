@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { BigNumber, Contract } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { SignerOrAddress, Signer, addressOf } from "@tempus-sdk/utils/ContractBase";
+import { Addressable, Signer, addressOf } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
 
@@ -17,7 +17,7 @@ export abstract class LidoContract extends ERC20 {
   }
 
   /** @return stETH balance of an user */
-  async sharesOf(user:SignerOrAddress): Promise<Decimal> {
+  async sharesOf(user:Addressable): Promise<Decimal> {
     return this.toDecimal(await this.contract.sharesOf(addressOf(user)));
   }
 
@@ -60,7 +60,7 @@ export abstract class LidoContract extends ERC20 {
    */
   abstract setInterestRate(interestRate:Numberish): Promise<void>;
 
-  async submit(signer:SignerOrAddress, amount:Numberish): Promise<Numberish> {
+  async submit(signer:Addressable, amount:Numberish): Promise<Numberish> {
     const val = this.toBigNum(amount); // payable call, set value:
     return await this.connect(signer).submit(addressOf(signer), {value: val})
   }
