@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Comptroller } from "@tempus-sdk/utils/Comptroller";
+import { Comptroller } from "../../protocols/Comptroller";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { PoolType } from "@tempus-sdk/tempus/TempusPool";
