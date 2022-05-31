@@ -97,6 +97,8 @@ if [ "$PARALLEL" == "true" ]; then
     wait $pid || let "FAILS+=1"
   done
 else
+  FAILS=0
+  TOTAL=1
   echo Start Unparallelized Test $ONLY_POOL - $ONLY_TOKEN
   cross-env ONLY_POOL=$ONLY_POOL ONLY_TOKEN=$ONLY_TOKEN $ENVS $CMD
 fi

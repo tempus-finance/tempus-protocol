@@ -26,7 +26,8 @@ jobs:
       - node/install-packages:
           pkg-manager: yarn
       - run:
-          command:
+          command: |
+            export ETH_NODE_URI_MAINNET=$ETH_NODE_URI_MAINNET_ALCHEMY
             yarn coverage:integration
       - coveralls/upload:
           parallel: true
@@ -119,7 +120,8 @@ jobs:
           pkg-manager: yarn
       - run:
           name: "Deploy on forked mainnet"
-          command: yarn deploy-ci:fork:mainnet
+          command:
+            yarn deploy-ci:fork:mainnet
 
   job-MythX-Pool:
     docker:
