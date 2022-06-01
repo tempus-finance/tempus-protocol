@@ -57,7 +57,7 @@ export abstract class ContractBase extends DecimalConvertible
   }
   
   /** Connects a user to the contract, so that transactions can be sent by the user */
-  connect(user:Addressable): Contract {
+  connect(user:Signer): Contract {
     const signerOrProvider = signerOf(user);
     return this.contract.connect(signerOrProvider);
   }
@@ -99,7 +99,7 @@ export abstract class ContractBase extends DecimalConvertible
    * @param contractAddress Address of the contract
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
-  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Addressable): Promise<Contract> {
+  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Signer): Promise<Contract> {
     const signerOrProvider = signerOf(signer);
     const factory = await ethers.getContractFactory(contractName, signerOrProvider);
     return factory.attach(contractAddress);

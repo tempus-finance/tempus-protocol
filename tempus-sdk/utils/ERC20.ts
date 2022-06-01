@@ -61,7 +61,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param contractAddress Address of the contract
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
-  static async attachWithSigner(contractName:string, contractAddress:string, signer:Addressable): Promise<ERC20> {
+  static async attachWithSigner(contractName:string, contractAddress:string, signer:Signer): Promise<ERC20> {
     if (!signer) {
       throw new Error("attachWithSigner: `signer` must not be null");
     }
@@ -103,7 +103,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param recipient ERC20 transfer recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
+  async transfer(sender:Signer, recipient:Addressable, amount:Numberish): Promise<any> {
     return await this.connect(sender).transfer(addressOf(recipient), this.toBigNum(amount));
   }
 
@@ -124,7 +124,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param spender ERC20 approve's, spender's address
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any> {
+  async approve(caller:Signer, spender:Addressable, amount:Numberish): Promise<any> {
     return await this.connect(caller).approve(addressOf(spender), this.toBigNum(amount));
   }
 

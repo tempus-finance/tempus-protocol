@@ -1,6 +1,6 @@
 import { Contract, Transaction } from "ethers";
 import { Numberish } from "../utils/DecimalUtils";
-import { ContractBase, Addressable, addressOf } from "../utils/ContractBase";
+import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
 import { ERC20 } from "../utils/ERC20";
 
 export interface VestingTerms {
@@ -44,7 +44,7 @@ export class ERC20Vesting extends ContractBase {
   }
 
   async startVesting(
-    sender:Addressable, 
+    sender:Signer, 
     receiver:Addressable,
     terms:VestingTerms
   ):Promise<Transaction> {
@@ -56,7 +56,7 @@ export class ERC20Vesting extends ContractBase {
   }
 
   async startVestingBatch(
-    sender:Addressable, 
+    sender:Signer,
     receivers:Addressable[],
     terms:VestingTerms[]
   ):Promise<Transaction> {
@@ -83,11 +83,11 @@ export class ERC20Vesting extends ContractBase {
     }
   }
 
-  async stopVesting(sender:Addressable, receiver:Addressable): Promise<Transaction> {
+  async stopVesting(sender:Signer, receiver:Addressable): Promise<Transaction> {
     return this.connect(sender).stopVesting(addressOf(receiver));
   }
 
-  async transferVesting(sender:Addressable, oldAddress:Addressable, newAddress:Addressable): Promise<Transaction> {
+  async transferVesting(sender:Signer, oldAddress:Addressable, newAddress:Addressable): Promise<Transaction> {
     return this.connect(sender).transferVesting(addressOf(oldAddress), addressOf(newAddress));
   }
 
@@ -95,7 +95,7 @@ export class ERC20Vesting extends ContractBase {
     return this.fromBigNum(await this.contract.claimable(addressOf(receiver)));
   }
 
-  async claim(sender:Addressable, amount?:Numberish): Promise<any> {
+  async claim(sender:Signer, amount?:Numberish): Promise<any> {
     if (amount === undefined) {
       return this.connect(sender)['claim()']();
     } else {

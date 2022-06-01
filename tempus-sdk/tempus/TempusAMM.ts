@@ -1,6 +1,6 @@
 import { Contract, Transaction } from "ethers";
 import { Numberish, toWei } from "../utils/DecimalUtils";
-import { ContractBase, Signer } from "../utils/ContractBase";
+import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
 import { ERC20 } from "../utils/ERC20";
 import { blockTimestamp, setEvmTime } from "../utils/Utils";
 import { TempusController } from "./TempusController";
@@ -63,8 +63,8 @@ export class TempusAMM extends ERC20 {
   /**
    * @dev Returns the amount of token0/token1 the users' LP tokens represent.
    */
-  async compositionBalanceOf(user:Signer): Promise<{token0: Numberish, token1: Numberish}> {
-    const [token0, token1] = await this.contract.compositionBalanceOf(user.address);
+  async compositionBalanceOf(user:Addressable): Promise<{token0: Numberish, token1: Numberish}> {
+    const [token0, token1] = await this.contract.compositionBalanceOf(addressOf(user));
     return {token0: this.token0.fromBigNum(token0), token1: this.token1.fromBigNum(token1)};
   }
 
