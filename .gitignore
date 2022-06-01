@@ -6,7 +6,7 @@ coverage/*
 coverage.json
 deployments/hardhat
 deployments/localhost
-typechain/*
+typechain-types/*
 .env
 .vscode/*
 mythxOutput.json

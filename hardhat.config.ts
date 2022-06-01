@@ -51,7 +51,7 @@ task("accounts", "Prints the list of accounts", async (args: any, hre: any) => {
 
 const config: HardhatUserConfig = {
   typechain: {
-    outDir: `./typechain`,
+    outDir: `./typechain-types`,
   },
   abiExporter: {
     path: './abi-artifacts',
