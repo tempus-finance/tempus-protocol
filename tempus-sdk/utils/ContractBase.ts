@@ -1,8 +1,9 @@
+import "@nomiclabs/hardhat-ethers"; // hardhat.ethers
 import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { DecimalConvertible } from "./DecimalConvertible";
 import * as signers from "@nomiclabs/hardhat-ethers/dist/src/signers";
-import * as signer from "@ethersproject/abstract-signer/src.ts";
+import * as signer from "@ethersproject/abstract-signer";
 
 /** Alias for ethers Signer with Address */
 export type Signer = signers.SignerWithAddress;
@@ -71,7 +72,7 @@ export abstract class ContractBase extends DecimalConvertible
    */
   static async deployContract(contractName:string, ...args: any[]): Promise<Contract> {
     const factory = await ethers.getContractFactory(contractName);
-    return await factory.deploy(...args);
+    return factory.deploy(...args);
   }
 
   /**
@@ -82,7 +83,7 @@ export abstract class ContractBase extends DecimalConvertible
    */
   static async deployContractBy(contractName:string, deployer?:Signer, ...args: any[]): Promise<Contract> {
     const factory = await ethers.getContractFactory(contractName, deployer);
-    return await factory.deploy(...args);
+    return factory.deploy(...args);
   }
 
   /**

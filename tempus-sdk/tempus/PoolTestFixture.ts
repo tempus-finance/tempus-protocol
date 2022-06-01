@@ -1,3 +1,5 @@
+import "@nomiclabs/hardhat-ethers"; // hardhat.ethers
+import "hardhat-deploy"; // hardhat.deployments
 import { expect } from "chai";
 import { Transaction } from "ethers";
 import { deployments, ethers } from "hardhat";
