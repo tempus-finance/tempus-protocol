@@ -1,0 +1,41 @@
+{
+  "name": "@tempus/pool-sdk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.ts",
+  "types": "lib/index.d.ts",
+  "files": [
+    "tempus",
+    "utils"
+  ],
+  "scripts": {
+    "prepack": "npx tsc",
+    "prepublish": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tempus-finance/tempus-protocol.git"
+  },
+  "keywords": [
+    "tempus",
+    "finance",
+    "protocol",
+    "tempus finance",
+    "tempus protocol",
+    "sdk"
+  ],
+  "author": "tempus.finance",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tempus-finance/tempus-protocol/issues"
+  },
+  "homepage": "https://github.com/tempus-finance/tempus-protocol",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.10",
+    "chai": "^4.3.4",
+    "ethers": "^5.4.1",
+    "hardhat": "^2.2.1",
+    "hardhat-deploy": "^0.8.9",
+    "typescript": "^4.7.2"
+  }
+}
