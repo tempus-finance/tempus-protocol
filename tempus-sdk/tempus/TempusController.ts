@@ -3,6 +3,7 @@ import { Numberish, toWei } from "../utils/DecimalUtils";
 import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
 import { TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "./PoolTestFixture";
+import { constructPermit } from "../utils/PermitUtils";
 
 /**
  * Wrapper around TempusController
@@ -209,55 +210,76 @@ export class TempusController extends ContractBase {
 
   async exitAmmGivenAmountsOutAndEarlyRedeem(
     pool: PoolTestFixture,
-    user: Addressable,
+    user: Signer,
     principals: Numberish,
     yields: Numberish,
     principalsLp: Numberish,
     yieldsLp: Numberish,
-    toBackingToken: boolean
+    toBackingToken: boolean,
+    withApprovals: Boolean = false,
+    deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus;
-    await amm.connect(user).approve(this.address, amm.contract.balanceOf(addressOf(user)));
+    const value = await amm.balanceOf(user.address)
+
+    if (withApprovals) {
+      await amm.approve(user, this, value);
+    }
+
     return this.connect(user).exitAmmGivenAmountsOutAndEarlyRedeem(
       amm.address,
       pool.tempus.address,
+      withApprovals ? [] : [await constructPermit(amm, user, this, value, deadline)],
       t.principalShare.toBigNum(principals),
       t.yieldShare.toBigNum(yields),
       t.principalShare.toBigNum(principalsLp),
       t.yieldShare.toBigNum(yieldsLp),
-      amm.contract.balanceOf(addressOf(user)),
+      amm.toBigNum(value),
       toBackingToken
     );
   }
 
   async exitAmmGivenLpAndRedeem(
     pool:PoolTestFixture, 
-    user: Addressable, 
+    user: Signer, 
     lpTokens:Numberish, 
     principals:Numberish, 
     yields:Numberish, 
     toBacking: boolean,
     maxLeftoverShares: Numberish,
+    withApprovals: Boolean = false,
     yieldsRate: Numberish = 1,
     maxSlippage: Numberish = 1,
     deadline: Date = new Date(8640000000000000) /// default is 9/12/275760 (no deadline)
   ): Promise<Transaction> {
     const amm = pool.amm, t = pool.tempus, addr = addressOf(user);
-    await amm.connect(user).approve(this.address, amm.contract.balanceOf(addr));
-    await t.principalShare.connect(user).approve(this.address, t.principalShare.contract.balanceOf(addr));
-    await t.yieldShare.connect(user).approve(this.address, t.yieldShare.contract.balanceOf(addr));
+
+    if (withApprovals) {
+      await amm.approve(user, this.address, lpTokens);
+      await t.principalShare.approve(user, this.address, principals);
+      await t.yieldShare.approve(user, this.address, yields);
+    }
 
     return this.connect(user).exitAmmGivenLpAndRedeem(
       amm.address,
       pool.tempus.address,
+      withApprovals 
+        ? [] 
+        : [
+          await constructPermit(amm, user, this, lpTokens, deadline),
+          await constructPermit(t.principalShare, user, this, principals, deadline),
+          await constructPermit(t.yieldShare, user, this, yields, deadline)
+        ],
       amm.toBigNum(lpTokens),
       amm.principalShare.toBigNum(principals),
       amm.yieldShare.toBigNum(yields),
-      0,
-      0,
-      t.principalShare.toBigNum(maxLeftoverShares),
-      amm.principalShare.toBigNum(yieldsRate),
-      toWei(maxSlippage),
+      {
+        minPrincipalsStaked: 0,
+        minYieldsStaked: 0,
+        maxLeftoverShares: t.principalShare.toBigNum(maxLeftoverShares),
+        yieldsRate: amm.principalShare.toBigNum(yieldsRate),
+        maxSlippage: toWei(maxSlippage)
+      },
       toBacking,
       parseInt((deadline.getTime() / 1000).toFixed(0))
     );
