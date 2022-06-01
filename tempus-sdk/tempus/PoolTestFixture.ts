@@ -58,17 +58,17 @@ function getRedeemShareAmounts(pegged:boolean, expects:RedeemExpectation): Redee
 }
 
 export class UserState {
-  principalShares:Number;
-  yieldShares:Number;
-  yieldBearing:Number;
-  yieldPeggedToAsset:boolean;
+  principalShares:Number = 0;
+  yieldShares:Number = 0;
+  yieldBearing:Number = 0;
+  yieldPeggedToAsset:boolean = false;
 
-  public expectMulti(principalShares:number, yieldShares:number, yieldBearingPegged:number, yieldBearingVariable:number, message:string = null) {
+  public expectMulti(principalShares:number, yieldShares:number, yieldBearingPegged:number, yieldBearingVariable:number, message?:string) {
     const yieldBearing = this.yieldPeggedToAsset ? yieldBearingPegged : yieldBearingVariable;
     this.expect(principalShares, yieldShares, yieldBearing, message);
   }
 
-  public expect(principalShares:number, yieldShares:number, yieldBearing:number, message:string = null) {
+  public expect(principalShares:number, yieldShares:number, yieldBearing:number, message?:string) {
     const msg = (message||"") + " expected " + (this.yieldPeggedToAsset ? "pegged" : "unpegged")
               + " balances TPS="+principalShares
               + " TYS="+yieldShares
@@ -131,32 +131,32 @@ export abstract class PoolTestFixture {
   integration:boolean;
 
   // initialized by initPool()
-  tempus:TempusPool;
-  controller:TempusController;
-  amm:TempusPoolAMM;
-  signers:Signer[];
+  tempus!:TempusPool;
+  controller!:TempusController;
+  amm!:TempusPoolAMM;
+  signers!:Signer[];
 
   // common state reset when a fixture is instantiated
-  initialRate:number; // initial interest rate
-  yieldEst:number; // initial estimated yield
-  maturityTime:number; // UNIX timestamp in milliseconds
-  poolDuration:number; // pool duration in seconds
-  names:TempusSharesNames;
+  initialRate!:number; // initial interest rate
+  yieldEst!:number; // initial estimated yield
+  maturityTime!:number; // UNIX timestamp in milliseconds
+  poolDuration!:number; // pool duration in seconds
+  names!:TempusSharesNames;
 
   /** The underlying pool contract, such as Aave, Lido or Comptroller */
-  pool:ContractBase;
+  pool!:ContractBase;
 
   /** The BackingToken of the underlying pool */
-  asset:IERC20;
+  asset!:IERC20;
 
   /** The YieldBearingToken of the underlying pool */
-  ybt:ERC20;
+  ybt!:ERC20;
 
   /** Tempus Principal Share */
-  principals:PoolShare;
+  principals!:PoolShare;
 
   /** Tempus Yield Share */
-  yields:PoolShare; 
+  yields!:PoolShare; 
 
   constructor(type:PoolType, acceptsEther:boolean, yieldPeggedToAsset:boolean, integration:boolean) {
     this.type = type;
@@ -217,7 +217,7 @@ export abstract class PoolTestFixture {
   /**
    * Deposit BackingTokens into TempusPool
    */
-  async depositBT(user:Signer, backingTokenAmount:Numberish, recipient:Addressable = user, ethValue: Numberish = undefined): Promise<Transaction> {
+  async depositBT(user:Signer, backingTokenAmount:Numberish, recipient:Addressable = user, ethValue?: Numberish): Promise<Transaction> {
     const ethToTransfer = this.acceptsEther ? ((ethValue == undefined) ? backingTokenAmount : ethValue) : (ethValue || 0);
     return this.tempus.controller.depositBacking(user, this.tempus, backingTokenAmount, recipient, ethToTransfer);
   }
@@ -247,7 +247,7 @@ export abstract class PoolTestFixture {
       await this.depositYBT(user, yieldBearingAmount, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(e));
+      return expect(getRevertMessage(<Error>e));
     }
   }
 
@@ -257,12 +257,12 @@ export abstract class PoolTestFixture {
    * @example (await pool.expectDepositBT(user, 100)).to.equal('success');
    * @returns RevertMessage assertion, or 'success' assertion
    */
-  async expectDepositBT(user:Signer, backingTokenAmount:Numberish, recipient:Addressable = user, ethValue: Numberish = undefined): Promise<Chai.Assertion> {
+  async expectDepositBT(user:Signer, backingTokenAmount:Numberish, recipient:Addressable = user, ethValue?: Numberish): Promise<Chai.Assertion> {
     try {
       await this.depositBT(user, backingTokenAmount, recipient, ethValue);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(e));
+      return expect(getRevertMessage(<Error>e));
     }
   }
 
@@ -277,7 +277,7 @@ export abstract class PoolTestFixture {
       await this.redeemToYBT(user, principalShares, yieldShares, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(e));
+      return expect(getRevertMessage(<Error>e));
     }
   }
 
@@ -292,7 +292,7 @@ export abstract class PoolTestFixture {
       await this.redeemToBT(user, principalShares, yieldShares, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(e));
+      return expect(getRevertMessage(<Error>e));
     }
   }
 

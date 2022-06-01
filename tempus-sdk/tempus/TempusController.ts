@@ -9,7 +9,7 @@ import { PoolTestFixture } from "./PoolTestFixture";
  */
 export class TempusController extends ContractBase {
   private static _contractName = "TempusController";
-  private static _instance:TempusController = null;
+  private static _instance:TempusController;
   
   constructor(contractName: string, controller: Contract) {
     super(contractName, 18, controller);
@@ -20,7 +20,7 @@ export class TempusController extends ContractBase {
    * @warning This cannot be used inside Test Fixture callback
    */
   static async instance(deployer?:Signer): Promise<TempusController> {
-    if (TempusController._instance === null) {
+    if (!TempusController._instance) {
       TempusController._instance = await this.deploy(deployer);
     }
     return TempusController._instance;
@@ -29,7 +29,7 @@ export class TempusController extends ContractBase {
   /**
    * Deploys a new instance of TempusController
    */
-  static async deploy(deployer:Signer): Promise<TempusController> {
+  static async deploy(deployer?:Signer): Promise<TempusController> {
     const controller = await ContractBase.deployContractBy(TempusController._contractName, deployer);
     return new TempusController(TempusController._contractName, controller);
   }

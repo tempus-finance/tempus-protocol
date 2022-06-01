@@ -80,7 +80,7 @@ export abstract class ContractBase extends DecimalConvertible
    * @param deployer User who deploys this contract and is marked as `msg.sender` in contract constructor
    * @param args... Optional arguments for the deployed contract
    */
-  static async deployContractBy(contractName:string, deployer:Signer, ...args: any[]): Promise<Contract> {
+  static async deployContractBy(contractName:string, deployer?:Signer, ...args: any[]): Promise<Contract> {
     const factory = await ethers.getContractFactory(contractName, deployer);
     return await factory.deploy(...args);
   }

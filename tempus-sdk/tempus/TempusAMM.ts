@@ -18,10 +18,10 @@ export const AMP_PRECISION = 1e3;
 export class TempusAMM extends ERC20 {
   token0: ERC20;
   token1: ERC20;
-  startAmp: number;
-  targetAmp: number;
-  startedAmpUpdateTime: number;
-  oneAmpUpdateTime: number;
+  startAmp: number = 0;
+  targetAmp: number = 0;
+  startedAmpUpdateTime: number = 0;
+  oneAmpUpdateTime: number = 0;
 
   constructor(tempusAmmPool: Contract, token0: PoolShare, token1: PoolShare) {
     super("TempusAMM", 18, tempusAmmPool);
