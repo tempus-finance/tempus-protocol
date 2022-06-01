@@ -8,9 +8,6 @@ import * as signer from "@ethersproject/abstract-signer";
 /** Alias for ethers Signer with Address */
 export type Signer = signers.SignerWithAddress;
 
-/** Alias for accepting abstract signer or an address */
-export type SignerOrAddress = signer.Signer|Signer|string;
-
 /** Alias for all types that can provide an address to the contracts. @see addressOf(addressable) */
 export type Addressable = Signer|string|ContractBase|Contract;
 
