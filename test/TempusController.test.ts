@@ -4,7 +4,7 @@ import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
-import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { BigNumber } from "@ethersproject/bignumber";
 import Decimal from "decimal.js";
 import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";

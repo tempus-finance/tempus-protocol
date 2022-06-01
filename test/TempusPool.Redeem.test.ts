@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { PoolTestFixture, YBTDepositExpectation, RedeemExpectation } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture, YBTDepositExpectation, RedeemExpectation } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { expectRevert } from "@tempus-sdk/utils/Utils";
 

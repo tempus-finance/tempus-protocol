@@ -112,6 +112,6 @@ export async function expectRevert(promise: Promise<any>): Promise<Chai.Assertio
     await promise;
     return expect('success');
   } catch (e) {
-    return expect(getRevertMessage(e));
+    return expect(getRevertMessage(<Error>e));
   }
 }

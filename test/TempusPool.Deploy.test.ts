@@ -1,6 +1,6 @@
 import { utils } from "ethers";
 import { expect } from "chai";
-import { PoolTestFixture } from "./pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { expectRevert, blockTimestamp } from "@tempus-sdk/utils/Utils";

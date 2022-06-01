@@ -3,7 +3,7 @@ import { Comptroller } from "../../protocols/Comptroller";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { PoolType } from "@tempus-sdk/tempus/TempusPool";
-import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool } from "../../pool-utils/MultiPoolTestSuite";
 
 describeForEachPool.type("Compound Mock", [PoolType.Compound], async (testPool:PoolTestFixture) =>

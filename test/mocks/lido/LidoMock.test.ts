@@ -3,7 +3,7 @@ import { LidoMock } from "../../protocols/LidoMock";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { expectRevert } from "@tempus-sdk/utils/Utils";
 import { PoolType } from "@tempus-sdk/tempus/TempusPool";
-import { PoolTestFixture } from "../../pool-utils/PoolTestFixture";
+import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "../../pool-utils/MultiPoolTestSuite";
 
 describeForEachPool.type("Lido Mock", [PoolType.Lido], (testPool:PoolTestFixture) =>
