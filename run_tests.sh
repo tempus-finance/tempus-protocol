@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Load env vars from .env file
-source .env
+if [ -f .env ]; then
+  source .env
+fi
 
 TESTS_PATH=""
 HARDHAT_FORK="mainnet"
@@ -14,9 +16,10 @@ REPORTER="progress"
 ONLY_TOKEN=""
 ONLY_POOL=""
 VALID_TOKENS="DAI USDC ETH all"
-POOLS="Aave Lido Compound Yearn Rari"
+POOLS="None Aave Lido Compound Yearn Rari"
 # @see test/Config.ts
 declare -A POOL_TOKENS
+POOL_TOKENS["None"]=""
 POOL_TOKENS["Aave"]="DAI USDC"
 POOL_TOKENS["Lido"]="ETH"
 POOL_TOKENS["Compound"]="DAI USDC"
@@ -83,7 +86,7 @@ if [ "$PARALLEL" == "true" ]; then
   done
 
   # and finally run the non-pool tests, only if we haven't set ONLY_POOL or ONLY_TOKEN
-  if [ "$ONLY_POOL" == "" ] && [ "$ONLY_TOKEN" == "" ]; then
+  if [[ "$ONLY_POOL" == "" || "$ONLY_POOL" == "None" ]] && [ "$ONLY_TOKEN" == "" ]; then
     echo Start Tests Non-Pool
     cross-env ONLY_POOL=None $ENVS $CMD &
     PIDS+=($!)

@@ -51,6 +51,8 @@
     "build": "npx hardhat compile",
     "clean": "rm -rf ./cache && rm -rf ./artifacts crytic-export echidna-corpus",
     "test": "yarn build && bash run_tests.sh",
+    "test:none": "yarn build && bash run_tests.sh None",
+    "test:aave": "yarn build && bash run_tests.sh Aave",
     "test:yearn": "yarn build && bash run_tests.sh Yearn",
     "test:integration": "yarn build && bash run_tests.sh integration-tests no-parallel",
     "test:integration:aave": "yarn build && bash run_tests.sh integration-suite Aave",

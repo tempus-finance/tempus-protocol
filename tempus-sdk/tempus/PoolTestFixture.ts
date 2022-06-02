@@ -249,7 +249,7 @@ export abstract class PoolTestFixture {
       await this.depositYBT(user, yieldBearingAmount, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(<Error>e));
+      return expect(getRevertMessage(e));
     }
   }
 
@@ -264,7 +264,7 @@ export abstract class PoolTestFixture {
       await this.depositBT(user, backingTokenAmount, recipient, ethValue);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(<Error>e));
+      return expect(getRevertMessage(e));
     }
   }
 
@@ -279,7 +279,7 @@ export abstract class PoolTestFixture {
       await this.redeemToYBT(user, principalShares, yieldShares, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(<Error>e));
+      return expect(getRevertMessage(e));
     }
   }
 
@@ -294,7 +294,7 @@ export abstract class PoolTestFixture {
       await this.redeemToBT(user, principalShares, yieldShares, recipient);
       return expect('success');
     } catch(e) {
-      return expect(getRevertMessage(<Error>e));
+      return expect(getRevertMessage(e));
     }
   }
 
