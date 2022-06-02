@@ -6,11 +6,12 @@ jobs:
   job-unit_tests_coverage:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           command:
             yarn coverage
@@ -20,11 +21,12 @@ jobs:
   job-integration_tests_coverage:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           command: |
             export ETH_NODE_URI_MAINNET=$ETH_NODE_URI_MAINNET_ALCHEMY
@@ -35,12 +37,13 @@ jobs:
   job-unit_tests:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     resource_class: xlarge
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run unit tests"
           command: yarn test
@@ -48,11 +51,12 @@ jobs:
   job-solhint:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run solhint and lint-check"
           command: |
@@ -62,11 +66,12 @@ jobs:
   job-coverage:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run coverage"
           command: yarn coverage
@@ -78,11 +83,12 @@ jobs:
   job-integration_tests:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run integration tests"
           command: yarn test:integration
@@ -90,7 +96,7 @@ jobs:
   job-save_and_upload_coverage_artifacts:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - coveralls/upload:
           parallel_finished: true
@@ -101,11 +107,12 @@ jobs:
   job-localDeployment:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Deploy on local network"
           command: yarn deploy-ci
@@ -113,11 +120,12 @@ jobs:
   job-localDeploymentForkMainnet:
     executor:
       name: node/default
-      tag: '15.11'
+      tag: '16.14'
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Deploy on forked mainnet"
           command:
@@ -130,6 +138,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
@@ -142,6 +151,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
@@ -154,6 +164,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run mythx"
           no_output_timeout: 30m
@@ -166,6 +177,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run Echidna lido pool"
           no_output_timeout: 30m
@@ -179,6 +191,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run Echidna yearn pool"
           no_output_timeout: 30m
@@ -192,6 +205,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run Echidna assertion lido pool"
           no_output_timeout: 30m
@@ -205,6 +219,7 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn install --frozen-lockfile
       - run:
           name: "Run Echidna assertion yearn pool"
           no_output_timeout: 30m

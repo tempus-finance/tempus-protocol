@@ -1,4 +1,4 @@
-FROM cimg/node:17.7.2
+FROM cimg/node:16.14.0
 RUN sudo apt-get update 
 RUN sudo apt-get install python3-pip
 RUN sudo pip3 install slither-analyzer
