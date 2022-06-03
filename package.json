@@ -1,21 +1,19 @@
 {
   "private": true,
   "name": "tempus-protocol",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "description": "Tempus Protocol Contracts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tempus-finance/tempus-protocol.git"
   },
-  "author": "Tempus",
+  "author": "Tempus Labs",
   "license": "UNLICENSED",
   "bugs": {
     "url": "https://github.com/tempus-finance/tempus-protocol/issues"
   },
   "homepage": "https://github.com/tempus-finance/tempus-protocol#readme",
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.10",
-    "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@nomiclabs/hardhat-waffle": "2.0.3",
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.2.0",
@@ -30,10 +28,7 @@
     "dotenv": "^10.0.0",
     "eth-ens-namehash": "^2.0.8",
     "ethereum-waffle": "^3.4.0",
-    "ethers": "^5.4.1",
-    "hardhat": "^2.2.1",
     "hardhat-abi-exporter": "^2.2.1",
-    "hardhat-deploy": "^0.8.9",
     "hardhat-gas-reporter": "^1.0.4",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.10",
@@ -46,6 +41,15 @@
     "typechain": "^5.1.1",
     "typescript": "^4.2.4",
     "yahoo-finance": "^0.3.7"
+  },
+  "dependencies": {
+    "ethers": "^5.4.1",
+    "hardhat": "^2.2.1",
+    "hardhat-deploy": "^0.8.9",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.10",
+    "@nomiclabs/hardhat-etherscan": "^2.1.6",
+    "@openzeppelin/contracts": "^4.1.0",
+    "tsconfig-paths": "^4.0.0"
   },
   "scripts": {
     "build": "npx hardhat compile",
@@ -90,9 +94,5 @@
     "echidna-test:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --format text",
     "echidna-test-assertion:pool:lido": "echidna-test ./ --contract EchidnaLidoTempusPool --config echidna.config.yaml --test-mode assertion --format text",
     "echidna-test-assertion:pool:yearn": "echidna-test ./ --contract EchidnaYearnTempusPool --config echidna.config.yaml --test-mode assertion --format text"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^4.1.0",
-    "tsconfig-paths": "^4.0.0"
   }
 }
