@@ -60,10 +60,12 @@ function getRedeemShareAmounts(pegged:boolean, expects:RedeemExpectation): Redee
 }
 
 export class UserState {
-  principalShares:Number = 0;
-  yieldShares:Number = 0;
-  yieldBearing:Number = 0;
-  yieldPeggedToAsset:boolean = false;
+  constructor(
+    private principalShares: number,
+    private yieldShares: number,
+    private yieldBearing: number,
+    private yieldPeggedToAsset:boolean
+  ) {}
 
   public expectMulti(principalShares:number, yieldShares:number, yieldBearingPegged:number, yieldBearingVariable:number, message?:string) {
     const yieldBearing = this.yieldPeggedToAsset ? yieldBearingPegged : yieldBearingVariable;
@@ -368,12 +370,12 @@ export abstract class PoolTestFixture {
    * @returns Balances state for a single user
    */
   async userState(user:Signer): Promise<UserState> {
-    let state = new UserState();
-    state.principalShares = (await this.principals.balanceOf(user)).toNumber();
-    state.yieldShares = (await this.yields.balanceOf(user)).toNumber();
-    state.yieldBearing = (await this.ybt.balanceOf(user)).toNumber();
-    state.yieldPeggedToAsset = this.yieldPeggedToAsset;
-    return state;
+    return new UserState(
+      (await this.principals.balanceOf(user)).toNumber(),
+      (await this.yields.balanceOf(user)).toNumber(),
+      (await this.ybt.balanceOf(user)).toNumber(),
+      this.yieldPeggedToAsset
+    );
   }
 
   /**
