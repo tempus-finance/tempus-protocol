@@ -1,9 +1,12 @@
-import { task, HardhatUserConfig } from 'hardhat/config';
+import { task } from 'hardhat/config';
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 import 'hardhat-abi-exporter';
-import "@typechain/hardhat";
+if (process.env["ENABLE_TYPECHAIN"] == '1') {
+  console.log("Enabling TYPECHAIN Support");
+  require("@typechain/hardhat");
+}
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
@@ -49,9 +52,9 @@ task("accounts", "Prints the list of accounts", async (args: any, hre: any) => {
   }
 });
 
-const config: HardhatUserConfig = {
+const config = {
   typechain: {
-    outDir: `./typechain-types`,
+    outDir: './typechain-types',
   },
   abiExporter: {
     path: './abi-artifacts',
