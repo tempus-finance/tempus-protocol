@@ -227,10 +227,10 @@ export class TempusPool extends ContractBase {
     maturityTime:number,
     estimatedYield:number,
     shareNames:TempusSharesNames,
-    underlyingProtocolContractAddress: string = null
+    underlyingProtocolContractAddress?: string
   ): Promise<TempusPool> {
     let exchangeRatePrec:number;
-    let pool:Contract = null;
+    let pool:Contract;
 
     if (type === PoolType.Aave) {
       exchangeRatePrec = 18; // AaveTempusPool converts 1e27 LiquidityIndex to 1e18 interestRate
@@ -410,7 +410,7 @@ export class TempusPool extends ContractBase {
         addressOf(from), this.principalShare.toBigNum(principalAmount), this.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
       );
     } catch(e) {
-      throw new Error("TempusPool.redeem failed: " + e.message);
+      throw new Error("TempusPool.redeem failed: " + (<Error>e).message);
     }
   }
 

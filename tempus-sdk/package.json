@@ -1,0 +1,30 @@
+{
+  "name": "@tempus/pool-sdk",
+  "version": "2.0.0",
+  "description": "Tempus Protocol TypeScript SDK",
+  "main": "lib/index.ts",
+  "types": "lib/index.d.ts",
+  "files": [ "tempus",  "utils" ],
+  "scripts": {
+    "prepack": "npx tsc",
+    "prepublish": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tempus-finance/tempus-protocol.git"
+  },
+  "keywords": [
+    "tempus",
+    "finance",
+    "protocol",
+    "tempus finance",
+    "tempus protocol",
+    "sdk"
+  ],
+  "author": "Tempus Labs",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/tempus-finance/tempus-protocol/issues"
+  },
+  "homepage": "https://github.com/tempus-finance/tempus-protocol"
+}

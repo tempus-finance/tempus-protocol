@@ -1,4 +1,3 @@
-import { beforeEach } from "mocha";
 import { Contract } from "ethers";
 import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
 import { ethers } from "hardhat";
