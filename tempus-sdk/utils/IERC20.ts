@@ -17,7 +17,7 @@ export interface IERC20 {
   symbol(): Promise<string>;
 
   /** @returns Total supply of this ERC20 token as a decimal, such as 10.0 */
-  totalSupply(): Promise<Numberish>;
+  totalSupply(): Promise<Decimal>;
 
   /**
    * @param account ERC20 account's address
@@ -39,7 +39,7 @@ export interface IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  allowance(owner:Addressable, spender:Addressable): Promise<Numberish>;
+  allowance(owner:Addressable, spender:Addressable): Promise<Decimal>;
 
   /**
    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
@@ -63,4 +63,7 @@ export interface IERC20 {
 
   /** @return Converts a BN big decimal of this Contract into a String or Number */
   fromBigNum(contractDecimal:BigNumber): Numberish;
+
+  /** @return Converts a BN decimal of this Contract into a Decimal with this contract precision */
+  toDecimal(contractDecimal:BigNumber): Decimal;
 }

@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { Decimal } from "./Decimal";
+import { Decimal, decimal } from "./Decimal";
 import { Numberish } from "./DecimalUtils";
 import { DecimalConvertible } from "./DecimalConvertible";
 import { Signer, Addressable, addressOf } from "./ContractBase";
@@ -26,7 +26,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
   /**
    * @returns Total supply of this ERC20 token as a decimal, such as 10.0
    */
-  async totalSupply(): Promise<Numberish> { return 117_766_454; }
+  async totalSupply(): Promise<Decimal> { return decimal(117_766_454); }
 
   /**
    * @param account ERC20 account's address
@@ -58,8 +58,8 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  async allowance(owner:Addressable, spender:Addressable): Promise<Numberish> {
-    return 0;
+  async allowance(owner:Addressable, spender:Addressable): Promise<Decimal> {
+    return decimal(0);
   }
   
   /**
