@@ -36,7 +36,7 @@ export class DecimalConvertible {
     return formatDecimal(contractDecimal, this.decimals);
   }
 
-  /** @return Converts a BN big decimal of this Contract into a Decimal with this contract's decimals precision */
+  /** @return Converts a BN decimal of this Contract into a Decimal with this contract precision */
   public toDecimal(contractDecimal:BigNumber): Decimal {
     return new Decimal(contractDecimal, this.decimals);
   }

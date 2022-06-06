@@ -104,8 +104,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
   async transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
-    const connected = this.connect(sender);
-    return await connected.transfer(addressOf(recipient), this.toBigNum(amount));
+    return await this.connect(sender).transfer(addressOf(recipient), this.toBigNum(amount));
   }
 
   /**
@@ -114,9 +113,9 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @returns The remaining number of tokens that `spender` will be allowed to 
    * spend on behalf of `owner` through {transferFrom}. This is zero by default.
    */
-  async allowance(owner:Addressable, spender:Addressable): Promise<Numberish> {
+  async allowance(owner:Addressable, spender:Addressable): Promise<Decimal> {
     const amount = await this.contract.allowance(addressOf(owner), addressOf(spender));
-    return this.fromBigNum(amount);
+    return this.toDecimal(amount);
   }
   
   /**
@@ -126,8 +125,7 @@ export class ERC20 extends ContractBase implements IERC20 {
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
   async approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any> {
-    const connected = this.connect(caller);
-    return await connected.approve(addressOf(spender), this.toBigNum(amount));
+    return await this.connect(caller).approve(addressOf(spender), this.toBigNum(amount));
   }
 
   /**
