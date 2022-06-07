@@ -3,6 +3,15 @@ pragma solidity 0.8.10;
 
 import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
+import "./utils/PermitHelper.sol";
+
+struct ExitAMMGivenLPSlippageParams {
+    uint256 minPrincipalsStaked;
+    uint256 minYieldsStaked;
+    uint256 maxLeftoverShares;
+    uint256 yieldsRate;
+    uint256 maxSlippage;
+}
 
 interface ITempusController {
     /// @dev Event emitted on a successful BT/YBT deposit.
@@ -261,6 +270,9 @@ interface ITempusController {
     /// @notice Only available before maturity since exiting AMM with exact amounts is disallowed after maturity
     /// @param tempusAMM TempusAMM instance to withdraw liquidity from
     /// @param tempusPool TempusPool instance to withdraw liquidity from
+    /// @param erc20Permits Permit signatures for spending tokens that needs approvals
+    ///                     This method needs approval for LP tokens
+    ///                     In case that user wants to use approvals, pass empty array
     /// @param principals Amount of Principals to redeem
     /// @param yields Amount of Yields to redeem
     /// @param principalsStaked Amount of staked principals (in TempusAMM) to redeem
@@ -272,6 +284,7 @@ interface ITempusController {
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
+        ERC20PermitSignature[] calldata erc20Permits,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
@@ -285,14 +298,13 @@ interface ITempusController {
     /// @notice Can fail if there is not enough user balance
     /// @param tempusAMM TempusAMM instance to withdraw liquidity from
     /// @param tempusPool TempusPool instance to withdraw liquidity from
+    /// @param erc20Permits Permit signatures for spending tokens that needs approvals
+    ///                     This method needs approval for LP tokens, Principals, and Yields
+    ///                     In case that user wants to use approvals, pass empty array
     /// @param lpTokens Number of Lp tokens to redeem
     /// @param principals Number of Principals to redeem
     /// @param yields Number of Yields to redeem
-    /// @param minPrincipalsStaked Minimum amount of staked principals to redeem for `lpTokens`
-    /// @param minYieldsStaked Minimum amount of staked yields to redeem for `lpTokens`
-    /// @param maxLeftoverShares Maximum amount of Principals or Yields to be left in case of early exit
-    /// @param yieldsRate Base exchange rate of TYS (denominated in TPS)
-    /// @param maxSlippage Maximum allowed change in the exchange rate from the base @param yieldsRate (1e18 precision)
+    /// @param slippageParams Slippage tolerance parameters
     /// @param toBackingToken If true redeems to backing token, otherwise redeems to yield bearing
     /// @param deadline A timestamp by which, if a swap is necessary, the transaction must be completed,
     ///    otherwise it would revert
@@ -301,14 +313,11 @@ interface ITempusController {
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
+        ERC20PermitSignature[] calldata erc20Permits,
         uint256 lpTokens,
         uint256 principals,
         uint256 yields,
-        uint256 minPrincipalsStaked,
-        uint256 minYieldsStaked,
-        uint256 maxLeftoverShares,
-        uint256 yieldsRate,
-        uint256 maxSlippage,
+        ExitAMMGivenLPSlippageParams calldata slippageParams,
         bool toBackingToken,
         uint256 deadline
     ) external returns (uint256);

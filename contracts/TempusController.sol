@@ -18,6 +18,7 @@ import "./utils/Ownable.sol";
 contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165 {
     using Fixed256xVar for uint256;
     using UntrustedERC20 for IERC20Metadata;
+    using PermitHelper for ERC20PermitSignature[];
 
     /// Registry for valid pools and AMM's to avoid fake address injection
     mapping(address => bool) private registry;
@@ -174,6 +175,7 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165
     function exitAmmGivenAmountsOutAndEarlyRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
+        ERC20PermitSignature[] calldata erc20Permits,
         uint256 principals,
         uint256 yields,
         uint256 principalsStaked,
@@ -183,6 +185,8 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165
     ) external override nonReentrant returns (uint256) {
         requireRegistered(address(tempusAMM));
         requireRegistered(address(tempusPool));
+
+        erc20Permits.applyPermits(msg.sender, address(this));
 
         return
             _exitAmmGivenAmountsOutAndEarlyRedeem(
@@ -200,25 +204,29 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165
     function exitAmmGivenLpAndRedeem(
         ITempusAMM tempusAMM,
         ITempusPool tempusPool,
+        ERC20PermitSignature[] calldata erc20Permits,
         uint256 lpTokens,
         uint256 principals,
         uint256 yields,
-        uint256 minPrincipalsStaked,
-        uint256 minYieldsStaked,
-        uint256 maxLeftoverShares,
-        uint256 yieldsRate,
-        uint256 maxSlippage,
+        ExitAMMGivenLPSlippageParams calldata slippageParams,
         bool toBackingToken,
         uint256 deadline
     ) external override nonReentrant returns (uint256) {
         requireRegistered(address(tempusAMM));
         requireRegistered(address(tempusPool));
 
+        erc20Permits.applyPermits(msg.sender, address(this));
+
         if (lpTokens > 0) {
             if (!tempusAMM.transferFrom(msg.sender, address(this), lpTokens)) {
                 revert FailedLPTokensTransfer(msg.sender, address(this), lpTokens);
             }
-            tempusAMM.exitGivenLpIn(lpTokens, minPrincipalsStaked, minYieldsStaked, address(this));
+            tempusAMM.exitGivenLpIn(
+                lpTokens,
+                slippageParams.minPrincipalsStaked,
+                slippageParams.minYieldsStaked,
+                address(this)
+            );
         }
 
         return
@@ -227,9 +235,9 @@ contract TempusController is ITempusController, ReentrancyGuard, Ownable, ERC165
                 tempusPool,
                 principals,
                 yields,
-                maxLeftoverShares,
-                yieldsRate,
-                maxSlippage,
+                slippageParams.maxLeftoverShares,
+                slippageParams.yieldsRate,
+                slippageParams.maxSlippage,
                 deadline,
                 toBackingToken
             );

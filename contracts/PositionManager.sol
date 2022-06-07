@@ -126,14 +126,17 @@ contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
         liquidatedTokenAmount = controller.exitAmmGivenLpAndRedeem(
             amm,
             tempusPool,
+            new ERC20PermitSignature[](0), // no permits, we approved tokens already
             0, // lpTokens is 0 since LP tokens are not supported by the PositionManager
             capitals,
             yields,
-            0, // minPrincipalsStaked is 0 since LP tokens are not supported by the PositionManager
-            0, // minYieldsStaked is 0 since LP tokens are not supported by the PositionManager
-            params.maxLeftoverShares,
-            params.yieldsRate,
-            params.maxSlippage,
+            ExitAMMGivenLPSlippageParams(
+                0, // minPrincipalsStaked is 0 since LP tokens are not supported by the PositionManager
+                0, // minYieldsStaked is 0 since LP tokens are not supported by the PositionManager
+                params.maxLeftoverShares,
+                params.yieldsRate,
+                params.maxSlippage
+            ),
             params.toBackingToken,
             params.deadline
         );

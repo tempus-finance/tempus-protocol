@@ -73,7 +73,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       expect(await controller.supportsInterface("0x3c3dbb51")).to.be.false;
   
       // should support ITempusController interface
-      expect(await controller.supportsInterface("0xa78f56f5")).to.be.true;
+      expect(await controller.supportsInterface("0x9f1dfbb0")).to.be.true;
 
       // should support ERC165 interface
       expect(await controller.supportsInterface("0x01ffc9a7")).to.be.true;
@@ -251,8 +251,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
   describe("Exit AMM and Reedem", () => 
   {
-    it("Exit AMM and redeem before maturity", async () => 
-    {
+    async function testExitAMMAndRedeemToYBTBeforeMaturity(withApprovals:Boolean) {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
 
       await controller.depositYieldBearing(user2, pool, 10000, user2);
@@ -269,16 +268,16 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         userYRedeem,
         9999 - userPRedeem, 
         9999 - userYRedeem,
-        false
+        false,   // toBackingToken
+        withApprovals
       );
       expect(+await pool.yieldShare.balanceOf(user2)).to.equal(0);
       expect(+await pool.principalShare.balanceOf(user2)).to.equal(0);
       expect(+await amm.balanceOf(user2)).to.be.within(0.991, 0.993);
       expect(+await pool.yieldBearing.balanceOf(user2)).to.equal(99999);
-    });
+    }
 
-    it("Exit AMM and redeem to backing before maturity", async () => 
-    {
+    async function testExitAMMAndRedeemToBackingBeforeMaturity(withApprovals:Boolean) {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await controller.depositYieldBearing(user2, pool, 10000, user2);
       await testPool.amm.provideLiquidity(user2, 1000, 10000);
@@ -305,6 +304,26 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         expect(+await amm.balanceOf(user2)).to.be.within(0.991, 0.993);
         expect(+await testPool.asset.balanceOf(user2)).to.equal(109999);
       }
+    }
+
+    it("Exit AMM and redeem before maturity", async () => 
+    {
+      await testExitAMMAndRedeemToYBTBeforeMaturity(false);
+    });
+
+    it("Exit AMM and redeem to backing before maturity", async () => 
+    {
+      await testExitAMMAndRedeemToBackingBeforeMaturity(false);
+    });
+
+    it("Exit AMM and redeem before maturity using approvals", async () => 
+    {
+      await testExitAMMAndRedeemToYBTBeforeMaturity(true);
+    });
+
+    it("Exit AMM and redeem to backing before maturity using approvals", async () => 
+    {
+      await testExitAMMAndRedeemToBackingBeforeMaturity(true);
     });
 
     it("Exit AMM and redeem after maturity should revert", async () => 
@@ -319,7 +338,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         100000,
         0,
         0,
-        false
+        false  // toBackingToken
       ))).to.equal(
         ":PoolAlreadyMatured"
       );
@@ -415,6 +434,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.yields.balanceOf(owner),
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         await calculateCurrentYieldsRate(),
         0.03
       )).to.emit(testPool.amm.contract, 'Swap');
@@ -433,6 +453,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         await calculateCurrentYieldsRate(),
         0.03
       )).to.emit(testPool.amm.contract, 'Swap');
@@ -451,6 +472,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         0,
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         await calculateCurrentYieldsRate(),
         "0.001"
         )))).to.equal(":SwapGivenTokensInSlippage");
@@ -469,6 +491,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.yields.balanceOf(owner),
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         await calculateCurrentYieldsRate(),
         "0.001"
       )))).to.equal(":SwapGivenTokensInSlippage");
@@ -488,6 +511,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.yields.balanceOf(owner),
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         yieldsRate,
         "0.001"
       ))).to.equal(":ZeroYieldsRate");
@@ -506,13 +530,13 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
         await testPool.yields.balanceOf(owner),
         false,
         getDefaultLeftoverShares(),
+        false,    // withApprovals
         await calculateCurrentYieldsRate(),
         "1.000000000000000001"
       ))).to.equal(":MaxSlippageTooBig");
     });
 
-    it("Complete exit to yield bearing", async () => 
-    {
+    async function testCompleteExitToYieldBearing(withApprovals: Boolean) {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       expect(+await testPool.yields.balanceOf(user1)).to.equal(0, "all yields are in amm");
       expect(+await testPool.principals.balanceOf(user1)).to.equal(
@@ -528,12 +552,13 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
 
       await controller.exitAmmGivenLpAndRedeem(
         testPool, 
-        user1, 
+        user1,
         await testPool.amm.balanceOf(user1), 
         await testPool.principals.balanceOf(user1),
         await testPool.yields.balanceOf(user1),
         false,
-        getDefaultLeftoverShares()
+        getDefaultLeftoverShares(),
+        withApprovals
       );
 
       expect(+await testPool.yields.balanceOf(user1)).to.equal(0);
@@ -544,11 +569,9 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       } else {
         expect(+await testPool.ybt.balanceOf(user1)).to.be.within(999000, 1001000);
       }
+    }
 
-    });
-
-    it("Complete exit to backing", async () => 
-    {
+    async function testCompleteExitToBacking(withApprovals: Boolean) {
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       expect(+await pool.yieldShare.balanceOf(user1)).to.equal(0, "all yields are in amm");
       expect(+await pool.principalShare.balanceOf(user1)).to.equal(
@@ -569,7 +592,8 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           await testPool.principals.balanceOf(user1),
           await testPool.yields.balanceOf(user1),
           true,
-          getDefaultLeftoverShares()
+          getDefaultLeftoverShares(),
+          withApprovals
         ))).to.equal(
           ":LidoWithdrawNotSupported"
         );
@@ -584,13 +608,34 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
           await testPool.principals.balanceOf(user1),
           await testPool.yields.balanceOf(user1),
           true,
-          getDefaultLeftoverShares()
+          getDefaultLeftoverShares(),
+          withApprovals
         );
         expect(+await pool.yieldShare.balanceOf(user1)).to.equal(0);
         expect(+await pool.principalShare.balanceOf(user1)).to.equal(0);
         expect(+await testPool.amm.contract.balanceOf(user1.address)).to.equal(0);
         expect(+await testPool.asset.balanceOf(user1)).to.be.within(1199000, 1200000);
       }
+    }
+
+    it("Complete exit to yield bearing", async () => 
+    {
+      await testCompleteExitToYieldBearing(false);
+    });
+
+    it("Complete exit to backing", async () => 
+    {
+      await testCompleteExitToBacking(false);
+    });
+
+    it("Complete exit to yield bearing with approvals", async () => 
+    {
+      await testCompleteExitToYieldBearing(true);
+    });
+
+    it("Complete exit to backing using approvals", async () => 
+    {
+      await testCompleteExitToBacking(true);
     });
   });
 
