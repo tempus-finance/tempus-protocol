@@ -1,4 +1,4 @@
-import { Contract, BigNumber } from "ethers";
+import { Contract } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { formatDecimal, Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
 import { addressOf, ContractBase, Signer, Addressable } from "@tempus-sdk/utils/ContractBase";
@@ -80,8 +80,8 @@ export class Comptroller extends ContractBase {
    * @return Success indicator for whether each corresponding market was entered
    */
   async enterMarkets(user:Signer): Promise<boolean> {
-    const results:BigNumber[] = await this.connect(user).enterMarkets([this.yieldToken.address]);
-    return results[0] == BigNumber.from("0"); // no error
+    const results:bigint[] = await this.connect(user).enterMarkets([this.yieldToken.address]);
+    return results[0] == BigInt(0); // no error
   }
 
   /**
@@ -92,8 +92,8 @@ export class Comptroller extends ContractBase {
    * @return Whether or not the account successfully exited the market
    */
   async exitMarket(user:Signer): Promise<boolean> {
-    const result:BigNumber = await this.connect(user).exitMarket(this.yieldToken.address);
-    return result == BigNumber.from("0"); // no error
+    const result:bigint = await this.connect(user).exitMarket(this.yieldToken.address);
+    return result == BigInt(0); // no error
   }
 
   /**

@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
-import { BigNumber, Contract } from "ethers";
-import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
+import { Contract } from "ethers";
+import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
+import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
 import { setStorageField } from "@tempus-sdk/utils/Utils";
 import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
@@ -27,10 +28,10 @@ export class LidoFork extends LidoContract {
     return lido;
   }
 
-  async getBeaconBalance(): Promise<BigNumber> {
+  async getBeaconBalance(): Promise<Decimal> {
     // { depositedValidators, beaconValidators, beaconBalance }
     const { beaconBalance } = await this.contract.getBeaconStat();
-    return beaconBalance;
+    return this.toDecimal(beaconBalance);
   }
 
   /**
@@ -45,15 +46,15 @@ export class LidoFork extends LidoContract {
    * to a negative value to achieve the desired TargetETHSupply.
    */
   async setInterestRate(interestRate:Numberish): Promise<void> {
-    const totalETHSupply:BigNumber = await this.contract.totalSupply();
-    
-    const targetETHSupply = parseDecimal(interestRate, 36);
+    const totalETHSupply:bigint = await this.contract.totalSupply();
+
+    const targetETHSupply = decimal(interestRate, 36);
     const ethSupplyDiff = targetETHSupply.sub(totalETHSupply);
 
     const beaconBalance = await this.getBeaconBalance();
-    const newBeaconBalance:BigNumber = beaconBalance.add(ethSupplyDiff);
-    
+    const newBeaconBalance:Decimal = beaconBalance.add(ethSupplyDiff);
+
     await setStorageField(this.contract, "lido.Lido.beaconBalance", newBeaconBalance);
-    await setStorageField(this.contract, "lido.StETH.totalShares", parseDecimal('1', 36));
+    await setStorageField(this.contract, "lido.StETH.totalShares", decimal('1.0', 36));
   }
 }

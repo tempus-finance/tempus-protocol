@@ -1,4 +1,5 @@
-import { BigNumber, Contract } from "ethers";
+import { Contract } from "ethers";
+import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
 import { ContractBase } from "@tempus-sdk/utils/ContractBase";
 import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
@@ -28,24 +29,24 @@ export class LidoMock extends LidoContract {
   }
 
   async setInterestRate(interestRate:Numberish): Promise<void> {
-    let totalETHSupply:BigNumber = await this.contract.totalSupply();
+    let totalETHSupply:Decimal = this.toDecimal(await this.contract.totalSupply());
     // total ETH is 0, so we must actually deposit something, otherwise we can't manipulate the rate
     if (totalETHSupply.isZero()) {
-      totalETHSupply = this.toBigNum(1000);
+      totalETHSupply = this.toDecimal(1000);
       await this.contract._setSharesAndEthBalance(this.toBigNum(1000), totalETHSupply); // 1.0 rate
     }
 
     // figure out if newRate requires a change of stETH
-    const curRate = await this.interestRateBigNum();
+    const curRate = await this.interestRateBigInt();
     const newRate = this.toBigNum(interestRate);
     const ONE = this.toBigNum(1.0);
-    const difference = newRate.mul(ONE).div(curRate).sub(ONE);
-    if (difference.isZero())
+    const difference = ((newRate * ONE) / curRate) - ONE;
+    if (difference == BigInt(0))
       return;
 
-    const totalShares:BigNumber = await this.contract.getTotalShares();
+    const totalShares:bigint = await this.contract.getTotalShares();
     const change = totalETHSupply.mul(difference).div(ONE);
     const newETHSupply = totalETHSupply.add(change);
-    await this.contract._setSharesAndEthBalance(totalShares, newETHSupply);
+    await this.contract._setSharesAndEthBalance(totalShares, newETHSupply.toBigInt());
   }
 }
