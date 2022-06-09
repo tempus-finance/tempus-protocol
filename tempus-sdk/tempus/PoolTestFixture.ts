@@ -369,7 +369,7 @@ export abstract class PoolTestFixture {
   /**
    * @returns Balances state for a single user
    */
-  async userState(user:Signer): Promise<UserState> {
+  async userState(user:Addressable): Promise<UserState> {
     return new UserState(
       (await this.principals.balanceOf(user)).toNumber(),
       (await this.yields.balanceOf(user)).toNumber(),
@@ -384,7 +384,7 @@ export abstract class PoolTestFixture {
    * @param expects All balance check parameters
    * @param message Description of what we expected to happen
    */
-  async checkBalance(user:Signer, expects:BalancesExpectation, message?:string): Promise<void> {
+  async checkBalance(user:Addressable, expects:BalancesExpectation, message?:string): Promise<void> {
     (await this.userState(user)).expect(expects.tps, expects.tys, expects.ybt, message);
   }
 
@@ -394,7 +394,7 @@ export abstract class PoolTestFixture {
    * @param wallet All wallet check parameters
    * @param message Description of what we expected to happen
    */
-  async checkWallet(user:Signer, wallet:WalletExpectation, message?:string): Promise<void> {
+  async checkWallet(user:Addressable, wallet:WalletExpectation, message?:string): Promise<void> {
     return this.checkBalance(user, this.yieldPeggedToAsset ? wallet.pegged : wallet.unpegged, message);
   }
 

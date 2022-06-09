@@ -60,7 +60,7 @@ export abstract class LidoContract extends ERC20 {
    */
   abstract setInterestRate(interestRate:Numberish): Promise<void>;
 
-  async submit(signer:Addressable, amount:Numberish): Promise<Numberish> {
+  async submit(signer:Signer, amount:Numberish): Promise<Numberish> {
     const val = this.toBigNum(amount); // payable call, set value:
     return await this.connect(signer).submit(addressOf(signer), {value: val})
   }

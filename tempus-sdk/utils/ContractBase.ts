@@ -8,9 +8,6 @@ import * as signer from "@ethersproject/abstract-signer";
 /** Alias for ethers Signer with Address */
 export type Signer = signers.SignerWithAddress;
 
-/** Alias for accepting abstract signer or an address */
-export type SignerOrAddress = signer.Signer|Signer|string;
-
 /** Alias for all types that can provide an address to the contracts. @see addressOf(addressable) */
 export type Addressable = Signer|string|ContractBase|Contract;
 
@@ -22,15 +19,6 @@ export function addressOf(addressable: Addressable): string {
       addressable instanceof signers.SignerWithAddress)
     return addressable.address;
   throw new Error("Invalid addressable (no address): " + addressable);
-}
-
-/** @return Signer or an address string */
-export function signerOf(addressable: Addressable): signer.Signer|Signer|string {
-  if (typeof(addressable) === "string")
-    return addressable;
-  if (addressable instanceof ContractBase || addressable instanceof Contract)
-    return addressable.address;
-  return addressable; // Signer
 }
 
 /**
@@ -60,9 +48,8 @@ export abstract class ContractBase extends DecimalConvertible
   }
   
   /** Connects a user to the contract, so that transactions can be sent by the user */
-  connect(user:Addressable): Contract {
-    const signerOrProvider = signerOf(user);
-    return this.contract.connect(signerOrProvider);
+  connect(user:Signer): Contract {
+    return this.contract.connect(user);
   }
 
   /**
@@ -102,9 +89,8 @@ export abstract class ContractBase extends DecimalConvertible
    * @param contractAddress Address of the contract
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
-  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Addressable): Promise<Contract> {
-    const signerOrProvider = signerOf(signer);
-    const factory = await ethers.getContractFactory(contractName, signerOrProvider);
+  static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Signer): Promise<Contract> {
+    const factory = await ethers.getContractFactory(contractName, signer);
     return factory.attach(contractAddress);
   }
 }

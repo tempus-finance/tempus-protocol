@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish, toRay, fromRay, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, Addressable, addressOf } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Signer, Addressable, addressOf } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 
@@ -56,7 +56,7 @@ export class Aave extends ContractBase {
   /**
    * Sets the AAVE pool's MOCK liquidity index in RAY
    */
-  async setLiquidityIndex(liquidityIndex:Numberish, owner:Addressable = null): Promise<void> {
+  async setLiquidityIndex(liquidityIndex:Numberish, owner:Signer = null): Promise<void> {
     if (owner !== null) {
       const prevLiquidityIndex = await this.liquidityIndex();
       const difference = (Number(liquidityIndex) / Number(prevLiquidityIndex)) - 1;
@@ -74,7 +74,7 @@ export class Aave extends ContractBase {
    * @param user User who wants to deposit ETH into AAVE Pool
    * @param amount # of ETH to deposit, eg: 1.0
    */
-  async deposit(user:Addressable, amount:Numberish): Promise<void> {
+  async deposit(user:Signer, amount:Numberish): Promise<void> {
     await this.asset.approve(user, this.address, amount);
     await this.connect(user).deposit(this.asset.address, this.toBigNum(amount), addressOf(user), 0);
   }

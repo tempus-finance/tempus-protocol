@@ -1,7 +1,7 @@
 import { Contract, BigNumber } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { formatDecimal, Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { addressOf, ContractBase, Addressable } from "@tempus-sdk/utils/ContractBase";
+import { addressOf, ContractBase, Signer, Addressable } from "@tempus-sdk/utils/ContractBase";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 
@@ -62,7 +62,7 @@ export class Comptroller extends ContractBase {
   /**
    * Sets the pool Exchange Rate, converting it to exchange rate decimal which has variable decimal precision
    */
-  async setExchangeRate(exchangeRate:Numberish, owner:Addressable = null): Promise<void> {
+  async setExchangeRate(exchangeRate:Numberish, owner:Signer = null): Promise<void> {
     if (owner !== null) {
       const prevExchangeRate = await this.exchangeRate();
       const difference = (Number(exchangeRate) / Number(prevExchangeRate)) - 1;
@@ -79,7 +79,7 @@ export class Comptroller extends ContractBase {
    * @notice Add assets to be included in account liquidity calculation
    * @return Success indicator for whether each corresponding market was entered
    */
-  async enterMarkets(user:Addressable): Promise<boolean> {
+  async enterMarkets(user:Signer): Promise<boolean> {
     const results:BigNumber[] = await this.connect(user).enterMarkets([this.yieldToken.address]);
     return results[0] == BigNumber.from("0"); // no error
   }
@@ -91,7 +91,7 @@ export class Comptroller extends ContractBase {
    * @param cTokenAddress The address of the asset to be removed
    * @return Whether or not the account successfully exited the market
    */
-  async exitMarket(user:Addressable): Promise<boolean> {
+  async exitMarket(user:Signer): Promise<boolean> {
     const result:BigNumber = await this.connect(user).exitMarket(this.yieldToken.address);
     return result == BigNumber.from("0"); // no error
   }
@@ -116,7 +116,7 @@ export class Comptroller extends ContractBase {
   /**
    * Calls CErc20 mint() on the CToken, which means CToken must be CErc20 (like cDAI)
    */
-  async mint(user:Addressable, amount:Numberish) {
+  async mint(user:Signer, amount:Numberish) {
     await this.asset.approve(user, this.yieldToken.address, amount);
     await this.yieldToken.connect(user).mint(this.asset.toBigNum(amount));
   }

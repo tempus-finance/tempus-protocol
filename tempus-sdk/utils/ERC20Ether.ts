@@ -43,10 +43,9 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param recipient ERC20 transfer recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transfer(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
-    const signer = <Signer>sender;
-    return signer.sendTransaction({
-      from: signer.address,
+  async transfer(sender:Signer, recipient:Addressable, amount:Numberish): Promise<any> {
+    return sender.sendTransaction({
+      from: sender.address,
       to: addressOf(recipient),
       value: this.toBigNum(amount)
     });
@@ -68,7 +67,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param spender ERC20 approve's, spender's address
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(caller:Addressable, spender:Addressable, amount:Numberish): Promise<any> {
+  async approve(caller:Signer, spender:Addressable, amount:Numberish): Promise<any> {
     return;
   }
 
@@ -79,7 +78,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    * @param recipient ERC20 transferFrom recipient's address
    * @param amount Amount of tokens to send in contract decimals, eg 2.0 or "0.00001"
    */
-  async transferFrom(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any> {
+  async transferFrom(sender:Signer, recipient:Addressable, amount:Numberish): Promise<any> {
     return this.transfer(sender, recipient, amount);
   }
 }

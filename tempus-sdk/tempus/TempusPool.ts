@@ -369,14 +369,14 @@ export class TempusPool extends ContractBase {
     return this.yieldBearing.balanceOf(this.contract.address);
   }
 
-  async onDepositYieldBearing(user:Addressable, yieldBearingAmount:Numberish, recipient:Addressable): Promise<Transaction> {
+  async onDepositYieldBearing(user:Signer, yieldBearingAmount:Numberish, recipient:Addressable): Promise<Transaction> {
     await this.yieldBearing.approve(user, this.contract.address, yieldBearingAmount);
     return this.connect(user).onDepositYieldBearing(
       this.yieldBearing.toBigNum(yieldBearingAmount), addressOf(recipient)
     );
   }
 
-  async onDepositBacking(user:Addressable, backingTokenAmount:Numberish, recipient:Addressable, ethValue: Numberish = 0): Promise<Transaction> {
+  async onDepositBacking(user:Signer, backingTokenAmount:Numberish, recipient:Addressable, ethValue: Numberish = 0): Promise<Transaction> {
     return this.connect(user).onDepositBacking(
       this.asset.toBigNum(backingTokenAmount), addressOf(recipient), { value: toWei(ethValue)}
     );
@@ -390,7 +390,7 @@ export class TempusPool extends ContractBase {
    * @param from Address of which Tempus Shares should be burned
    * @param recipient Address to which redeemed Backing Tokens should be transferred
    */
-  async redeemToBacking(user:Addressable, principalAmount:Numberish, yieldAmount:Numberish, from: Addressable = user, recipient: Addressable = user): Promise<Transaction> {
+  async redeemToBacking(user:Signer, principalAmount:Numberish, yieldAmount:Numberish, from: Addressable = user, recipient: Addressable = user): Promise<Transaction> {
     return this.connect(user).redeemToBacking(
       addressOf(from), this.principalShare.toBigNum(principalAmount), this.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
     );
@@ -404,7 +404,7 @@ export class TempusPool extends ContractBase {
    * @param from Address of which Tempus Shares should be burned
    * @param recipient Address to which redeemed Yield Bearing Tokens should be transferred
    */
-  async redeem(user:Addressable, principalAmount:Numberish, yieldAmount:Numberish, from: Addressable = user, recipient: Addressable = user): Promise<Transaction> {
+  async redeem(user:Signer, principalAmount:Numberish, yieldAmount:Numberish, from: Addressable = user, recipient: Addressable = user): Promise<Transaction> {
     try {
       return this.connect(user).redeem(
         addressOf(from), this.principalShare.toBigNum(principalAmount), this.yieldShare.toBigNum(yieldAmount), addressOf(recipient)
@@ -574,7 +574,7 @@ export class TempusPool extends ContractBase {
    * Sets fees config for the pool. Caller must be owner
    */
   async setFeesConfig(
-    owner:Addressable,
+    owner:Signer,
     feesConfig: TempusFeesConfig
   ): Promise<void> {
     await this.connect(owner).setFeesConfig({
@@ -587,7 +587,7 @@ export class TempusPool extends ContractBase {
   /**
    * Transfers fees to the recipient. Caller must be owner.
    */
-  async transferFees(owner:Addressable, recipient:Addressable): Promise<void> {
+  async transferFees(owner:Signer, recipient:Addressable): Promise<void> {
     await this.connect(owner).transferFees(addressOf(recipient));
   }
 

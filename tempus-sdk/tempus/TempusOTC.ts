@@ -58,7 +58,7 @@ export class TempusOTC extends ContractBase {
    * @param user The caller who is sending this approve
    * @param amount Amount of tokens to approve in contract decimals, eg 2.0 or "0.00001"
    */
-  async approve(token: ERC20, user:Addressable, amount:Numberish): Promise<void> {
+  async approve(token:ERC20, user:Signer, amount:Numberish): Promise<void> {
     await token.approve(user, this.address, amount);
   }
   
@@ -66,7 +66,7 @@ export class TempusOTC extends ContractBase {
    * @dev Accept offer
    * @param user The caller who is accept offer (must be same as taker)
    */ 
-  async buy(user:Addressable): Promise<Transaction>{
+  async buy(user:Signer): Promise<Transaction>{
     await this.approve(this.tokenToSell, user, this.sellAmount);
     
     return this.connect(user).buy();
@@ -76,7 +76,7 @@ export class TempusOTC extends ContractBase {
    * @dev Cancel offer
    * @param user The caller who is cancel offer (must be same user that create offer and contract owner)
    */ 
-  async cancel(user:Addressable): Promise<Transaction>{
+  async cancel(user:Signer): Promise<Transaction>{
     return this.connect(user).cancel();
   }
 }
