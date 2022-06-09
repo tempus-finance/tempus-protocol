@@ -1,6 +1,5 @@
-import { BigNumber } from "ethers";
 import { Decimal } from "./Decimal";
-import { MAX_NUMBER_DIGITS, Numberish, parseDecimal, formatDecimal } from "./DecimalUtils";
+import { Numberish, parseDecimal, formatDecimal } from "./DecimalUtils";
 /**
  * A type which has a standard `decimals` property
  * and can convert TypeScript number types into Solidity
@@ -13,31 +12,24 @@ export class DecimalConvertible {
     this.decimals = decimals;
   }
 
-  /** @return Converts a Number or String into this Contract's BigNumber decimal */
-  public toBigNum(amount:Numberish): BigNumber {
-    if (amount instanceof BigNumber) {
+  /** @return Converts a Number or String into this Contract's Scaled BigInt decimal */
+  public toBigNum(amount:Numberish): bigint {
+    if (typeof(amount) === "bigint") {
       return amount;
     }
     if (amount instanceof Decimal) { // fastpath
-      return new Decimal(amount, this.decimals).toBigNumber();
+      return new Decimal(amount, this.decimals).toBigInt();
     }
-    if (typeof(amount) === "string") {
-      return parseDecimal(amount, this.decimals);
-    }
-    const decimal = amount.toString();
-    if (decimal.length > MAX_NUMBER_DIGITS) {
-      throw new Error("toBigNum possible number overflow, use a string instead: " + decimal);
-    }
-    return parseDecimal(decimal, this.decimals);
+    return parseDecimal(amount, this.decimals);
   }
 
-  /** @return Converts a BN big decimal of this Contract into a String or Number */
-  public fromBigNum(contractDecimal:BigNumber): Numberish {
+  /** @return Converts a Scaled BigInt decimal of this Contract into a String or Number */
+  public fromBigNum(contractDecimal:bigint): Numberish {
     return formatDecimal(contractDecimal, this.decimals);
   }
 
-  /** @return Converts a BN decimal of this Contract into a Decimal with this contract precision */
-  public toDecimal(contractDecimal:BigNumber): Decimal {
+  /** @return Converts a Number|BigInt|Decimal into a Decimal with this contract's precision */
+  public toDecimal(contractDecimal:Numberish): Decimal {
     return new Decimal(contractDecimal, this.decimals);
   }
 }
