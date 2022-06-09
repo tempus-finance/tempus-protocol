@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from "ethers";
+import { BigNumber } from "ethers";
 import { Decimal } from "./Decimal";
 
 export type Numberish = Number | number | string | BigInt | BigNumber | Decimal;
@@ -50,11 +50,11 @@ export function bn(number:Numberish): BigNumber {
  */
 export function parseDecimal(decimal:Numberish, decimalBase:number): BigNumber {
   // need this special case to support MAX_UINT256, ignoring decimalBase
-  const decimalString = decimal.toString();
-  if (decimalString === MAX_UINT256) {
+  if (decimal === MAX_UINT256) {
     return BigNumber.from(MAX_UINT256);
   }
-  return ethers.utils.parseUnits(decimalString, decimalBase);
+  const bigIntStr = Decimal.toScaledBigInt(decimal, decimalBase).toString();
+  return BigNumber.from(bigIntStr);
 }
 
 /**
@@ -64,7 +64,8 @@ export function parseDecimal(decimal:Numberish, decimalBase:number): BigNumber {
  * @returns Number for simple decimals like 2.5, string for long decimals "0.00000000000001"
  */
 export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): Numberish {
-  const str = ethers.utils.formatUnits(bigDecimal, decimalBase);
+  const decimal = new Decimal(bigDecimal, decimalBase);
+  const str = decimal.toRounded(-1);
   if (str.length <= MAX_NUMBER_DIGITS) 
     return Number(str);
   return str;

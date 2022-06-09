@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
-import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
+import { Numberish, formatDecimal, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
 
 describeNonPool("Decimal", () =>
 {
-  describe("Decimal", () =>
+  describe(`Decimal v${Decimal.version}`, () =>
   {
     const dec18 = (x:Numberish):Decimal => decimal(x, 18);
     const dec6 = (x:Numberish):Decimal => decimal(x, 6);
@@ -74,6 +74,19 @@ describeNonPool("Decimal", () =>
 
     it("toRounded: rounds excess digits", () =>
     {
+      equals(dec6('0.000000').toRounded(-1), '0');
+      equals(dec18('0.000000').toRounded(-1), '0');
+      equals(dec18('0.004').toRounded(-1), '0.004');
+      equals(dec18('0.004555').toRounded(3), '0.005');
+      equals(dec18('100.04000000000').toRounded(-1), '100.04');
+      equals(dec18('100.04555555555').toRounded(3), '100.046');
+      equals(dec18('100.04555555555').toRounded(6), '100.045556');
+
+      equals(dec18('0.000000000000000000').toRounded(-1), '0');
+      equals(dec18('0.040000000000000000').toRounded(-1), '0.04');
+      equals(dec18('1.000000000000000000').toRounded(-1), '1');
+      equals(dec18('30.000000000000000000').toRounded(-1), '30');
+
       equals(dec18('100.5432149898').toRounded(0), '100');
       equals(dec18('100.5432149898').toRounded(6), '100.543215');
       equals(dec18('100.5432141198').toRounded(6), '100.543214');
@@ -315,6 +328,38 @@ describeNonPool("Decimal", () =>
       {
         equals(dec6('0.000001').div(2), '0.000000');
       });
+    });
+  });
+
+  describe("DecimalUtils", () =>
+  {
+    function bn18(x:Numberish): BigNumber {
+      const parts = x.toString().split('.');
+      const whole = BigNumber.from(parts[0]);
+      if (parts.length === 1) // it was an integer, return it as-is
+        return whole;
+      // it's a decimal fraction, scale it up:
+      const sign = BigNumber.from(whole.isNegative() ? '-1' : '1');
+      const fractString = parts[1].padEnd(18, '0'); // pad 04 to 040000000000000000
+      const fract = BigNumber.from(fractString);
+      const scaledResult = whole.abs().mul('1000000000000000000').add(fract).mul(sign);
+      return scaledResult;
+    }
+
+    describe("parseDecimal", () =>
+    {
+      expect(parseDecimal('0.000000000000000000', 18)).to.equal(bn18('0'));
+      expect(parseDecimal('0.040000000000000000', 18)).to.equal(bn18('0.04'));
+      expect(parseDecimal('1.000000000000000000', 18)).to.equal(bn18('1.0'));
+      expect(parseDecimal('30.000000000000000000', 18)).to.equal(bn18('30.0'));
+    });
+
+    describe("formatDecimal", () =>
+    {
+      expect(formatDecimal(bn18('0.000000000000000000'), 18)).to.equal(0);
+      expect(formatDecimal(bn18('0.040000000000000000'), 18)).to.equal(0.04);
+      expect(formatDecimal(bn18('1.000000000000000000'), 18)).to.equal(1);
+      expect(formatDecimal(bn18('30.000000000000000000'), 18)).to.equal(30);
     });
   });
 });

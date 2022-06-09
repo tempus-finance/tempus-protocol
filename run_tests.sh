@@ -53,7 +53,7 @@ while [ -n "$1" ]; do
   shift
 done
 
-if [ "$ONLY_POOL" ] && [ "$ONLY_TOKEN" ]; then
+if [ "$ONLY_POOL" ] && [[ "$ONLY_POOL" == "None" || "$ONLY_TOKEN" ]]; then
   REPORTER="spec"
 fi
 

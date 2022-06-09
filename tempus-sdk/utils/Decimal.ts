@@ -22,6 +22,9 @@ export function decimal(value:Numberish, decimals:number = DEFAULT_DECIMAL_PRECI
  *           compatible with ERC20.decimals() concept.
  */
 export class Decimal {
+  /** @dev Decimal implementation version number */
+  public static readonly version: number = 2;
+
   readonly int: bigint; // big integer that holds the FixedPoint Decimal value
   readonly decimals: number; // number of decimal digits that form a fraction, can be 0
 
@@ -221,7 +224,7 @@ export class Decimal {
     }
 
     if (decimalIdx === -1) { // input was integer eg "1234"
-      return BigInt(val.padEnd(val.length + decimals, "0"));
+      return BigInt(val.padEnd(val.length + decimals, '0'));
     }
 
     // input was a decimal eg "123.456" (pad trail) or "1.23456789" (truncate fract)
@@ -230,7 +233,7 @@ export class Decimal {
     const fract = val.slice(decimalIdx+1, Math.min(decimalIdx+1+decimals, val.length));
     // if it's not long enough, create a trail of zeroes to satisfy decimals precision
     const trail = decimals > fract.length ? decimals - fract.length : 0;
-    return BigInt(whole + fract.padEnd(fract.length + trail, "0"));
+    return BigInt(whole + fract.padEnd(fract.length + trail, '0'));
   }
 
   private _toString(maxDecimals:number, round:boolean=false): string {
@@ -244,27 +247,64 @@ export class Decimal {
 
     // split the BigInt digits into whole and fractional parts
     const gotWhole = abs.length > this.decimals; // is BigInt >= Decimal(1.000000)
-    const whole = gotWhole ? abs.slice(0, abs.length - this.decimals) : "0";
+    const whole = gotWhole ? abs.slice(0, abs.length - this.decimals) : '0';
 
-    let fractPart = "";
-    if (maxDecimals > 0) {
-      const f = gotWhole ? abs.slice(abs.length - this.decimals)
-                         : abs.padStart(this.decimals, "0");
-
-      const truncationIdx = Math.min(maxDecimals, f.length);
-      if (round) {
-        // convert the fract part into a Number and round it at the truncation point
-        const rounded = Math.round(Number(f.slice(0, truncationIdx)+"."+f.slice(truncationIdx)));
-        // and truncate any trailing parts
-        fractPart = "." + rounded.toString().slice(0, truncationIdx);
-      } else if (maxDecimals !== this.decimals) {
-        // truncate the trailing fraction
-        fractPart = "." + f.slice(0, truncationIdx);
-      } else {
-        fractPart = "." + f;
-      }
+    // if -1, then auto set the decimals value
+    maxDecimals = maxDecimals === -1 ? this.decimals : maxDecimals;
+    if (maxDecimals <= 0) { // truncate fraction
+      return Decimal.toDecimalString(neg, whole);
     }
 
-    return (neg ? "-" : "") + whole + fractPart;
+    const f = gotWhole ? abs.slice(abs.length - this.decimals)
+                       : abs.padStart(this.decimals, '0');
+    if (round) {
+      const roundedFract = Decimal.roundFraction(f, maxDecimals);
+      return Decimal.toDecimalString(neg, whole, roundedFract);
+    } else if (maxDecimals !== this.decimals) {
+      // truncate the trailing fraction
+      const truncationIdx = Math.min(maxDecimals, f.length);
+      const truncatedFract = f.slice(0, truncationIdx);
+      return Decimal.toDecimalString(neg, whole, truncatedFract);
+    } else {
+      return Decimal.toDecimalString(neg, whole, f);
+    }
+  }
+
+  /** @return Decimal string from sign, whole part and fraction part */
+  private static toDecimalString(neg:boolean, whole:string, fract?:string): string {
+    const signPart = neg ? '-' : '';
+    const wholePart = whole ? whole : '0';
+    const decPoint = fract ? '.' : '';
+    const fractPart = fract ? fract : '';
+    return signPart + wholePart + decPoint + fractPart;
+  }
+
+  /**
+   * Rounds the trailing fraction at the boundary of `maxDecimals`
+   * ex: roundFraction('004555', 3) -> '005'
+   * ex: roundFraction('004000', 3) -> '004'
+   */
+  private static roundFraction(f:string, maxDecimals:number): string {
+    const truncationIdx = Math.min(maxDecimals, f.length);
+    if (f.length === truncationIdx) { // nothing to round, just trim it
+      return Decimal.trimFraction(f);
+    }
+    // convert the fract part into a Number and round it at the truncation point
+    const toRound = f.slice(0, truncationIdx)+'.'+f.slice(truncationIdx);
+    const rounded = Math.round(Number(toRound)).toString();
+    // make sure we pad back to correct length
+    const fractPart = rounded.padStart(truncationIdx, '0');
+    return Decimal.trimFraction(fractPart);
+  }
+
+  /**
+   * Trims a fraction string by removing trailing zeroes
+   * ex: '00000' -> ''
+   * ex: '04000' -> '.04'
+   */
+  private static trimFraction(fraction:string): string {
+    let end = fraction.length;
+    while (end > 0 && fraction.charAt(end - 1) === '0') --end;
+    return end === 0 ? '' : fraction.slice(0, end);
   }
 }
