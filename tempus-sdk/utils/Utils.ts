@@ -5,7 +5,7 @@ import { BigNumber, Contract } from "ethers";
 /**
  * @returns Latest timestamp of the blockchain
  */
-export async function blockTimestamp() : Promise<number> {
+export async function blockTimestamp(): Promise<number> {
   return (await ethers.provider.getBlock('latest')).timestamp;
 }
 
@@ -38,15 +38,15 @@ export async function evmMineInSingleBlock(fn: ()=>Promise<void>): Promise<void>
 /**
  * Increase current EVM time by seconds
  */
-export async function increaseTime(addSeconds: number) : Promise<void> {
+export async function increaseTime(addSeconds: number): Promise<void> {
   await ethers.provider.send("evm_increaseTime", [addSeconds]);
-  await ethers.provider.send("evm_mine", []);
+  await evmMine();
 }
 
 /**
  * Set current EVM time
  */
-export async function setEvmTime(timestamp:number) : Promise<void> {
+export async function setEvmTime(timestamp:number): Promise<void> {
   await setNextBlockTimestamp(timestamp);
   await evmMine();
 }
@@ -54,7 +54,7 @@ export async function setEvmTime(timestamp:number) : Promise<void> {
 /**
  * Set The timestamp of the next block (without mining it)
  */
-export async function setNextBlockTimestamp(timestamp:number) : Promise<void> {
+export async function setNextBlockTimestamp(timestamp:number): Promise<void> {
   await ethers.provider.send("evm_setNextBlockTimestamp", [timestamp]);
 }
 

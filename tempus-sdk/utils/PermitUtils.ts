@@ -13,7 +13,7 @@ const permitTypes = {
   ]
 };
 
-async function getPermitStruct(token: ERC20, owner: Addressable, spender: Addressable, value: Numberish, deadline: Numberish) {  
+async function getPermitStruct(token: ERC20, owner: Addressable, spender: Addressable, value: Numberish, deadline: Numberish) {
   return {
     owner: addressOf(owner),
     spender: addressOf(spender),
