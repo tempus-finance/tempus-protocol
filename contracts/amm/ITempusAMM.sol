@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import "../token/IPoolShare.sol";
 import "../utils/IOwnable.sol";
 
-interface ITempusAMM is IERC20, IERC20Permit, IOwnable {
+interface ITempusAMM is IERC20Metadata, IERC20Permit, IOwnable {
     enum SwapType {
         GIVEN_IN,
         GIVEN_OUT
