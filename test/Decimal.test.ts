@@ -33,7 +33,7 @@ describeNonPool("Decimal", () =>
       equals(dec6('123.4567899'), '123.456789');
       equals(int('1234567890'), '1234567890');
       equals(int('123.4567890'), '123');
-      equals(dec6(BigNumber.from('12340123456')), '12340.123456');
+      equals(dec6(BigInt('12340123456')), '12340.123456');
       equals(dec6(dec6(1.654321)), '1.654321');
       equals(dec6(dec18('1.123456789012345678')), '1.123456');
 
@@ -47,7 +47,7 @@ describeNonPool("Decimal", () =>
       equals(dec6('-123.4567899'), '-123.456789');
       equals(int('-1234567890'), '-1234567890');
       equals(int('-123.4567890'), '-123');
-      equals(dec6(BigNumber.from('-12340123456')), '-12340.123456');
+      equals(dec6(BigInt('-12340123456')), '-12340.123456');
       equals(dec6(dec6(-1.654321)), '-1.654321');
       equals(dec6(dec18('-1.123456789012345678')), '-1.123456');
     });
@@ -169,6 +169,13 @@ describeNonPool("Decimal", () =>
       expect(dec6('-50.5').lte('-50.5')).to.be.true;
     });
 
+    it("ethers BigNumber support", () =>
+    {
+      equals(dec6(BigNumber.from('100000000')), '100.000000');
+      equals(dec6(BigNumber.from('100')), '0.000100');
+      expect(dec6('100').toBigNumber()).to.equal(BigNumber.from('100000000'));
+    });
+
     it("chai equality tests", () =>
     {
       expect(dec18('100.123456')).to.eql(dec18('100.123456'));
@@ -179,7 +186,7 @@ describeNonPool("Decimal", () =>
 
     type BinaryOp<T> = (a:number, b:number) => T;
 
-    // toFixed, but with BigNumber-like rounding
+    // toFixed, but trailing digits are truncated
     function truncate(x:number, precision:number): string {
       const [whole, fract] = x.toFixed(precision + 6).split('.');
       if (!fract) return whole;
@@ -333,16 +340,17 @@ describeNonPool("Decimal", () =>
 
   describe("DecimalUtils", () =>
   {
-    function bn18(x:Numberish): BigNumber {
+    function bn18(x:Numberish): bigint {
       const parts = x.toString().split('.');
-      const whole = BigNumber.from(parts[0]);
+      const whole = BigInt(parts[0]);
       if (parts.length === 1) // it was an integer, return it as-is
         return whole;
       // it's a decimal fraction, scale it up:
-      const sign = BigNumber.from(whole.isNegative() ? '-1' : '1');
+      const sign = BigInt(whole >= 0 ? '1' : '-1');
       const fractString = parts[1].padEnd(18, '0'); // pad 04 to 040000000000000000
-      const fract = BigNumber.from(fractString);
-      const scaledResult = whole.abs().mul('1000000000000000000').add(fract).mul(sign);
+      const fract = BigInt(fractString);
+      const absWhole = whole >= 0 ? whole : -whole;
+      const scaledResult = (absWhole * BigInt('1000000000000000000') + fract) * sign;
       return scaledResult;
     }
 

@@ -6,6 +6,8 @@ import { Numberish } from "./DecimalUtils";
  */
 export const DEFAULT_DECIMAL_PRECISION = 18;
 
+const ZERO = BigInt(0);
+
  /**
   * Creates a new `Decimal` Fixed-Point Decimal type
   * The default precision is 18 decimals.
@@ -32,7 +34,7 @@ export class Decimal {
    * Creates a new `Decimal` Fixed-Point Decimal type with fixed decimals precision
    * @warning Any EXCESS digits will ALWAYS be truncated, not rounded!
    * @param value Any Number-like value.
-   *              BigInt and BigNumber pass through without any scaling.
+   *              BigInt passes through without any scaling.
    *              Decimal types are upscaled/downscaled to this decimals precision
    * @param decimals Fixed count of fractional decimal digits, eg 18 or 6.
    *                 Excess digits are truncated.
@@ -41,6 +43,11 @@ export class Decimal {
     this.decimals = decimals;
     this.int = Decimal.toScaledBigInt(value, decimals);
     Object.freeze(this);
+  }
+
+  /** @returns Scaled BigInt from this Decimal */
+  public toBigInt(): bigint {
+    return this.int;
   }
 
   /** @returns BigNumber from this Decimal */
@@ -78,6 +85,15 @@ export class Decimal {
     return this._toString(maxDecimals, true);
   }
 
+  /**
+   * @param padZeroes If set, pads the front of the hex string to specific width
+   * @returns Scaled Bigint converted to an Ethers suitable HEX string
+   */
+  public toHexString(padZeroes?:number): string {
+    const hex = this.int.toString(16);
+    return '0x' + (padZeroes ? hex.padStart(padZeroes, '0') : hex);
+  }
+
   /*** @returns JSON representation of this Decimal as { type: "Decimal", value: "1.000000" } */
   public toJSON(key?: string): any {
       return { type: "Decimal", value: this.toString() };
@@ -102,7 +118,14 @@ export class Decimal {
   public equals(other:Numberish): boolean {
     if (other instanceof Decimal)
       return this.decimals === other.decimals && this.int === other.int;
-    return this.int == this.toScaledBigInt(other);
+    return this.int === this.toScaledBigInt(other);
+  }
+
+  /**
+   * @brief Alias of this.equals()
+   */
+  public eq(other:Numberish): boolean {
+    return this.equals(other);
   }
 
   /**
@@ -180,6 +203,10 @@ export class Decimal {
     return this.int <= this.toScaledBigInt(x);
   }
 
+  public isZero(): boolean {
+    return this.int === ZERO;
+  }
+
   /**
    * Main utility for converting numeric values into the internal
    * scaled fixed point integer representation.
@@ -194,8 +221,8 @@ export class Decimal {
       return value; // accept BigInt without any validation, this is necessary to enable raw interop
     }
 
-    if (value instanceof BigNumber) {
-      return BigInt(value.toString()); // accept BigNumber without any validation
+    if (value instanceof BigNumber) { // ethers.js compatibility, treat BigNumber as a BigInt
+      return BigInt(value.toString());
     }
 
     // for Decimal types we can perform optimized upscaling/downscaling fastpaths
