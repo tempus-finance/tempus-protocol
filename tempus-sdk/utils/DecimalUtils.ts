@@ -1,7 +1,7 @@
 import { BigNumber } from "ethers";
 import { Decimal } from "./Decimal";
 
-export type Numberish = Number | number | string | BigInt | BigNumber | Decimal;
+export type Numberish = Number | String | BigInt | Decimal | BigNumber;
 
 /**
  * double has limited digits of accuracy, so any decimal 
@@ -14,84 +14,76 @@ export const MAX_NUMBER_DIGITS = 17;
 /**
  * Maximum value for uint256
  */
-export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+export const MAX_UINT256:bigint = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
 
 /**
- * 1.0 expressed as a WEI BigNumber
- */
-export const ONE_WEI:BigNumber = parseDecimal('1.0', 18);
-
-/**
- * Converts any input number into an ethers.BigNumber.
+ * Converts any input number into a BigInt.
  * Regular numbers are simply truncated to integer.
- * To create scaled BigNumbers, pass a Decimal to this function.
+ * To create scaled BigInt, pass a Decimal to this function.
  * Example: bn(decimal(1.0, 18)) -> 1000000000000000000
  * 
  * @param number Any number-like value
  */
 export function bn(number:Numberish): BigNumber {
-  if (number instanceof BigNumber)
-    return number;
-  if (number instanceof Decimal)
-    return number.toBigNumber();
   if (typeof(number) === "bigint")
     return BigNumber.from(number);
+  if (number instanceof Decimal)
+    return number.toBigNumber();
   // truncate decimal part
-  const integer = number.toString().split('.')[0];
-  return BigNumber.from(integer);
+  const whole = number.toString().split('.')[0];
+  return BigNumber.from(whole);
 }
 
 /**
- * Parses a decimal string into specified base precision
+ * Converts a decimal number into a scaled bigint
  * @example let wei = parseDecimal("0.000001", 18);
  * @param decimal Decimal such as 1.25 or "12.1234777777"
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27 
- * @returns BigNumber for use in solidity contracts
+ * @returns Scaled bigint for use in solidity contracts
  */
-export function parseDecimal(decimal:Numberish, decimalBase:number): BigNumber {
+export function parseDecimal(decimal:Numberish, decimalBase:number): bigint {
   // need this special case to support MAX_UINT256, ignoring decimalBase
-  if (decimal === MAX_UINT256) {
-    return BigNumber.from(MAX_UINT256);
+  if (typeof(decimal) === "bigint" && decimal === MAX_UINT256) {
+    return decimal;
   }
-  const bigIntStr = Decimal.toScaledBigInt(decimal, decimalBase).toString();
-  return BigNumber.from(bigIntStr);
+  return Decimal.toScaledBigInt(decimal, decimalBase);
 }
 
 /**
  * Formats a big decimal into a Number or String which is representable in TypeScript
- * @param bigDecimal BigNumber in contract decimal base
+ * @param scaledBigInt Scaled BigInt decimal from an ERC20-like contract
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27
  * @returns Number for simple decimals like 2.5, string for long decimals "0.00000000000001"
  */
-export function formatDecimal(bigDecimal:BigNumber, decimalBase:number): Numberish {
-  const decimal = new Decimal(bigDecimal, decimalBase);
+export function formatDecimal(scaledBigInt:bigint, decimalBase:number): Numberish {
+  const decimal = new Decimal(scaledBigInt, decimalBase);
   const str = decimal.toRounded(-1);
   if (str.length <= MAX_NUMBER_DIGITS) 
     return Number(str);
   return str;
 }
 
-/** @return WEI BigNumber from an ETH decimal */
-export function toWei(eth:Numberish): BigNumber {
+/** @return WEI Scaled BigInt from an ETH decimal */
+export function toWei(eth:Numberish): bigint {
   return parseDecimal(eth, 18);
 }
 
-/** @return Decimal from a WEI BigNumber */
-export function fromWei(wei:BigNumber): Numberish {
+/** @return Decimal from a WEI Scaled BigInt */
+export function fromWei(wei:bigint): Numberish {
   return formatDecimal(wei, 18);
 }
 
-/** @return RAY BigNumber from a decimal number */
-export function toRay(decimal:Numberish): BigNumber {
+/** @return RAY Scaled BigInt from a decimal number */
+export function toRay(decimal:Numberish): bigint {
   return parseDecimal(decimal, 27);
 }
 
-/** @return Decimal from a RAY BigNumber */
-export function fromRay(wei:BigNumber): Numberish {
+/** @return Decimal from a RAY Scaled BigInt */
+export function fromRay(wei:bigint): Numberish {
   return formatDecimal(wei, 27);
 }
 
-/** @return ETH decimal from WEI BigNumber */
-export function toEth(wei:BigNumber): Numberish {
+/** @return ETH decimal from WEI Scaled BigInt */
+export function toEth(wei:bigint): Numberish {
   return formatDecimal(wei, 18);
 }
