@@ -354,8 +354,8 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
       isBackingToken: true
     }, { value: testPool.type === PoolType.Lido ? parseDecimal(1, pool.asset.decimals) : 0 });
     
-    const balanceAfter = parseDecimal(await pool.asset.balanceOf(user1.address), pool.asset.decimals);
-    const expectedBalanceAfter = parseDecimal(Number(balanceBefore) - depositAmount, pool.asset.decimals);
+    const balanceAfter = await pool.asset.balanceOf(user1.address);
+    const expectedBalanceAfter = pool.asset.toDecimal(Number(balanceBefore) - depositAmount);
     if (testPool.type === PoolType.Lido) {
       expect(balanceAfter.lt(expectedBalanceAfter)).to.be.true; // BN.lt is used since some ETH will be consumed for gas 
     }

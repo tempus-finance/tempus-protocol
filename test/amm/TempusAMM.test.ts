@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
@@ -71,19 +71,19 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
     const tokenOut = swapTest.principalIn ? tempusPool.yieldShare : tempusPool.principalShare;
     const givenOut = (swapTest.givenOut !== undefined && swapTest.givenOut);
 
-    const preSwapTokenInBalance:BigNumber = await tokenIn.contract.balanceOf(owner.address);
-    const preSwapTokenOutBalance:BigNumber = await tokenOut.contract.balanceOf(owner.address);
+    const preSwapTokenInBalance = await tokenIn.balanceOf(owner.address);
+    const preSwapTokenOutBalance = await tokenOut.balanceOf(owner.address);
   
     await tempusAMM.swapGivenInOrOut(owner, tokenIn.address, tokenOut.address, givenOut ? swapTest.swapAmountOut : swapTest.swapAmountIn, givenOut);
     
     // mine a block in case the current test case has automining set to false (otherwise expect functions would fail...)
     await evmMine();
 
-    const postSwapTokenInBalance:BigNumber = await tokenIn.contract.balanceOf(owner.address);
-    const postSwapTokenOutBalance:BigNumber = await tokenOut.contract.balanceOf(owner.address);
+    const postSwapTokenInBalance = await tokenIn.balanceOf(owner.address);
+    const postSwapTokenOutBalance = await tokenOut.balanceOf(owner.address);
 
-    expect(+tokenIn.fromBigNum(preSwapTokenInBalance.sub(postSwapTokenInBalance))).to.be.within(+swapTest.swapAmountIn * 0.97, +swapTest.swapAmountIn * 1.03);
-    expect(+tokenIn.fromBigNum(postSwapTokenOutBalance.sub(preSwapTokenOutBalance))).to.be.within(+swapTest.swapAmountOut * 0.97, +swapTest.swapAmountOut * 1.03);
+    expect(+preSwapTokenInBalance.sub(postSwapTokenInBalance)).to.be.within(+swapTest.swapAmountIn * 0.97, +swapTest.swapAmountIn * 1.03);
+    expect(+postSwapTokenOutBalance.sub(preSwapTokenOutBalance)).to.be.within(+swapTest.swapAmountOut * 0.97, +swapTest.swapAmountOut * 1.03);
   }
 
   it("Revert with checks in constructor", async () => {

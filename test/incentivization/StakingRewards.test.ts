@@ -87,7 +87,7 @@ describeNonPool("StakingRewards", async () => {
         (await expectRevert(initializeStakingRewards(1, -1))).to.equal(":ExpirationTooSmall");
     });
     it("verifies setting a Maximum Early Withdrawal Fee greater than 1e18 reverts", async () => {
-        (await expectRevert(stakingRewards.setMaxEarlyWithdrawalFee(toWei(1).add(1)))).to.equal(":MaxEarlyWithdrawalFeeTooBig");
+        (await expectRevert(stakingRewards.setMaxEarlyWithdrawalFee(toWei(1) + BigInt(1)))).to.equal(":MaxEarlyWithdrawalFeeTooBig");
     });
   });
 

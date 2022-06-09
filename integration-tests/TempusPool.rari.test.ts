@@ -29,7 +29,7 @@ const setupWithRariWithdrawalFee = async (rariFee:Decimal) => await deployments.
   if (rariFee.valueOf() > 0) {
     await owner.sendTransaction({ from: owner.address, to: rariFundManagerOwner.address, value: toWei(3) });
     // Set Rari's Withdrawal Fee
-    await rariFundManager.connect(rariFundManagerOwner).setWithdrawalFeeRate(rariFee.toBigNumber());
+    await rariFundManager.connect(rariFundManagerOwner).setWithdrawalFeeRate(rariFee.toBigInt());
   }
   
   const maturityTime = await blockTimestamp() + (60 * 60 * 24 * 30 * 3); // maturity is in 3 months

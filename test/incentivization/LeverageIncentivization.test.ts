@@ -1,9 +1,10 @@
 import { expect } from "chai";
+import { BigNumber, Contract } from "ethers";
 import { MockContract } from "@ethereum-waffle/mock-contract";
 import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
 import { blockTimestamp, expectRevert, setEvmTime } from "@tempus-sdk/utils/Utils";
-import { Numberish, parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
-import { Contract, BigNumber } from "ethers";
+import { decimal } from "@tempus-sdk/utils/Decimal";
+import { bn, Numberish, parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { ethers, network, waffle } from "hardhat";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
@@ -11,6 +12,7 @@ import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 const { abi: POSITION_MANAGER_ABI } = require("../../artifacts/contracts/IPositionManager.sol/IPositionManager");
 
 const REWARD_TOKEN_DECIMALS = 18;
+
 describeNonPool("LeverageIncentivization", async () =>
 {
   const incentivizedTempusAmm = ethers.Wallet.createRandom().address;
@@ -46,23 +48,23 @@ describeNonPool("LeverageIncentivization", async () =>
 
   beforeEach(async () =>
   {
-    incentiveSize = parseDecimal(1000, REWARD_TOKEN_DECIMALS);
+    incentiveSize = decimal(1000, REWARD_TOKEN_DECIMALS).toBigNumber();
     expiration = (await blockTimestamp()) + 60 * 60 * 24 * 30 * 6; // expiration in 6 months
     [owner, user1, user2, user3] = await ethers.getSigners();
     const [sender] = waffle.provider.getWallets();
 
     positionManagerMock = await waffle.deployMockContract(sender, POSITION_MANAGER_ABI);
-    
+
     await network.provider.send("hardhat_setBalance", [
       positionManagerMock.address,
-      toWei(1).toHexString().replace("0x0", "0x")
+      decimal(1).toHexString()
     ]);
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [positionManagerMock.address],
     });
     positionManagerMockSigner = await ethers.getSigner(positionManagerMock.address);
-    
+
     rewardToken = await ERC20.deploy(
       "ERC20FixedSupply",
       REWARD_TOKEN_DECIMALS,
@@ -94,11 +96,11 @@ describeNonPool("LeverageIncentivization", async () =>
     
     expect(await rewardToken.contract.balanceOf(user1.address)).equals(0);
     await unstake(1, user1, /*yieldsRate*/"0.1");
-    expect(await rewardToken.contract.balanceOf(user1.address)).to.be.closeTo(incentiveSize, parseDecimal("0.001", REWARD_TOKEN_DECIMALS).toNumber());
+    expect(await rewardToken.contract.balanceOf(user1.address)).to.be.closeTo(incentiveSize, parseDecimal("0.001", REWARD_TOKEN_DECIMALS));
   });
 
   it("verifies that unstaking a non-owned position reverts", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(40), yields: toWei(150), tempusAMM: incentivizedTempusAmm});
+    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: bn(toWei(40)), yields: bn(toWei(150)), tempusAMM: incentivizedTempusAmm});
     await onERC721Received(user2, 1, 50);
 
     (await expectRevert(unstake(1, user1, /*yieldsRate*/"0.1"))).to.be.equal(":SenderIsNotStaker");
