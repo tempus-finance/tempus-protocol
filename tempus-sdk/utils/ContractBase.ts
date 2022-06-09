@@ -21,15 +21,6 @@ export function addressOf(addressable: Addressable): string {
   throw new Error("Invalid addressable (no address): " + addressable);
 }
 
-/** @return Signer or an address string */
-export function signerOf(addressable: Addressable): signer.Signer|Signer|string {
-  if (typeof(addressable) === "string")
-    return addressable;
-  if (addressable instanceof ContractBase || addressable instanceof Contract)
-    return addressable.address;
-  return addressable; // Signer
-}
-
 /**
  * Base class for Any contract
  * Contains several utilities for deploying, attaching and type conversions
@@ -58,8 +49,7 @@ export abstract class ContractBase extends DecimalConvertible
   
   /** Connects a user to the contract, so that transactions can be sent by the user */
   connect(user:Signer): Contract {
-    const signerOrProvider = signerOf(user);
-    return this.contract.connect(signerOrProvider);
+    return this.contract.connect(user);
   }
 
   /**
@@ -100,8 +90,7 @@ export abstract class ContractBase extends DecimalConvertible
    * @param signer Signer to attach with, can be ethers.VoidSigner or SignerWithAddress
    */
   static async attachContractWithSigner(contractName:string, contractAddress:string, signer:Signer): Promise<Contract> {
-    const signerOrProvider = signerOf(signer);
-    const factory = await ethers.getContractFactory(contractName, signerOrProvider);
+    const factory = await ethers.getContractFactory(contractName, signer);
     return factory.attach(contractAddress);
   }
 }
