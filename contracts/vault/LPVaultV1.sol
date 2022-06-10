@@ -37,6 +37,8 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
     Stats public stats;
 
     bool public isShutdown;
+    /// True if the after shutdown the pool was exited from.
+    bool private isExited;
 
     constructor(
         ITempusPool _pool,
@@ -99,10 +101,11 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
     function withdraw(uint256 shares, address recipient) external returns (uint256 amount) {
         bool matured = pool.matured();
 
-        if (matured) {
+        if (matured && !isExited) {
             // Upon maturity withdraw all existing liquidity.
             // Doing this prior to totalAssets for less calculation risk.
             exitPool();
+            isExited = true;
         }
 
         amount = previewWithdraw(shares);
