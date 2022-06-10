@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import "@tempus-labs/contracts/utils/IOwnable.sol";
 
 import "../ITempusPool.sol";
@@ -9,7 +10,7 @@ import "../amm/ITempusAMM.sol";
 import "../stats/Stats.sol";
 
 // TODO: Make this EIP-4626 compatible.
-interface ILPVaultV1 is IERC20Metadata, IOwnable {
+interface ILPVaultV1 is IERC20Metadata, IERC20Permit, IOwnable {
     /// Supplied amm is not for the suplied pool.
     error InvalidPoolAMM(ITempusPool, ITempusAMM);
 

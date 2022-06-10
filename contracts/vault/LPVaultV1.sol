@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@tempus-labs/contracts/math/Fixed256xVar.sol";
 import "@tempus-labs/contracts/utils/Ownable.sol";
@@ -14,7 +14,7 @@ import "../amm/ITempusAMM.sol";
 import "../stats/Stats.sol";
 import "./ILPVaultV1.sol";
 
-contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
+contract LPVaultV1 is ILPVaultV1, ERC20Permit, Ownable {
     using SafeERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -46,7 +46,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         Stats _stats,
         string memory name,
         string memory symbol
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) ERC20Permit(name) {
         if (!isTempusPoolAMM(_pool, _amm)) {
             revert InvalidPoolAMM(_pool, _amm);
         }
