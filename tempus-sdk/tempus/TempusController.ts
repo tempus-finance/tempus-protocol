@@ -1,7 +1,7 @@
 import { Contract, Transaction } from "ethers";
 import { Numberish, toWei } from "../utils/DecimalUtils";
 import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
-import { TempusPool } from "./TempusPool";
+import { PoolType, TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "./PoolTestFixture";
 import { constructPermit } from "../utils/PermitUtils";
 
@@ -72,14 +72,14 @@ export class TempusController extends ContractBase {
   * Deposits backing tokens into Tempus Pool on behalf of user
   * @param user User who is depositing
   * @param pool The Tempus Pool to which funds will be deposited
-  * @param backingAmount Amount of Backing Tokens to deposit
+  * @param backingAmount Amount of Backing Tokens to deposit or ETH value if pool is Lido
   * @param recipient Address or User who will receive the minted shares
   * @param ethValue value of ETH to send with the tx
   */
-  async depositBacking(user:Signer, pool: TempusPool, backingAmount:Numberish, recipient:Addressable = user, ethValue: Numberish = 0): Promise<Transaction> {
+  async depositBacking(user:Signer, pool: TempusPool, backingAmount:Numberish, recipient?:Addressable, ethValue?: Numberish): Promise<Transaction> {
     return this.connect(user).depositBacking(
-      pool.address, pool.asset.toBigNum(backingAmount),
-      addressOf(recipient), { value: toWei(ethValue) }
+      pool.address, pool.asset.toBigNum(backingAmount), addressOf(recipient ?? user),
+      { value: toWei(pool.type === PoolType.Lido ? ethValue ?? backingAmount : ethValue ?? 0) }
     );
   }
 

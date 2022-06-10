@@ -222,8 +222,7 @@ export abstract class PoolTestFixture {
    * Deposit BackingTokens into TempusPool
    */
   async depositBT(user:Signer, backingTokenAmount:Numberish, recipient:Addressable = user, ethValue?: Numberish): Promise<Transaction> {
-    const ethToTransfer = this.acceptsEther ? ((ethValue == undefined) ? backingTokenAmount : ethValue) : (ethValue || 0);
-    return this.tempus.controller.depositBacking(user, this.tempus, backingTokenAmount, recipient, ethToTransfer);
+    return this.tempus.controller.depositBacking(user, this.tempus, backingTokenAmount, recipient, ethValue);
   }
 
   /**

@@ -50,11 +50,11 @@ describeForSinglePool('TempusPool', PoolType.Lido, 'ETH', () => {
 
     const depositAmount: number = 100;
     const initialPoolYieldBearingBalance = "12345.678901234";
-    await tempusPool.controller.depositBacking(signer2, tempusPool, initialPoolYieldBearingBalance, signer2, initialPoolYieldBearingBalance); // deposit some BT to the pool before 
+    await tempusPool.controller.depositBacking(signer2, tempusPool, initialPoolYieldBearingBalance, signer2); // deposit some BT to the pool before 
 
     const preBalances = await Balances.getBalances(tempusPool.yieldBearing, signer1, signer2);
 
-    await tempusPool.controller.depositBacking(signer1, tempusPool, depositAmount, signer1, depositAmount); // deposit some BT to the pool before 
+    await tempusPool.controller.depositBacking(signer1, tempusPool, depositAmount, signer1); // deposit some BT to the pool before 
     await lido.connect(signer2).submit('0x1234567895e8bbcfc9581d2e864a68feb6a076d3', { value: toWei(depositAmount) }); // deposit directly to Lido
 
     // This increases Lido's yield
