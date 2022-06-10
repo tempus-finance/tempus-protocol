@@ -300,9 +300,6 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         uint256 yields = pool.yieldShare().balanceOf(address(this));
 
         uint256 supply = totalSupply();
-        if (supply == 0) {
-            revert PricePerShareInvalidSupply();
-        }
 
         (price, , , , ) = stats.estimateExitAndRedeem(
             amm,

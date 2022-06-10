@@ -43,9 +43,6 @@ interface ILPVaultV1 is IERC20Metadata, IOwnable {
     /// The new pool's share precision is different to the current one.
     error PoolSharePrecisionMismatch();
 
-    /// Price per share cannot be calculated for empty vault.
-    error PricePerShareInvalidSupply();
-
     /// The yield bearing token accepted by this vault.
     /// @return The address of the token.
     function yieldBearingToken() external view returns (IERC20Metadata);
