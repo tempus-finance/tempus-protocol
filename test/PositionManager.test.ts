@@ -341,21 +341,21 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
   });
 
   it("verifies minting a position with toBackingToken=true collects Backing Tokens", async () => {
-    const depositAmount = 1;
+    const depositAmount = pool.asset.toDecimal(1.0);
     const balanceBefore = await pool.asset.balanceOf(user1.address);
     
     const tx = await positionManager.connect(user1).mint({
       tempusAMM: amm.address,
       leverageMultiplier: toWei(2),
-      tokenAmountToDeposit: parseDecimal(1, pool.asset.decimals),
-      worstAcceptableCapitalsRate: parseDecimal("9.0", amm.token0.decimals),
+      tokenAmountToDeposit: depositAmount.toBigInt(),
+      worstAcceptableCapitalsRate: amm.token0.toBigNum(9.0),
       deadline: 2594275590,
       recipient: user1.address,
       isBackingToken: true
-    }, { value: testPool.type === PoolType.Lido ? parseDecimal(1, pool.asset.decimals) : 0 });
+    }, { value: testPool.type === PoolType.Lido ? pool.asset.toBigNum(1.0) : 0 });
     
     const balanceAfter = await pool.asset.balanceOf(user1.address);
-    const expectedBalanceAfter = pool.asset.toDecimal(Number(balanceBefore) - depositAmount);
+    const expectedBalanceAfter = pool.asset.toDecimal(balanceBefore.sub(depositAmount));
     if (testPool.type === PoolType.Lido) {
       expect(balanceAfter.lt(expectedBalanceAfter)).to.be.true; // BN.lt is used since some ETH will be consumed for gas 
     }

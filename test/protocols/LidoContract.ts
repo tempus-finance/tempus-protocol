@@ -45,8 +45,8 @@ export abstract class LidoContract extends ERC20 {
   async interestRateBigInt(): Promise<bigint> {
     // using higher sharesAmount for increased precision
     const byShares = parseDecimal("1000000.0", 18);
-    const shares:bigint = await this.contract.getPooledEthByShares(byShares);
-    return shares / BigInt(1000000); // convert to 1e18
+    const shares = await this.contract.getPooledEthByShares(byShares);
+    return BigInt(shares) / BigInt(1000000); // convert to 1e18
   }
 
   /** @return Stored Interest Rate */

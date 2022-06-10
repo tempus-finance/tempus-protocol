@@ -28,8 +28,8 @@ export class DecimalConvertible {
     return formatDecimal(contractDecimal, this.decimals);
   }
 
-  /** @return Converts a Number|BigInt|Decimal into a Decimal with this contract's precision */
-  public toDecimal(contractDecimal:Numberish): Decimal {
-    return new Decimal(contractDecimal, this.decimals);
+  /** @return Converts a Numberish value into a Decimal with this contract's precision */
+  public toDecimal(number:Numberish): Decimal {
+    return new Decimal(number, this.decimals);
   }
 }

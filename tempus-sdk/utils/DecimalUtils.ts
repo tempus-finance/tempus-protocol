@@ -17,9 +17,9 @@ export const MAX_NUMBER_DIGITS = 17;
 export const MAX_UINT256:bigint = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
 
 /**
- * Converts any input number into a BigInt.
+ * Converts any input number into a BigNumber.
  * Regular numbers are simply truncated to integer.
- * To create scaled BigInt, pass a Decimal to this function.
+ * To create scaled BigNumber, pass a Decimal to this function.
  * Example: bn(decimal(1.0, 18)) -> 1000000000000000000
  * 
  * @param number Any number-like value
@@ -55,7 +55,7 @@ export function parseDecimal(decimal:Numberish, decimalBase:number): bigint {
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27
  * @returns Number for simple decimals like 2.5, string for long decimals "0.00000000000001"
  */
-export function formatDecimal(scaledBigInt:bigint, decimalBase:number): Numberish {
+export function formatDecimal(scaledBigInt:bigint|BigNumber, decimalBase:number): Numberish {
   const decimal = new Decimal(scaledBigInt, decimalBase);
   const str = decimal.toRounded(-1);
   if (str.length <= MAX_NUMBER_DIGITS) 

@@ -63,6 +63,6 @@ export interface IERC20 {
   /** @return Converts a Scaled BigInt decimal of this Contract into a String or Number */
   fromBigNum(contractDecimal:bigint): Numberish;
 
-  /** @return Converts a Number|BigInt|Decimal into a Decimal with this contract's precision */
-  toDecimal(contractDecimal:Numberish): Decimal;
+  /** @return Converts a Numberish value into a Decimal with this contract's precision */
+  toDecimal(number:Numberish): Decimal;
 }
