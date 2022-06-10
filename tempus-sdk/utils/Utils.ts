@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { BigNumber, Contract } from "ethers";
+import { Contract } from "ethers";
+import { Decimal } from "./Decimal";
 
 /**
  * @returns Latest timestamp of the blockchain
@@ -61,20 +62,15 @@ export async function setNextBlockTimestamp(timestamp:number): Promise<void> {
 /**
  * Overwrites storage at address with a new value
  */
-export async function setStorageAtAddr(contract:Contract, addr:string, value:string|BigNumber): Promise<any> {
-  let val:string;
-  if (typeof(value) === "string") {
-    val = value;
-  } else {
-    val = ethers.utils.hexZeroPad(value.toHexString(), 32);
-  }
+export async function setStorageAtAddr(contract:Contract, addr:string, value:Decimal): Promise<any> {
+  const val = value.toHexString();
   return ethers.provider.send('hardhat_setStorageAt', [contract.address, addr, val]);
 }
 
 /**
  * Overwrites storage by full field name, eg "lido.Lido.beaconBalance" with a new value
  */
-export async function setStorageField(contract:Contract, fieldName:string, value:string|BigNumber): Promise<any> {
+export async function setStorageField(contract:Contract, fieldName:string, value:Decimal): Promise<any> {
   const addr = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fieldName)).replace("0x0", "0x");
   return setStorageAtAddr(contract, addr, value);
 }

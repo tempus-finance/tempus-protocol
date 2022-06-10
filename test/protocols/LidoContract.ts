@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { BigNumber, Contract } from "ethers";
+import { Contract } from "ethers";
 import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
 import { Addressable, Signer, addressOf } from "@tempus-sdk/utils/ContractBase";
@@ -41,17 +41,17 @@ export abstract class LidoContract extends ERC20 {
     return this.toDecimal(await this.contract.totalSupply());
   }
 
-  // Interest rate as 1e18 BigNumber
-  async interestRateBigNum(): Promise<BigNumber> {
+  // Interest rate as 1e18 Scaled BigInt
+  async interestRateBigInt(): Promise<bigint> {
     // using higher sharesAmount for increased precision
     const byShares = parseDecimal("1000000.0", 18);
-    const shares:BigNumber = await this.contract.getPooledEthByShares(byShares);
-    return shares.div(BigNumber.from(1000000)); // convert to 1e18
+    const shares = await this.contract.getPooledEthByShares(byShares);
+    return BigInt(shares) / BigInt(1000000); // convert to 1e18
   }
 
   /** @return Stored Interest Rate */
   async interestRate(): Promise<Decimal> {
-    return this.toDecimal(await this.interestRateBigNum());
+    return this.toDecimal(await this.interestRateBigInt());
   }
 
   /**

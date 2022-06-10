@@ -5,9 +5,8 @@ import { PoolType, TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
-import { BigNumber } from "@ethersproject/bignumber";
-import Decimal from "decimal.js";
 import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
+import { Decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
 
 describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
@@ -27,11 +26,11 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     await testPool.setupAccounts(owner, [[user1,/*ybt*/1000000],[user2,/*ybt*/100000]]);
   });
 
-  async function getAMMBalancesRatio(): Promise<BigNumber>
+  async function getAMMBalancesRatio(): Promise<Decimal>
   {
     const principals = await pool.principalShare.balanceOf(amm.address);
     const yields = await pool.yieldShare.balanceOf(amm.address);
-    return amm.toBigNum(1.0).mul(amm.toBigNum(principals)).div(amm.toBigNum(yields));
+    return amm.toDecimal(1.0).mul(principals).div(yields);
   }
 
   function getDefaultLeftoverShares(): Numberish
@@ -52,13 +51,13 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     await amm.provideLiquidity(user1, principals, yields);
   }
 
-  async function expectValidState(expectedAMMBalancesRatio:BigNumber = null)
+  async function expectValidState(expectedAMMBalancesRatio?:Decimal)
   {
     if (expectedAMMBalancesRatio) {
-      expect(await getAMMBalancesRatio()).to.equal(expectedAMMBalancesRatio, "AMM balances must maintain the same ratio");
+      expect(await getAMMBalancesRatio()).to.eql(expectedAMMBalancesRatio, "AMM balances must maintain the same ratio");
     }
-    expect(+await pool.principalShare.balanceOf(controller.address)).to.be.lessThan(2e-18, "No funds should remain in controller");
-    expect(+await pool.yieldShare.balanceOf(controller.address)).to.be.lessThan(2e-18, "No funds should remain in controller");
+    expect(+await pool.principalShare.balanceOf(controller)).to.be.lessThan(2e-18, "No funds should remain in controller");
+    expect(+await pool.yieldShare.balanceOf(controller)).to.be.lessThan(2e-18, "No funds should remain in controller");
   }
 
   describe("deploy", async () => {
@@ -643,6 +642,6 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
     const pricePerYield = await testPool.yields.getPricePerFullShareStored();
     const pricePerPrincipal = await testPool.principals.getPricePerFullShareStored();
     
-    return new Decimal(pricePerYield.toString()).div(pricePerPrincipal.toString()).toFixed(testPool.principals.decimals); /// TODO: move Decimal.js usage to a separate math helper
+    return testPool.yields.toDecimal(pricePerYield).div(pricePerPrincipal).toString();
   }
 });

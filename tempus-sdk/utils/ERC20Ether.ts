@@ -34,7 +34,7 @@ export class ERC20Ether extends DecimalConvertible implements IERC20 {
    */
   async balanceOf(account:Addressable): Promise<Decimal> {
     const balance = await ethers.provider.getBalance(addressOf(account));
-    return this.toDecimal(balance);
+    return this.toDecimal(balance.toString());
   }
 
   /**

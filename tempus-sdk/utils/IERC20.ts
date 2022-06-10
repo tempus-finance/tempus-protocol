@@ -1,7 +1,6 @@
 import { Decimal } from "./Decimal";
 import { Numberish } from "./DecimalUtils";
 import { Addressable } from "./ContractBase";
-import { BigNumber } from "@ethersproject/bignumber";
 
 /**
  * Interface for ERC20-like contracts
@@ -58,12 +57,12 @@ export interface IERC20 {
    */
   transferFrom(sender:Addressable, recipient:Addressable, amount:Numberish): Promise<any>;
 
-  /** @return Converts a Number or String into this Contract's BigNumber decimal */
-  toBigNum(amount:Numberish): BigNumber;
+  /** @return Converts a Number or String into this Contract's Scaled BigInt decimal */
+  toBigNum(amount:Numberish): bigint;
 
-  /** @return Converts a BN big decimal of this Contract into a String or Number */
-  fromBigNum(contractDecimal:BigNumber): Numberish;
+  /** @return Converts a Scaled BigInt decimal of this Contract into a String or Number */
+  fromBigNum(contractDecimal:bigint): Numberish;
 
-  /** @return Converts a BN decimal of this Contract into a Decimal with this contract precision */
-  toDecimal(contractDecimal:BigNumber): Decimal;
+  /** @return Converts a Numberish value into a Decimal with this contract's precision */
+  toDecimal(number:Numberish): Decimal;
 }

@@ -1,4 +1,4 @@
-import { BigNumber, BytesLike, Contract, Transaction } from "ethers";
+import { BytesLike, Contract, Transaction } from "ethers";
 import { Decimal } from "../utils/Decimal";
 import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "../utils/DecimalUtils";
 import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
@@ -444,16 +444,16 @@ export class TempusPool extends ContractBase {
    * @returns The start time of the pool
    */
   async startTime(): Promise<Numberish> {
-    let start:BigNumber = await this.contract.startTime();
-    return start.toNumber();
+    const start:number = await this.contract.startTime();
+    return start;
   }
 
   /**
    * @returns The maturity time of the pool
    */
   async maturityTime(): Promise<Numberish> {
-    let maturity:BigNumber = await this.contract.maturityTime();
-    return maturity.toNumber();
+    const maturity:number = await this.contract.maturityTime();
+    return maturity;
   }
 
   /**
@@ -461,25 +461,25 @@ export class TempusPool extends ContractBase {
    * @note This returns null in case it is not set (i.e. has the special value of `type(uin256).max`)
    */
   async exceptionalHaltTime(): Promise<Numberish | null> {
-    let exceptionalHaltTime:BigNumber = await this.contract.exceptionalHaltTime();
-    if (exceptionalHaltTime.toHexString() === MAX_UINT256) {
+    const exceptionalHaltTime = BigInt(await this.contract.exceptionalHaltTime());
+    if (exceptionalHaltTime === MAX_UINT256) {
       return null;
     }
-    return exceptionalHaltTime.toNumber();
+    return exceptionalHaltTime;
   }
 
   /**
    * @returns The maximum allowed duration of negative yield periods (in seconds)
    */
   async maximumNegativeYieldDuration(): Promise<Numberish> {
-    let maximumNegativeYieldDuration:BigNumber = await this.contract.maximumNegativeYieldDuration();
-    return maximumNegativeYieldDuration.toNumber();
+    const maximumNegativeYieldDuration:number = await this.contract.maximumNegativeYieldDuration();
+    return maximumNegativeYieldDuration;
   }
 
   /**
-   * @returns JS decimal converted to suitable contract Exchange Rate precision BigNumber
+   * @returns JS decimal converted to suitable contract Exchange Rate precision bigint
    */
-  public toContractExchangeRate(decimal:Numberish): BigNumber {
+  public toContractExchangeRate(decimal:Numberish): BigInt {
     return parseDecimal(decimal, this.exchangeRatePrec);
   }
 

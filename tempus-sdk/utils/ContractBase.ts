@@ -3,7 +3,6 @@ import { ethers } from "hardhat";
 import { Contract } from "ethers";
 import { DecimalConvertible } from "./DecimalConvertible";
 import * as signers from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import * as signer from "@ethersproject/abstract-signer";
 
 /** Alias for ethers Signer with Address */
 export type Signer = signers.SignerWithAddress;
