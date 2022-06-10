@@ -5,7 +5,7 @@ import { blockTimestamp, evmMine, evmMineInSingleBlock } from '@tempus-sdk/utils
 import { generateTempusSharesNames, TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { bn, Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
+import { Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getAccounts } from "./IntegrationUtils";
 import { Signer } from "@tempus-sdk/utils/ContractBase";
 
@@ -112,7 +112,7 @@ describeForSinglePool('TempusPool', PoolType.Compound, 'DAI', () => {
     {
       const singer1yields = await tempusPool.yieldShare.balanceOf(signer1);
       await tempusPool.controller.redeemToBacking(signer1, tempusPool, singer1yields, singer1yields, signer1);
-      await cDai.connect(signer2).redeem(bn(await cDai.balanceOf(signer2)));
+      await cDai.connect(signer2).redeem((await cDai.balanceOf(signer2)).toHexString());
     });
 
     const error = await preBalances.getInterestDeltaError();

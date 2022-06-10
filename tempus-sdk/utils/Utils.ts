@@ -1,7 +1,8 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { Contract } from "ethers";
 import { Decimal } from "./Decimal";
+import { Addressable, addressOf, Signer } from "./ContractBase";
 
 /**
  * @returns Latest timestamp of the blockchain
@@ -73,6 +74,22 @@ export async function setStorageAtAddr(contract:Contract, addr:string, value:Dec
 export async function setStorageField(contract:Contract, fieldName:string, value:Decimal): Promise<any> {
   const addr = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(fieldName)).replace("0x0", "0x");
   return setStorageAtAddr(contract, addr, value);
+}
+
+/**
+ * Modifies the ETH Balance of an account
+ */
+export async function setBalanceOf(address:Addressable, ethAmount:Decimal): Promise<void> {
+  await network.provider.send("hardhat_setBalance", [ addressOf(address), ethAmount.toHexString() ]);
+}
+
+/**
+ * Impersonates an account and creates a Signer from it
+ * @returns A new Signer that impersonates account from `address`
+ */
+export async function impersonateAccount(address:Addressable): Promise<Signer> {
+  await network.provider.request({ method: "hardhat_impersonateAccount", params: [ addressOf(address) ] });
+  return ethers.getSigner(addressOf(address));
 }
 
 function parseRevertMessage(msg:string): string {
