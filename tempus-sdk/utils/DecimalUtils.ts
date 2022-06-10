@@ -1,7 +1,6 @@
-import { BigNumber } from "ethers";
 import { Decimal } from "./Decimal";
 
-export type Numberish = Number | String | BigInt | Decimal | BigNumber;
+export type Numberish = Number | String | BigInt | Decimal;
 
 /**
  * double has limited digits of accuracy, so any decimal 
@@ -15,24 +14,6 @@ export const MAX_NUMBER_DIGITS = 17;
  * Maximum value for uint256
  */
 export const MAX_UINT256:bigint = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-
-/**
- * Converts any input number into a BigNumber.
- * Regular numbers are simply truncated to integer.
- * To create scaled BigNumber, pass a Decimal to this function.
- * Example: bn(decimal(1.0, 18)) -> 1000000000000000000
- * 
- * @param number Any number-like value
- */
-export function bn(number:Numberish): BigNumber {
-  if (typeof(number) === "bigint")
-    return BigNumber.from(number);
-  if (number instanceof Decimal)
-    return number.toBigNumber();
-  // truncate decimal part
-  const whole = number.toString().split('.')[0];
-  return BigNumber.from(whole);
-}
 
 /**
  * Converts a decimal number into a scaled bigint
@@ -55,7 +36,7 @@ export function parseDecimal(decimal:Numberish, decimalBase:number): bigint {
  * @param decimalBase Base precision of the decimal, for wei=18, for ray=27
  * @returns Number for simple decimals like 2.5, string for long decimals "0.00000000000001"
  */
-export function formatDecimal(scaledBigInt:bigint|BigNumber, decimalBase:number): Numberish {
+export function formatDecimal(scaledBigInt:bigint|any, decimalBase:number): Numberish {
   const decimal = new Decimal(scaledBigInt, decimalBase);
   const str = decimal.toRounded(-1);
   if (str.length <= MAX_NUMBER_DIGITS) 

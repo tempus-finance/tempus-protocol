@@ -1,4 +1,3 @@
-import { BigNumber } from "ethers";
 import { Numberish } from "./DecimalUtils";
 
 /**
@@ -48,11 +47,6 @@ export class Decimal {
   /** @returns Scaled BigInt from this Decimal */
   public toBigInt(): bigint {
     return this.int;
-  }
-
-  /** @returns BigNumber from this Decimal */
-  public toBigNumber(): BigNumber {
-    return BigNumber.from(this.int.toString());
   }
 
   /** @returns Numberish converted to this Decimal precision bigint */
@@ -221,7 +215,7 @@ export class Decimal {
       return value; // accept BigInt without any validation, this is necessary to enable raw interop
     }
 
-    if (value instanceof BigNumber) { // ethers.js compatibility, treat BigNumber as a BigInt
+    if ((<any>value)._isBigNumber) { // ethers.js compatibility, treat ethers.BigNumber as a BigInt
       return BigInt(value.toString());
     }
 

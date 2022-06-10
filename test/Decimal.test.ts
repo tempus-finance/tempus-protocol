@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
 import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
 import { Numberish, formatDecimal, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
 import { describeNonPool } from "./pool-utils/MultiPoolTestSuite";
+import { BigNumber } from "ethers";
 
 describeNonPool("Decimal", () =>
 {
@@ -169,11 +169,15 @@ describeNonPool("Decimal", () =>
       expect(dec6('-50.5').lte('-50.5')).to.be.true;
     });
 
-    it("ethers BigNumber support", () =>
+    it("ethers BN support (type erased)", () =>
     {
-      equals(dec6(BigNumber.from('100000000')), '100.000000');
-      equals(dec6(BigNumber.from('100')), '0.000100');
-      expect(dec6('100').toBigNumber()).to.equal(BigNumber.from('100000000'));
+      const bn = (number:Decimal|string) => {
+        const int = (number instanceof Decimal) ? number.toBigInt() : number.split('.')[0];
+        return BigNumber.from(int);
+      }
+      equals(dec6(<any>bn('100000000')), '100.000000');
+      equals(dec6(<any>bn('100')), '0.000100');
+      expect(bn(dec6('100'))).to.equal(bn('100000000'));
     });
 
     it("chai equality tests", () =>

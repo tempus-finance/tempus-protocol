@@ -14,17 +14,11 @@ export class DecimalConvertible {
 
   /** @return Converts a Number or String into this Contract's Scaled BigInt decimal */
   public toBigNum(amount:Numberish): bigint {
-    if (typeof(amount) === "bigint") {
-      return amount;
-    }
-    if (amount instanceof Decimal) { // fastpath
-      return new Decimal(amount, this.decimals).toBigInt();
-    }
     return parseDecimal(amount, this.decimals);
   }
 
   /** @return Converts a Scaled BigInt decimal of this Contract into a String or Number */
-  public fromBigNum(contractDecimal:bigint): Numberish {
+  public fromBigNum(contractDecimal:bigint|any): Numberish {
     return formatDecimal(contractDecimal, this.decimals);
   }
 
