@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -14,7 +15,7 @@ import "../amm/ITempusAMM.sol";
 import "../stats/Stats.sol";
 import "./ILPVaultV1.sol";
 
-contract LPVaultV1 is ILPVaultV1, ERC20Permit, Ownable {
+contract LPVaultV1 is ILPVaultV1, ERC20Permit, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20Metadata;
     using Fixed256xVar for uint256;
 
@@ -78,7 +79,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20Permit, Ownable {
     }
 
     // TODO: add support for permit
-    function deposit(uint256 amount, address recipient) external override returns (uint256 shares) {
+    function deposit(uint256 amount, address recipient) external override nonReentrant returns (uint256 shares) {
         // Quick exit path.
         if (isShutdown) {
             revert VaultIsShutdown();
@@ -98,7 +99,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20Permit, Ownable {
         _mint(recipient, shares);
     }
 
-    function withdraw(uint256 shares, address recipient) external override returns (uint256 amount) {
+    function withdraw(uint256 shares, address recipient) external override nonReentrant returns (uint256 amount) {
         bool matured = pool.matured();
 
         if (matured && !isExited) {
