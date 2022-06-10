@@ -65,20 +65,20 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         return tokenDecimals;
     }
 
-    function previewDeposit(uint256 amount) public view returns (uint256 shares) {
+    function previewDeposit(uint256 amount) public view override returns (uint256 shares) {
         uint256 supply = totalSupply();
         // TODO: rounding
         return (supply == 0) ? amount : amount.mulfV(supply, _totalAssets(supply));
     }
 
-    function previewWithdraw(uint256 shares) public view returns (uint256 amount) {
+    function previewWithdraw(uint256 shares) public view override returns (uint256 amount) {
         uint256 supply = totalSupply();
         // TODO: rounding
         return (supply == 0) ? shares : shares.mulfV(_totalAssets(supply), supply);
     }
 
     // TODO: add support for permit
-    function deposit(uint256 amount, address recipient) external returns (uint256 shares) {
+    function deposit(uint256 amount, address recipient) external override returns (uint256 shares) {
         // Quick exit path.
         if (isShutdown) {
             revert VaultIsShutdown();
@@ -98,7 +98,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         _mint(recipient, shares);
     }
 
-    function withdraw(uint256 shares, address recipient) external returns (uint256 amount) {
+    function withdraw(uint256 shares, address recipient) external override returns (uint256 amount) {
         bool matured = pool.matured();
 
         if (matured && !isExited) {
@@ -241,7 +241,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         ITempusPool newPool,
         ITempusAMM newAMM,
         Stats newStats
-    ) external onlyOwner {
+    ) external override onlyOwner {
         if (pool == newPool) {
             revert CannotMigrateToSamePool();
         }
@@ -279,12 +279,12 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         }
     }
 
-    function shutdown() external onlyOwner {
+    function shutdown() external override onlyOwner {
         // TODO: exit pools
         isShutdown = true;
     }
 
-    function totalAssets() external view returns (uint256 tokenAmount) {
+    function totalAssets() external view override returns (uint256 tokenAmount) {
         uint256 supply = totalSupply();
         return (supply == 0) ? 0 : _totalAssets(supply);
     }
