@@ -59,6 +59,7 @@
     "test:aave": "yarn build && bash run_tests.sh Aave",
     "test:yearn": "yarn build && bash run_tests.sh Yearn",
     "test:rari": "yarn build && bash run_tests.sh Rari",
+    "test:lido": "yarn build && bash run_tests.sh Lido",
     "test:integration": "yarn build && bash run_tests.sh integration-tests no-parallel",
     "test:integration:aave": "yarn build && bash run_tests.sh integration-suite Aave",
     "test:integration:compound": "yarn build && bash run_tests.sh integration-suite Compound",
