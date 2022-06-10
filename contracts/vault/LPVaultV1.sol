@@ -49,19 +49,13 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
             revert InvalidPoolAMM(_pool, _amm);
         }
 
-        pool = _pool;
-        amm = _amm;
-        stats = _stats;
-
-        yieldBearingToken = pool.yieldBearingToken();
+        yieldBearingToken = _pool.yieldBearingToken();
         tokenDecimals = yieldBearingToken.decimals();
         oneYBT = 10**tokenDecimals;
-        onePoolShare = 10**pool.principalShare().decimals();
+        onePoolShare = 10**_pool.principalShare().decimals();
 
-        // Unlimited approval.
-        // NOTE: cannot use safeApprove here
-        yieldBearingToken.approve(pool.controller(), type(uint256).max);
-        amm.approve(pool.controller(), type(uint256).max);
+        // Set up initial details.
+        finalizeSetup(_pool, _amm, _stats);
     }
 
     /// This mirrors the decimals of the underlying yield bearing token.
@@ -224,6 +218,22 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         return (token0 == principalShare && token1 == yieldShare) || (token0 == yieldShare && token1 == principalShare);
     }
 
+    /// This function sets up approvals and replaces references.
+    function finalizeSetup(
+        ITempusPool _pool,
+        ITempusAMM _amm,
+        Stats _stats
+    ) private {
+        // Unlimited approval.
+        // NOTE: cannot use safeApprove here
+        yieldBearingToken.approve(_pool.controller(), type(uint256).max);
+        _amm.approve(_pool.controller(), type(uint256).max);
+
+        pool = _pool;
+        amm = _amm;
+        stats = _stats;
+    }
+
     function migrate(
         ITempusPool newPool,
         ITempusAMM newAMM,
@@ -256,13 +266,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20, Ownable {
         yieldBearingToken.approve(pool.controller(), 0);
         amm.approve(pool.controller(), 0);
 
-        pool = newPool;
-        amm = newAMM;
-        stats = newStats;
-
-        // Unlimited approval.
-        yieldBearingToken.approve(newPool.controller(), type(uint256).max);
-        newAMM.approve(newPool.controller(), type(uint256).max);
+        finalizeSetup(newPool, newAMM, newStats);
 
         // Deposit all yield bearing tokens to new pool
         uint256 amount = yieldBearingToken.balanceOf(address(this));
