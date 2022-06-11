@@ -6,8 +6,7 @@ export const ALL_POOLS = [
     PoolType.Aave,
     PoolType.Lido,
     PoolType.Compound,
-    PoolType.Yearn,
-    PoolType.Rari
+    PoolType.Yearn
 ];
 
 // Set this to `PoolType.XXX` if you want to only run one specific pool's tests
@@ -58,16 +57,6 @@ const MOCK_TOKENS: { [type:string]: TokenInfo[][]; } = {
     [
       { decimals:6, name:"USD Coin", symbol:"USDC", totalSupply:TOTAL_SUPPLY },
       { decimals:6, name:"USDC yVault", symbol:"yvUSDC" }
-    ]
-  ],
-  "Rari": [
-    [
-      { decimals:18, name:"Dai Stablecoin", symbol:"DAI", totalSupply:TOTAL_SUPPLY },
-      { decimals:18,  name:"Rari DAI Pool Token", symbol:"RDPT" }
-    ],
-    [
-      { decimals:6, name:"USD Coin", symbol:"USDC", totalSupply:TOTAL_SUPPLY },
-      { decimals:18, name:"Rari Stable Pool Token", symbol:"RSPT" }
     ]
   ]
 };

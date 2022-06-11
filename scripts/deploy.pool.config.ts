@@ -47,14 +47,9 @@ interface LidoConfig {
   referrer: string;
 }
 
-interface RariConfig {
-  fundManager: string;
-}
-
 interface Config {
   kind: string;
   lido?: LidoConfig;
-  rari?: RariConfig;
   decimals: number;
   ybt: YBTConfig;
   controller: string;
@@ -133,8 +128,6 @@ async function deployPool(config:Config, deployerPrivateKey:string): Promise<Con
     }
   } else if (config.kind === "Yearn") {
     contractName = "YearnTempusPool";
-  } else if (config.kind === "Rari") {
-    contractName = "RariTempusPool";
   } else {
     console.log("No suitable protocol found");
     process.exit(1);
@@ -161,12 +154,6 @@ async function deployPool(config:Config, deployerPrivateKey:string): Promise<Con
       matureRedeemPercent: parseDecimal(config.pool.fees.maturedRedemption, config.ybt.decimals)
     }
   ].concat(customPoolConstructorArgs);
-
-  // NOTE: special case for Rari
-  if (config.kind === "Rari") {
-    // Insert fundManager as first argument
-    poolConstructorArgs.splice(0, 0, config.rari.fundManager);
-  }
 
   const ybtSymbol = config.ybt.symbol;
   const tempusPoolContract = await confirmAndDeploy(

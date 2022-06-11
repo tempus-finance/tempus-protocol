@@ -57,7 +57,7 @@ You must define exactly what types of tokens are supported in `MOCK_TOKENS`, the
 #
 ### 8. **Update test runner script [run_tests.sh](run_tests.sh)**
 This is needed to run all tests in parallel, otherwise generated unit test combinations would take forever to run.
-  - Append your adapter into `POOLS` variable: `POOLS="Aave Lido Compound Yearn Rari MyLending"`
+  - Append your adapter into `POOLS` variable: `POOLS="Aave Lido Compound Yearn MyLending"`
   - Define which tokens the pool supports: `POOL_TOKENS["MyLending"]="DAI SHIB"`
   - If needed, update `VALID_TOKENS` `VALID_TOKENS="DAI USDC ETH SHIB all"`
 #

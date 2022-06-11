@@ -122,8 +122,7 @@ const config = {
     lidoOracleMember1: '0x007DE4a5F7bc37E2F26c0cb2E8A95006EE9B89b5',
     lidoOracleMember2: '0x1d0813bf088BE3047d827D98524fBf779Bc25F00',
     lidoOracleMember3: '0x404335BcE530400a5814375E7Ec1FB55fAff3eA2',
-    usdcHolder: "0x700fb29Ec8AC5B7f4Ff981B700b47B57E8350ccE",
-    rariFundManagerOwner: "0x8ace03fc45139fddba944c6a4082b604041d19fc"
+    usdcHolder: "0x700fb29Ec8AC5B7f4Ff981B700b47B57E8350ccE"
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
