@@ -16,7 +16,7 @@ REPORTER="progress"
 ONLY_TOKEN=""
 ONLY_POOL=""
 VALID_TOKENS="DAI USDC ETH all"
-POOLS="None Aave Lido Compound Yearn Rari"
+POOLS="None Aave Lido Compound Yearn"
 # @see test/Config.ts
 declare -A POOL_TOKENS
 POOL_TOKENS["None"]=""
@@ -24,7 +24,6 @@ POOL_TOKENS["Aave"]="DAI USDC"
 POOL_TOKENS["Lido"]="ETH"
 POOL_TOKENS["Compound"]="DAI USDC"
 POOL_TOKENS["Yearn"]="DAI USDC"
-POOL_TOKENS["Rari"]="DAI USDC"
 
 if [ -z "$ETH_NODE_URI_MAINNET" ]; then
   echo "env var ETH_NODE_URI_MAINNET was not set! It is required to run the test suite"

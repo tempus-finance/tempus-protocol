@@ -1,7 +1,6 @@
 import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { AaveTestPool } from "./AaveTestPool";
 import { LidoTestPool } from "./LidoTestPool";
-import { RariTestPool } from "./RariTestPool";
 import { YearnTestPool } from "./YearnTestPool";
 import { TokenInfo } from "./TokenInfo";
 import { CompoundTestPool } from "./CompoundTestPool";
@@ -79,7 +78,6 @@ function _describeForEachPoolType(title:string, poolTypes:PoolType[], only:boole
           case PoolType.Lido:     pool = new LidoTestPool(asset, yieldToken, integration); break;
           case PoolType.Compound: pool = new CompoundTestPool(asset, yieldToken, integration); break;
           case PoolType.Yearn:    pool = new YearnTestPool(asset, yieldToken, integration); break;
-          case PoolType.Rari:     pool = new RariTestPool(asset, yieldToken, integration); break;
         }
         fn(pool);
       };
