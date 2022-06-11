@@ -1,17 +1,17 @@
 import { expect } from "chai";
-import { BigNumber, Contract } from "ethers";
+import { Contract } from "ethers";
+import { ethers, waffle } from "hardhat";
 import { MockContract } from "@ethereum-waffle/mock-contract";
 import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
-import { blockTimestamp, expectRevert, setEvmTime } from "@tempus-sdk/utils/Utils";
+import { blockTimestamp, expectRevert, impersonateAccount, setBalanceOf, setEvmTime } from "@tempus-sdk/utils/Utils";
 import { decimal } from "@tempus-sdk/utils/Decimal";
-import { bn, Numberish, parseDecimal, toWei } from "@tempus-sdk/utils/DecimalUtils";
+import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { ethers, network, waffle } from "hardhat";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
 const { abi: POSITION_MANAGER_ABI } = require("../../artifacts/contracts/IPositionManager.sol/IPositionManager");
 
-const REWARD_TOKEN_DECIMALS = 18;
+const REWARD_DECIMALS = 18;
 
 describeNonPool("LeverageIncentivization", async () =>
 {
@@ -22,56 +22,51 @@ describeNonPool("LeverageIncentivization", async () =>
   let positionManagerMockSigner: Signer;
   let leverageIncentivization: Contract;
   let expiration: number;
-  let incentiveSize: BigNumber;
+  let incentiveSize: number;
+
+  // fixed-point scaled int for Incentivization contracts
+  const fp = (number:Numberish) => parseDecimal(number, REWARD_DECIMALS);
 
   async function onERC721Received(operator:Signer, tokenId:number, mintedShares:Numberish, txInvoker:Signer = positionManagerMockSigner): Promise<any> {
     return leverageIncentivization.connect(txInvoker).onERC721Received(
       operator.address,
       ethers.constants.AddressZero,
       tokenId,
-      ethers.utils.defaultAbiCoder.encode(["uint256"], [toWei(mintedShares)])
+      ethers.utils.defaultAbiCoder.encode(["uint256"], [fp(mintedShares)])
     );
   }
 
   async function unstake(tokenId:number, user:Signer, yieldsRate:Numberish, toBackingToken:boolean = false): Promise<any>
-    {
-      return leverageIncentivization.connect(user).unstake(tokenId, {
-        maxLeftoverShares: toWei("0.01"),
-        yieldsRate: toWei(yieldsRate),
-        maxSlippage: toWei(0.03),
-        deadline: 2594275590,
-        toBackingToken: toBackingToken,
-        recipient: user.address
-      });
-    }
+  {
+    return leverageIncentivization.connect(user).unstake(tokenId, {
+      maxLeftoverShares: fp("0.01"),
+      yieldsRate: fp(yieldsRate),
+      maxSlippage: fp(0.03),
+      deadline: 2594275590,
+      toBackingToken: toBackingToken,
+      recipient: user.address
+    });
+  }
 
+  async function setMockPosition(tokenId:number, capitals:Numberish, yields:Numberish, amm = incentivizedTempusAmm): Promise<void> {
+    await positionManagerMock.mock.position.withArgs(tokenId).returns(
+      { capitals: fp(capitals), yields: fp(yields), tempusAMM: amm}
+    );
+  }
 
   beforeEach(async () =>
   {
-    incentiveSize = decimal(1000, REWARD_TOKEN_DECIMALS).toBigNumber();
+    incentiveSize = 1000.0;
     expiration = (await blockTimestamp()) + 60 * 60 * 24 * 30 * 6; // expiration in 6 months
     [owner, user1, user2, user3] = await ethers.getSigners();
     const [sender] = waffle.provider.getWallets();
 
     positionManagerMock = await waffle.deployMockContract(sender, POSITION_MANAGER_ABI);
-
-    await network.provider.send("hardhat_setBalance", [
-      positionManagerMock.address,
-      decimal(1).toHexString()
-    ]);
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [positionManagerMock.address],
-    });
-    positionManagerMockSigner = await ethers.getSigner(positionManagerMock.address);
+    await setBalanceOf(positionManagerMock.address, decimal(1.0));
+    positionManagerMockSigner = await impersonateAccount(positionManagerMock.address);
 
     rewardToken = await ERC20.deploy(
-      "ERC20FixedSupply",
-      REWARD_TOKEN_DECIMALS,
-      REWARD_TOKEN_DECIMALS,
-      "Reward Token",
-      "RWRD",
-      incentiveSize
+      "ERC20FixedSupply", REWARD_DECIMALS, REWARD_DECIMALS, "Reward Token", "RWRD", fp(incentiveSize)
     );
     leverageIncentivization = await ContractBase.deployContract(
       "LeverageIncentivization",
@@ -81,53 +76,48 @@ describeNonPool("LeverageIncentivization", async () =>
       0,
       "Staked Tempus Positions",
       "stPOSITION"
-      );
+    );
     
     await rewardToken.approve(owner, leverageIncentivization.address, incentiveSize);
-    await leverageIncentivization.initializeRewards(incentiveSize, expiration);
+    await leverageIncentivization.initializeRewards(fp(incentiveSize), expiration);
   });
 
   it("verifies that a single position staked for the entire rewards duration receives the entire incentive size", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(40), yields: toWei(150), tempusAMM: incentivizedTempusAmm});
-    await positionManagerMock.mock.burn.returns(parseDecimal(100, REWARD_TOKEN_DECIMALS));
+    await setMockPosition(/*tokenId*/1, /*capitals*/40, /*yields*/150);
+    await positionManagerMock.mock.burn.returns(fp(100));
     
     await onERC721Received(user1, 1, 50);
     await setEvmTime(expiration);
-    
-    expect(await rewardToken.contract.balanceOf(user1.address)).equals(0);
+
+    expect(+await rewardToken.balanceOf(user1)).to.equal(0);
     await unstake(1, user1, /*yieldsRate*/"0.1");
-    expect(await rewardToken.contract.balanceOf(user1.address)).to.be.closeTo(incentiveSize, parseDecimal("0.001", REWARD_TOKEN_DECIMALS));
+    expect(+await rewardToken.balanceOf(user1)).to.be.closeTo(incentiveSize, 0.001);
   });
 
   it("verifies that unstaking a non-owned position reverts", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: bn(toWei(40)), yields: bn(toWei(150)), tempusAMM: incentivizedTempusAmm});
+    await setMockPosition(/*tokenId*/1, /*capitals*/40, /*yields*/150);
     await onERC721Received(user2, 1, 50);
-
     (await expectRevert(unstake(1, user1, /*yieldsRate*/"0.1"))).to.be.equal(":SenderIsNotStaker");
   });
 
   it("verifies that invoking onERC721Received from a contract different than the configured PositionManager reverts", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(40), yields: toWei(150), tempusAMM: incentivizedTempusAmm});
-    
+    await setMockPosition(/*tokenId*/1, /*capitals*/40, /*yields*/150);
     (await expectRevert(onERC721Received(user2, 1, 50, user2))).to.be.equal(":UnauthorizedPositionManager");
   });
 
   it("verifies that staking a position with equal shares (non-leveraged) reverts", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(150), yields: toWei(150), tempusAMM: incentivizedTempusAmm});
-    
+    await setMockPosition(/*tokenId*/1, /*capitals*/150, /*yields*/150);
     (await expectRevert(onERC721Received(user1, 1, 50))).to.be.equal(":UnsupportedPositionType");
   });
 
   it("verifies that staking a position with more capitals than yields (non-leveraged) reverts", async () => {
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(150), yields: toWei(150), tempusAMM: incentivizedTempusAmm});
-    
+    await setMockPosition(/*tokenId*/1, /*capitals*/150, /*yields*/150);
     (await expectRevert(onERC721Received(user1, 1, 50))).to.be.equal(":UnsupportedPositionType");
   });
 
   it("verifies that staking a position of a non-incentivized TempusAmm reverts", async () => {
     const nonIncentivizedTempusAmm = ethers.Wallet.createRandom().address;
-    await positionManagerMock.mock.position.withArgs(1).returns({ capitals: toWei(150), yields: toWei(150), tempusAMM: nonIncentivizedTempusAmm});
-    
+    await setMockPosition(/*tokenId*/1, /*capitals*/150, /*yields*/150, /*amm*/nonIncentivizedTempusAmm);
     (await expectRevert(onERC721Received(user1, 1, 50))).to.be.equal(":TempusAmmNotIncentivized");
   });
 });

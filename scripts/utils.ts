@@ -5,7 +5,6 @@ import { ethers } from 'hardhat';
 import { FormatTypes } from 'ethers/lib/utils';
 import * as prompts from "prompts";
 import * as chalk from "chalk";
-import { BigNumberish } from 'ethers';
 
 export async function generateDeployment(contract: Contract, contractName:string, networkName:string): Promise<void> {  
   const exportDir = join(__dirname, '../deployments/', networkName);
@@ -38,7 +37,7 @@ export async function generateDeployment(contract: Contract, contractName:string
   });
 }
 
-export async function deployContract(contractName: string, constructorArgs: any[] = [], deployerPrivateKey: string = null, gasLimit: BigNumberish = null) {
+export async function deployContract(contractName: string, constructorArgs: any[] = [], deployerPrivateKey?: string, gasLimit?: number) {
   const contractFactory = await ethers.getContractFactory(contractName, deployerPrivateKey ? new ethers.Wallet(deployerPrivateKey, ethers.provider) : undefined);
   return contractFactory.deploy(...constructorArgs, ...(gasLimit ? [{ gasLimit }] : []));
 }

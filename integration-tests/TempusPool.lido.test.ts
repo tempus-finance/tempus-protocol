@@ -6,7 +6,8 @@ import { generateTempusSharesNames, TempusPool, PoolType } from "@tempus-sdk/tem
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
-import { parseDecimal, toWei, bn } from "@tempus-sdk/utils/DecimalUtils";
+import { decimal } from "@tempus-sdk/utils/Decimal";
+import { toWei } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getNamedSigners, getAccounts } from "./IntegrationUtils";
 
 const setup = deployments.createFixture(async () => {
@@ -59,7 +60,7 @@ describeForSinglePool('TempusPool', PoolType.Lido, 'ETH', () => {
 
     // This increases Lido's yield
     const { beaconValidators, beaconBalance } = await lido.contract.getBeaconStat();
-    const newBeaconBalance = bn(beaconBalance).add(toWei(100)).div(parseDecimal('1', 9));
+    const newBeaconBalance = (BigInt(beaconBalance) + BigInt(100)) / BigInt('1000000000');
     await lidoOracle.connect(lidoOracleMember1).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);
     await lidoOracle.connect(lidoOracleMember2).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);
     await lidoOracle.connect(lidoOracleMember3).reportBeacon((await lidoOracle.getExpectedEpochId()), newBeaconBalance, beaconValidators);

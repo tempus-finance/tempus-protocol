@@ -6,7 +6,7 @@ import { generateTempusSharesNames, PoolType, TempusPool } from "@tempus-sdk/tem
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
 import { ERC20 } from "@tempus-sdk/utils/ERC20";
 import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
-import { toWei, Numberish, bn } from "@tempus-sdk/utils/DecimalUtils";
+import { toWei, Numberish } from "@tempus-sdk/utils/DecimalUtils";
 import { Balances, getAccounts, getNamedSigners } from "./IntegrationUtils";
 
 const setupWithRariWithdrawalFee = async (rariFee:Decimal) => await deployments.createFixture(async () => {
@@ -95,7 +95,7 @@ describeForSinglePool('TempusPool', PoolType.Rari, 'USDC', () => {
     const preBalances = await Balances.getBalances(usdc, signer1, signer2);
 
     await tempusPool.controller.depositBacking(signer1, tempusPool, depositAmount); // deposit some BT to the pool before 
-    await rariFundManager.connect(signer2).deposit("USDC", bn(usd(depositAmount))); // deposit directly to Rari
+    await rariFundManager.connect(signer2).deposit("USDC", usd(depositAmount).toHexString()); // deposit directly to Rari
 
     /// send directly to the Rari Fund Controller to emulate yield accumulation (which increases the interest rate)
     await usdc.transfer(usdcHolder, rariFundController, "4204200.696969");
@@ -108,7 +108,7 @@ describeForSinglePool('TempusPool', PoolType.Rari, 'USDC', () => {
     const withdrawAmount = usd(usdValue.div(usdcPriceInUsd)); // apply USDC-USD rate
 
     const signer1yields = await tempusPool.yieldShare.balanceOf(signer1);
-    await rariFundManager.connect(signer2).withdraw("USDC", bn(withdrawAmount)); // withdraw directly from Rari 
+    await rariFundManager.connect(signer2).withdraw("USDC", withdrawAmount.toHexString()); // withdraw directly from Rari 
     await tempusPool.controller.redeemToBacking(signer1, tempusPool, signer1yields, signer1yields, signer1);
 
     const error = await preBalances.getInterestDeltaError();
