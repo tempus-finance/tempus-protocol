@@ -5,19 +5,34 @@ import { generateTempusSharesNames, TempusPool } from '../../test/utils/TempusPo
 import { HOUR } from '../../test/utils/TempusAMM';
 import { ContractBase } from '../../test/utils/ContractBase';
 import { toWei } from '../../test/utils/Decimal';
-import { promptAddress, promptNumber } from '../utils';
+import { promptAddress, promptNumber, promptSelect } from '../utils';
 
 async function deployPool() {
     const owner = (await ethers.getSigners())[0];
-
-    const bt = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('Dai')));
-    const ybt = new ERC20("ERC20FixedSupply", 18, (await ethers.getContract('yvDAI')));
 
     const vaultAddress = await promptAddress('Enter Vault address:');
 
     const tempusControllerAddress = await promptAddress('Enter TempusController address:');
     const tempusControllerContract = await ethers.getContractAt('TempusController', tempusControllerAddress);
     const tempusController = new TempusController('TempusController', tempusControllerContract);
+    const backingToken = await promptSelect('Select backing token for pool:', ['DAI', 'USDC']);
+
+    const backingTokenToContractsNameMap = {
+      'DAI': {
+        BT: 'Dai',
+        YBT: 'yvDAI',
+        precision: 18,
+      },
+      'USDC': {
+        BT: 'Usdc',
+        YBT: 'yvUSDC',
+        precision: 6
+      }
+    }
+    const tokenData = backingTokenToContractsNameMap[backingToken];
+
+    const bt = new ERC20("ERC20FixedSupply", tokenData.precision, (await ethers.getContract(tokenData.BT)));
+    const ybt = new ERC20("ERC20FixedSupply", tokenData.precision, (await ethers.getContract(tokenData.YBT)));
 
     const maturityInHours = await promptNumber('Enter pool duration in hours:');
 
