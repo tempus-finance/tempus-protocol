@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 // Based on https://github.com/compound-finance/compound-protocol/blob/v2.8.1/contracts/ComptrollerInterface.sol
 // and documentation at https://compound.finance/docs/comptroller

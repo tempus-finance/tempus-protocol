@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 /// @dev OTC (Over The Counter) is direct trading between two parties, where they agree on a price
 ///     and then work out the transfer of assets between themselves.

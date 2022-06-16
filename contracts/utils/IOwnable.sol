@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 /// Implements Ownable with a two step transfer of ownership
 interface IOwnable {

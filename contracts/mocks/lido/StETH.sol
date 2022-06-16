@@ -3,8 +3,7 @@
 // SPDX-FileCopyrightText: 2020 Lido <info@lido.fi>
 
 // SPDX-License-Identifier: GPL-3.0
-
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import "../../protocols/lido/ILido.sol";
 

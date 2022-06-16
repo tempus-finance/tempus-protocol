@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 /// @dev Fixed Point decimal math utils for variable decimal point precision
 ///      on 256-bit wide numbers
