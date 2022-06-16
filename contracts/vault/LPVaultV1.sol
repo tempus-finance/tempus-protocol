@@ -75,7 +75,7 @@ contract LPVaultV1 is ILPVaultV1, ERC20Permit, ReentrancyGuard, Ownable {
     function previewWithdraw(uint256 shares) public view override returns (uint256 amount) {
         uint256 supply = totalSupply();
         // TODO: rounding
-        return (supply == 0) ? shares : shares.mulfV(_totalAssets(supply), supply);
+        return (supply == 0) ? shares : _totalAssets(shares);
     }
 
     // TODO: add support for permit
