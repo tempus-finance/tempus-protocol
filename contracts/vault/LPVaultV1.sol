@@ -317,4 +317,14 @@ contract LPVaultV1 is ILPVaultV1, ERC20Permit, ReentrancyGuard, Ownable {
         );
         price += ybtBalance.divfV(supply, oneYBT);
     }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override {
+        if (to == address(this)) {
+            revert CannotTransferToVault();
+        }
+    }
 }

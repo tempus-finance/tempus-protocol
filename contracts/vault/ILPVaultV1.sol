@@ -44,6 +44,9 @@ interface ILPVaultV1 is IERC20Metadata, IERC20Permit, IOwnable {
     /// The new pool's share precision is different to the current one.
     error PoolSharePrecisionMismatch();
 
+    /// Cannot transfer token to vault directly.
+    error CannotTransferToVault();
+
     /// The yield bearing token accepted by this vault.
     /// @return The address of the token.
     function yieldBearingToken() external view returns (IERC20Metadata);
