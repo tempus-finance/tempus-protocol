@@ -40,7 +40,7 @@ contract StakeWiseTempusPool is TempusPool {
         stakewiseRewardEthToken = rewardEthToken;
     }
 
-    function depositToUnderlying(uint256 amountBT) internal override returns (uint256 mintedYBT) {
+    function depositToUnderlying(uint256) internal pure override returns (uint256) {
         revert StakeWiseDepositNotSupported();
     }
 
