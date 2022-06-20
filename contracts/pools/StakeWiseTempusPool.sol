@@ -23,7 +23,7 @@ contract StakeWiseTempusPool is TempusPool {
         FeesConfig memory maxFeeSetup
     )
         TempusPool(
-            IERC20Metadata(token),
+            IERC20Metadata(rewardEthToken),
             IERC20Metadata(address(0)),
             controller,
             maturity,
