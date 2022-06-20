@@ -7,7 +7,7 @@ import "../protocols/stakewise/IRewardEthToken.sol";
 contract StakeWiseTempusPool is TempusPool {
     IRewardEthToken internal immutable stakewiseRewardEthToken;
     bytes32 public constant override protocolName = "StakeWise";
-    address private immutable referrer;
+    /// address private immutable referrer;
 
     error StakeWiseWithdrawNotSupported();
     error StakeWiseDepositNotSupported();
@@ -27,7 +27,7 @@ contract StakeWiseTempusPool is TempusPool {
             IERC20Metadata(address(0)),
             controller,
             maturity,
-            stakewiseRewardEthToken.rewardPerToken(),
+            rewardEthToken.rewardPerToken(),
             1e18,
             estYield,
             principalsData,
