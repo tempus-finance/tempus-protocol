@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 pragma solidity 0.8.10;
 
 /**
  * @dev Interface of the RewardEthToken contract.
  */
-interface IRewardEthToken {
+interface IRewardEthToken is IERC20Metadata{
     /**
     * @dev Structure for storing information about user reward checkpoint.
     * @param rewardPerToken - user reward per token.

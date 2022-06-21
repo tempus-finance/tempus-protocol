@@ -333,13 +333,17 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, ERC165 {
     {
         (redeemedYieldTokens, fee, rate) = burnShares(from, principalAmount, yieldAmount);
 
-        redeemedYieldTokens = yieldBearingToken.untrustedTransfer(recipient, redeemedYieldTokens);
+        redeemedYieldTokens = releaseYieldBearingTokens(recipient, redeemedYieldTokens);
     }
 
     function finalize() public override {
         if (matured() && maturityInterestRate == 0) {
             maturityInterestRate = updateInterestRate();
         }
+    }
+    
+    function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
+        return yieldBearingToken.untrustedTransfer(recipient, redeemedYieldTokens);
     }
 
     function burnShares(

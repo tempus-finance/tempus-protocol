@@ -11,6 +11,7 @@ export enum PoolType {
   None = "None",
   Aave = "Aave",
   Lido = "Lido",
+  StakeWise = "StakeWise",
   Compound = "Compound",
   Yearn = "Yearn"
 }
@@ -166,6 +167,21 @@ export class TempusPool extends ContractBase {
       PoolType.Lido, owner, controller, asset, yieldToken, maturityTime, estimatedYield, tempusShareNames
     );
   }
+  
+  static async deployStakeWise(
+    owner:Signer,
+    asset:IERC20,
+    stakedEthToken:ERC20,
+    controller:TempusController,
+    maturityTime:number,
+    estimatedYield:number,
+    tempusShareNames:TempusSharesNames,
+    rewardEthToken:ERC20
+  ): Promise<TempusPool> {
+    return TempusPool.deploy(
+      PoolType.StakeWise, owner, controller, asset, yieldToken, maturityTime, estimatedYield, tempusShareNames, rewardEthToken.address
+    );
+  }
 
   /**
    * Deploys YearnTempusPool
@@ -200,7 +216,7 @@ export class TempusPool extends ContractBase {
     maturityTime:number,
     estimatedYield:number,
     shareNames:TempusSharesNames,
-    underlyingProtocolContractAddress?: string
+    underlyingProtocolContractAddress?: string /// TODO: IMPORTANT rename
   ): Promise<TempusPool> {
     let exchangeRatePrec:number;
     let pool:Contract;
@@ -252,6 +268,30 @@ export class TempusPool extends ContractBase {
         },
         "0x0000000000000000000000000000000000000000" /* hardcoded referrer */
       );
+    } else if (type === PoolType.StakeWise) {
+        exchangeRatePrec = 18; // StakeWise is always 1e18 thanks to ETH
+        pool = await ContractBase.deployContractBy(
+          type + "TempusPool",
+          owner,
+          yieldToken.address,
+          controller.address,
+          maturityTime,
+          parseDecimal(estimatedYield, exchangeRatePrec),
+          /*principalsData*/{
+            name: shareNames.principalName, 
+            symbol: shareNames.principalSymbol
+          },
+          /*yieldsData*/{
+            name: shareNames.yieldName, 
+            symbol: shareNames.yieldSymbol
+          },
+          /*maxFeeSetup:*/{
+            depositPercent:      yieldToken.toBigNum(0.5), // fees are stored in YBT
+            earlyRedeemPercent:  yieldToken.toBigNum(1.0),
+            matureRedeemPercent: yieldToken.toBigNum(0.5)
+          },
+          underlyingProtocolContractAddress
+        );
     } else if (type === PoolType.Compound) {
       exchangeRatePrec = (10 + asset.decimals); // exchange rate precision = 18 - 8 + Underlying Token Decimals
       pool = await ContractBase.deployContractBy(

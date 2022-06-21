@@ -29,7 +29,11 @@ export class Balances
     const delta1 = (await c.balanceOf(this.signer1)).sub(this.balance1);
     const delta2 = (await c.balanceOf(this.signer2)).sub(this.balance2);
     // abs(1.0 - delta2/delta1)
+    console.log("getInterestDeltaError:")
+    console.log(delta1.toString())
+    console.log(delta2.toString())
     const error = decimal(1.0, c.decimals).sub( delta2.div(delta1) ).abs();
+    console.log(error.toString())
     return error;
   }
 }

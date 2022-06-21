@@ -1,29 +1,30 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "./math/Fixed256xVar.sol";
 import "../TempusPool.sol";
 import "../protocols/stakewise/IRewardEthToken.sol";
 
 contract StakeWiseTempusPool is TempusPool {
-    IRewardEthToken internal immutable stakewiseRewardEthToken;
+    IRewardEthToken internal immutable stakeWiseRewardEthToken;
     bytes32 public constant override protocolName = "StakeWise";
-    /// address private immutable referrer;
+    /// address private immutable referrer; https://github.com/stakewise/contracts/blob/master/contracts/pool/Pool.sol#L126
 
     error StakeWiseWithdrawNotSupported();
     error StakeWiseDepositNotSupported();
 
     constructor(
-        IRewardEthToken rewardEthToken,
         address stakedEthToken,
         address controller,
         uint256 maturity,
         uint256 estYield,
         TokenData memory principalsData,
         TokenData memory yieldsData,
-        FeesConfig memory maxFeeSetup
+        FeesConfig memory maxFeeSetup,
+        IRewardEthToken rewardEthToken
     )
         TempusPool(
-            IERC20Metadata(address(rewardEthToken)),
+            IERC20Metadata(stakedEthToken),
             IERC20Metadata(address(0)),
             controller,
             maturity,
@@ -37,7 +38,7 @@ contract StakeWiseTempusPool is TempusPool {
     {
         require(address(rewardEthToken) != address(0), "zero address");
         require(stakedEthToken != address(0), "zero address");
-        stakewiseRewardEthToken = rewardEthToken;
+        stakeWiseRewardEthToken = rewardEthToken;
     }
 
     function depositToUnderlying(uint256) internal pure override returns (uint256) {
@@ -55,7 +56,7 @@ contract StakeWiseTempusPool is TempusPool {
 
     /// @return Stored Interest Rate as an 1e18 decimal
     function currentInterestRate() public view override returns (uint256) {
-        return stakewiseRewardEthToken.rewardPerToken();
+        return stakeWiseRewardEthToken.rewardPerToken();
     }
 
     /// @return Asset Token amount
@@ -71,4 +72,34 @@ contract StakeWiseTempusPool is TempusPool {
     function interestRateToSharePrice(uint256 interestRate) internal pure override returns (uint256) {
         return interestRate;
     }
+
+
+    function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
+        uint256 stakedEthBalance = yieldBearingToken.balanceOf(address(this));
+        uint256 rewardEthBalance = rewardEthToken.balanceOf(address(this));
+        
+        if (amount > stakedEthBalance) {
+            yieldBearingToken.transfer(recipient, stakedEthBalance);
+            rewardEthToken.transfer(recipient, amount - stakedEthBalance);
+        }
+        else {
+            yieldBearingToken.transfer(recipient, amount);
+        }
+        
+        return amount; /// TODO: IMPORTANT sum up transfers instead
+    }
+
+    /***function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
+        uint256 stakedEthBalance = yieldBearingToken.balanceOf(address(this));
+        if (amount > stakedEthBalance) {
+            yieldBearingToken.transfer(recipient, stakedEthBalance);
+            rewardEthToken.transfer(recipient, amount - stakedEthBalance);
+        }
+        else {
+            yieldBearingToken.transfer(recipient, amount);
+        }
+        
+        return amount; /// TODO: IMPORTANT sum up transfers instead
+    }
+    ***/
 }
