@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "./math/Fixed256xVar.sol";
+import "./math/Fixed256x18.sol";
 import "../TempusPool.sol";
 import "../protocols/stakewise/IRewardEthToken.sol";
 
 contract StakeWiseTempusPool is TempusPool {
+    using Fixed256x18 for uint256;
+    
     IRewardEthToken internal immutable stakeWiseRewardEthToken;
     bytes32 public constant override protocolName = "StakeWise";
     /// address private immutable referrer; https://github.com/stakewise/contracts/blob/master/contracts/pool/Pool.sol#L126
@@ -78,28 +80,12 @@ contract StakeWiseTempusPool is TempusPool {
         uint256 stakedEthBalance = yieldBearingToken.balanceOf(address(this));
         uint256 rewardEthBalance = rewardEthToken.balanceOf(address(this));
         
-        if (amount > stakedEthBalance) {
-            yieldBearingToken.transfer(recipient, stakedEthBalance);
-            rewardEthToken.transfer(recipient, amount - stakedEthBalance);
-        }
-        else {
-            yieldBearingToken.transfer(recipient, amount);
-        }
+        uint256 percentageOfStakedEthBalance = (stakedEthBalance).divDown(stakedEthBalance + rewardEthBalance);
+        uint256 percentageOfRewardEthBalance = 1e18 - percentageOfStakedEthBalance;
         
-        return amount; /// TODO: IMPORTANT sum up transfers instead
-    }
-
-    /***function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
-        uint256 stakedEthBalance = yieldBearingToken.balanceOf(address(this));
-        if (amount > stakedEthBalance) {
-            yieldBearingToken.transfer(recipient, stakedEthBalance);
-            rewardEthToken.transfer(recipient, amount - stakedEthBalance);
-        }
-        else {
-            yieldBearingToken.transfer(recipient, amount);
-        }
+        uint256 stakedEthTransferred = yieldBearingToken.untrustedTransfer(recipient, stakedEthBalance.divDown(percentageOfStakedEthBalance));
+        uint256 rewardEthTransferred = rewardEthToken.untrustedTransfer(recipient, rewardEthBalance.divDown(percentageOfRewardEthBalance));
         
-        return amount; /// TODO: IMPORTANT sum up transfers instead
+        return stakedEthTransferred + rewardEthTransferred;
     }
-    ***/
 }
