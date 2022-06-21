@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import "./math/Fixed256x18.sol";
+import "../math/Fixed256x18.sol";
 import "../TempusPool.sol";
 import "../protocols/stakewise/IRewardEthToken.sol";
 
