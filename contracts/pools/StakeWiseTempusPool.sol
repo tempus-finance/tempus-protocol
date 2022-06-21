@@ -78,13 +78,13 @@ contract StakeWiseTempusPool is TempusPool {
 
     function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
         uint256 stakedEthBalance = yieldBearingToken.balanceOf(address(this));
-        uint256 rewardEthBalance = rewardEthToken.balanceOf(address(this));
+        uint256 rewardEthBalance = stakeWiseRewardEthToken.balanceOf(address(this));
         
         uint256 percentageOfStakedEthBalance = (stakedEthBalance).divDown(stakedEthBalance + rewardEthBalance);
         uint256 percentageOfRewardEthBalance = 1e18 - percentageOfStakedEthBalance;
         
         uint256 stakedEthTransferred = yieldBearingToken.untrustedTransfer(recipient, stakedEthBalance.divDown(percentageOfStakedEthBalance));
-        uint256 rewardEthTransferred = rewardEthToken.untrustedTransfer(recipient, rewardEthBalance.divDown(percentageOfRewardEthBalance));
+        uint256 rewardEthTransferred = stakeWiseRewardEthToken.untrustedTransfer(recipient, rewardEthBalance.divDown(percentageOfRewardEthBalance));
         
         return stakedEthTransferred + rewardEthTransferred;
     }
