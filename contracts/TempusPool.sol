@@ -343,7 +343,7 @@ abstract contract TempusPool is ITempusPool, ReentrancyGuard, Ownable, ERC165 {
     }
     
     function releaseYieldBearingTokens(address recipient, uint256 amount) internal virtual returns (uint256) {
-        return yieldBearingToken.untrustedTransfer(recipient, redeemedYieldTokens);
+        return yieldBearingToken.untrustedTransfer(recipient, amount);
     }
 
     function burnShares(
