@@ -425,7 +425,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await testPool.controller.depositYieldBearing(owner, testPool.tempus, 100);
 
-      expect(await controller.exitAmmGivenLpAndRedeem(
+      await expect(controller.exitAmmGivenLpAndRedeem(
         testPool, 
         owner, 
         0, 
@@ -444,7 +444,7 @@ describeForEachPool("TempusController", (testPool:PoolTestFixture) =>
       await initAMM(user1, /*ybtDeposit*/1000000, /*principals*/100000, /*yields*/1000000);
       await testPool.controller.depositYieldBearing(owner, testPool.tempus, 100);
 
-      expect(await controller.exitAmmGivenLpAndRedeem(
+      await expect(controller.exitAmmGivenLpAndRedeem(
         testPool, 
         owner, 
         0, 
