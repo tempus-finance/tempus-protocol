@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./ATokenMock.sol";
 import "./WadRayMath.sol";
 import "../../protocols/aave/ILendingPool.sol";

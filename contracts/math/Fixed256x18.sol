@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 library Fixed256x18 {
     uint256 internal constant ONE = 1e18; // 18 decimal places

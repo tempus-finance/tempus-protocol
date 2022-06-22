@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
+
 import "../utils/Ownable.sol";
 
 /// Tempus Token with initial supply that be increased by up to 2% yearly after 4 years.
