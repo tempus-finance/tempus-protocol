@@ -253,7 +253,8 @@ describeForEachPool("TempusAMM", (testFixture:PoolTestFixture) =>
 
     const amplificationParams = await testFixture.amm.getAmplificationParam();
     expect(+amplificationParams.value).to.be.greaterThan((amplifyStartValue + amplifyEndValue) * +amplificationParams.precision / 2);
-    expect(amplificationParams.isUpdating).to.be.true;
+    const matured = await testFixture.tempus.matured();
+    expect(amplificationParams.isUpdating).to.be.equal(!matured);
   });
 
   it("checks invariant increases over time with adding liquidity", async () =>
