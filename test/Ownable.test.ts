@@ -33,12 +33,12 @@ describeNonPool("Ownable", async () => {
   });
 
   it("transferOwnership successful flow", async () => {
-    expect(await ownable.connect(owner).transferOwnership(user.address)).to.emit(
+    await expect(ownable.connect(owner).transferOwnership(user.address)).to.emit(
       ownable,
       "OwnershipProposed"
     ).withArgs(owner.address, user.address);
     expect(await ownable.owner()).to.equal(owner.address);
-    expect(await ownable.connect(user).acceptOwnership()).to.emit(
+    await expect(ownable.connect(user).acceptOwnership()).to.emit(
       ownable, 
       "OwnershipTransferred"
     ).withArgs(owner.address, user.address);

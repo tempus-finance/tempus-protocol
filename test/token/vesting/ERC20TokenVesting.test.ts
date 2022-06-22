@@ -144,7 +144,7 @@ describeNonPool("ERC20 Vesting", async () => {
     it("Expected state after startVesting", async () => {
       const startTime = await blockTimestamp();
       const period = DAY * 30;
-      expect(await vesting.startVesting(
+      await expect(vesting.startVesting(
         owner,
         user,
         {startTime: startTime, period: period, amount: 30, claimed: 0}
@@ -208,7 +208,7 @@ describeNonPool("ERC20 Vesting", async () => {
         {startTime: startTime, period: period, amount: 30, claimed: 0}
       );
       await setEvmTime(startTime + period);
-      expect(await vesting.stopVesting(owner, user)).to.emit(
+      await expect(vesting.stopVesting(owner, user)).to.emit(
         vesting.contract, 
         "VestingRemoved"
       ).withArgs(addressOf(user));
@@ -262,7 +262,7 @@ describeNonPool("ERC20 Vesting", async () => {
 
       await increaseTime(period * 2);
       const amountToClaim = await vesting.claimable(user);
-      expect(await vesting.claim(user, amountToClaim)).to.emit(
+      await expect(vesting.claim(user, amountToClaim)).to.emit(
         vesting.contract,
         "VestingClaimed"
       ).withArgs(addressOf(user), vesting.toBigNum(amountToClaim));
@@ -344,7 +344,7 @@ describeNonPool("ERC20 Vesting", async () => {
       );
       expect(+await token.balanceOf(owner)).to.equal(270);
 
-      expect(await vesting.transferVesting(owner, user, user2)).to.emit(
+      await expect(vesting.transferVesting(owner, user, user2)).to.emit(
         vesting.contract, 
         "VestingTransferred"
       ).withArgs(addressOf(user), addressOf(user2));
