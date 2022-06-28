@@ -3,10 +3,10 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@tempus-labs/contracts/math/Fixed256x18.sol";
+import "@tempus-labs/contracts/utils/UntrustedERC20.sol";
 
 import "./StakingMath.sol";
-import "../utils/UntrustedERC20.sol";
-import "../math/Fixed256x18.sol";
 
 interface IStakingRewards {
     /* ========== ERRORS ========== */

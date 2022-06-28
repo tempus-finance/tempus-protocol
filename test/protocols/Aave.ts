@@ -1,8 +1,8 @@
 import { Contract } from "ethers";
-import { Decimal } from "@tempus-sdk/utils/Decimal";
-import { Numberish, toRay, fromRay, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, Signer, Addressable, addressOf } from "@tempus-sdk/utils/ContractBase";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { Decimal } from "@tempus-labs/utils/ts/utils/Decimal";
+import { Numberish, toRay, fromRay, parseDecimal } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase, Signer, Addressable, addressOf } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 
 export class Aave extends ContractBase {

@@ -2,8 +2,8 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@tempus-labs/contracts/token/ERC20OwnerMintableToken.sol";
 
-import "./ERC20OwnerMintableToken.sol";
 import "../ITempusPool.sol";
 
 /// Token representing the principal or yield shares of a pool.

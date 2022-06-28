@@ -1,9 +1,9 @@
 import { BytesLike, Contract, Transaction } from "ethers";
-import { Decimal } from "../utils/Decimal";
-import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "../utils/DecimalUtils";
-import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
-import { ERC20 } from "../utils/ERC20";
-import { IERC20 } from "../utils/IERC20";
+import { Decimal } from "@tempus-labs/utils/ts/utils/Decimal";
+import { Numberish, toWei, parseDecimal, formatDecimal, MAX_UINT256 } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase, Signer, Addressable, addressOf } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { IERC20 } from "@tempus-labs/utils/ts/token/IERC20";
 import { PoolShare, ShareKind } from "./PoolShare";
 import { TempusController } from "./TempusController";
 

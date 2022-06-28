@@ -2,7 +2,7 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import "../utils/Ownable.sol";
+import "@tempus-labs/contracts/utils/Ownable.sol";
 
 /// Tempus Token with initial supply that be increased by up to 2% yearly after 4 years.
 /// Holders have the ability to burn their own tokens.

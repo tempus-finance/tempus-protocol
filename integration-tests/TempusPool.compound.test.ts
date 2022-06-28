@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { ethers, deployments } from 'hardhat';
 import { describeForSinglePool } from "../test/pool-utils/MultiPoolTestSuite";
-import { blockTimestamp, evmMine, evmMineInSingleBlock } from '@tempus-sdk/utils/Utils';
+import { blockTimestamp, evmMine, evmMineInSingleBlock } from '@tempus-labs/utils/ts/utils/Utils';
 import { generateTempusSharesNames, TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
 import { Balances, getAccounts } from "./IntegrationUtils";
-import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { Signer } from "@tempus-labs/utils/ts/utils/ContractBase";
 
 const setupDai = deployments.createFixture(async () => {
   await deployments.fixture(undefined, { keepExistingDeployments: true, });

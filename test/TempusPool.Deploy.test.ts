@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
 import { describeForEachPool, integrationExclusiveIt as it } from "./pool-utils/MultiPoolTestSuite";
 import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
-import { expectRevert, blockTimestamp } from "@tempus-sdk/utils/Utils";
+import { expectRevert, blockTimestamp } from "@tempus-labs/utils/ts/utils/Utils";
 
 describeForEachPool("TempusPool Deploy", (testPool:PoolTestFixture) =>
 {

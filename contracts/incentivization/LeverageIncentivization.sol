@@ -5,11 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@tempus-labs/contracts/utils/Ownable.sol";
+
 import "./StakingRewards.sol";
 import "./ILeverageIncentivization.sol";
 import "../IPositionManager.sol";
 import "../amm/ITempusAMM.sol";
-import "../utils/Ownable.sol";
 
 contract LeverageIncentivization is
     ILeverageIncentivization,

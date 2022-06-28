@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.10;
 
+import "@tempus-labs/contracts/math/Fixed256x18.sol";
+
 import "./Math.sol";
-import "../../math/Fixed256x18.sol";
 
 library StableMath {
     using Fixed256x18 for uint256;

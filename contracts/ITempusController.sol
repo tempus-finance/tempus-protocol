@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@tempus-labs/contracts/utils/PermitHelper.sol";
+
 import "./amm/ITempusAMM.sol";
 import "./ITempusPool.sol";
-import "./utils/PermitHelper.sol";
 
 struct ExitAMMGivenLPSlippageParams {
     uint256 minPrincipalsStaked;

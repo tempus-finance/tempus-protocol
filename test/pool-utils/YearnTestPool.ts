@@ -1,5 +1,5 @@
 import { PoolTestFixture, TempusAMMParams } from "@tempus-sdk/tempus/PoolTestFixture";
-import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Signer } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { TempusPool, PoolType } from "@tempus-sdk/tempus/TempusPool";
 import { TokenInfo } from "./TokenInfo";
 import { YearnVault } from "../protocols/YearnVault";

@@ -1,7 +1,7 @@
 import { Contract } from "ethers";
-import { Numberish, formatDecimal, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase, Signer, Addressable } from "@tempus-sdk/utils/ContractBase";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { Numberish, formatDecimal, parseDecimal } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase, Signer, Addressable } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
 import { TokenInfo } from "test/pool-utils/TokenInfo";
 
 export class YearnVault extends ContractBase {

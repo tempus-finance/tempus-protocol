@@ -7,8 +7,9 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
+
 import "../../protocols/yearn/IYearnVaultV2.sol";
-import "../../math/Fixed256xVar.sol";
 
 contract YearnVaultMock is ERC20, IYearnVaultV2 {
     using Fixed256xVar for uint256;

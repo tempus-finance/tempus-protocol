@@ -6,11 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@tempus-labs/contracts/utils/UntrustedERC20.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
 
 import "./ITempusController.sol";
 import "./IPositionManager.sol";
-import "./utils/UntrustedERC20.sol";
-import "./math/Fixed256xVar.sol";
 
 contract PositionManager is IPositionManager, ERC721, ReentrancyGuard {
     using Fixed256xVar for uint256;

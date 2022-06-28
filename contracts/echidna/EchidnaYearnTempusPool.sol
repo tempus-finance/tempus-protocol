@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import "@tempus-labs/contracts/token/ERC20FixedSupply.sol";
+
 import "./EchidnaTempusPool.sol";
-import "../token/ERC20FixedSupply.sol";
 import "../pools/YearnTempusPool.sol";
 import "../mocks/yearn/YearnVaultMock.sol";
 

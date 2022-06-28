@@ -1,4 +1,4 @@
-import { blockTimestamp } from "@tempus-sdk/utils/Utils";
+import { blockTimestamp } from "@tempus-labs/utils/ts/utils/Utils";
 import { Aave } from "../test/protocols/Aave";
 import { generateTempusSharesNames, TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { TempusController } from "@tempus-sdk/tempus/TempusController";

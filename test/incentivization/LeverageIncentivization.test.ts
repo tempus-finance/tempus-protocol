@@ -2,11 +2,11 @@ import { expect } from "chai";
 import { Contract } from "ethers";
 import { ethers, waffle } from "hardhat";
 import { MockContract } from "@ethereum-waffle/mock-contract";
-import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
-import { blockTimestamp, expectRevert, impersonateAccount, setBalanceOf, setEvmTime } from "@tempus-sdk/utils/Utils";
-import { decimal } from "@tempus-sdk/utils/Decimal";
-import { Numberish, parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { ContractBase, Signer } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { blockTimestamp, expectRevert, impersonateAccount, setBalanceOf, setEvmTime } from "@tempus-labs/utils/ts/utils/Utils";
+import { decimal } from "@tempus-labs/utils/ts/utils/Decimal";
+import { Numberish, parseDecimal } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
 
 const { abi: POSITION_MANAGER_ABI } = require("../../artifacts/contracts/IPositionManager.sol/IPositionManager");

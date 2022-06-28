@@ -1,8 +1,8 @@
 import { expect, AssertionError } from 'chai';
 import { AsyncFunc } from 'mocha';
 import { Contract } from 'ethers';
-import { ContractBase } from "@tempus-sdk/utils/ContractBase";
-import { expectRevert } from "@tempus-sdk/utils/Utils";
+import { ContractBase } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { expectRevert } from "@tempus-labs/utils/ts/utils/Utils";
 import { BigNumberish, fp, num, isBigNumberish } from './Numbers';
 import { Decimal } from 'decimal.js';
 import { describeNonPool } from '../pool-utils/MultiPoolTestSuite';

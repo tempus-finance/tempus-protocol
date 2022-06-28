@@ -2,9 +2,9 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@tempus-labs/contracts/utils/IOwnable.sol";
 
 import "./token/IPoolShare.sol";
-import "./utils/IOwnable.sol";
 
 /// Setting and transferring of fees are restricted to the owner.
 interface ITempusFees is IOwnable {

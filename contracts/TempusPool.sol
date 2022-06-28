@@ -6,13 +6,13 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@tempus-labs/contracts/utils/UntrustedERC20.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
+import "@tempus-labs/contracts/utils/Ownable.sol";
 
 import "./ITempusPool.sol";
 import "./token/PrincipalShare.sol";
 import "./token/YieldShare.sol";
-import "./math/Fixed256xVar.sol";
-import "./utils/Ownable.sol";
-import "./utils/UntrustedERC20.sol";
 
 /// @dev helper struct to store name and symbol for the token
 struct TokenData {

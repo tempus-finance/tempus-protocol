@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Signer } from "@tempus-sdk/utils/ContractBase";
+import { Signer } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { TempusPool } from "@tempus-sdk/tempus/TempusPool";
 import { describeForEachPool } from "../pool-utils/MultiPoolTestSuite";
 import { PoolTestFixture } from "@tempus-sdk/tempus/PoolTestFixture";
