@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
-import { Numberish } from "../utils/DecimalUtils";
-import { ERC20OwnerMintable } from "./ERC20OwnerMintable";
+import { Numberish } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ERC20OwnerMintable } from "@tempus-labs/utils/ts/token/ERC20OwnerMintable";
 
 export enum ShareKind {
   Principal = "PrincipalShare",

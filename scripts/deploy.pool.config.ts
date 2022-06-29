@@ -3,8 +3,8 @@ import { ethers, network } from 'hardhat';
 import { Contract } from '@ethersproject/contracts';
 import * as utils from './utils';
 import * as chalk from "chalk";
-import { parseDecimal } from "@tempus-sdk/utils/DecimalUtils";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
+import { parseDecimal } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
 import { AMP_PRECISION } from '@tempus-sdk/tempus/TempusAMM';
 
 interface YBTConfig {

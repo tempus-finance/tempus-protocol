@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
-import { Numberish, toWei } from "../utils/DecimalUtils";
-import { ContractBase } from "../utils/ContractBase";
+import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { PoolTestFixture } from "./PoolTestFixture";
 
 export class Stats extends ContractBase {

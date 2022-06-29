@@ -1,11 +1,11 @@
 import { Contract } from "ethers";
-import { ContractBase, Signer } from "@tempus-sdk/utils/ContractBase";
+import { ContractBase, Signer } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { setEvmTime, evmSetAutomine, evmMine, blockTimestamp, expectRevert } from "@tempus-sdk/utils/Utils";
+import { setEvmTime, evmSetAutomine, evmMine, blockTimestamp, expectRevert } from "@tempus-labs/utils/ts/utils/Utils";
 import { describeNonPool } from "../pool-utils/MultiPoolTestSuite";
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { Numberish, toWei } from "@tempus-sdk/utils/DecimalUtils";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
 
 
 interface StakingMathTestCase {

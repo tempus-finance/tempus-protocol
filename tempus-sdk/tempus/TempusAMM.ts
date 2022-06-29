@@ -1,8 +1,8 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish, toWei } from "../utils/DecimalUtils";
-import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
-import { ERC20 } from "../utils/ERC20";
-import { blockTimestamp, setEvmTime } from "../utils/Utils";
+import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase, Signer, Addressable, addressOf } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { blockTimestamp, setEvmTime } from "@tempus-labs/utils/ts/utils/Utils";
 import { TempusController } from "./TempusController";
 import { PoolShare } from "./PoolShare";
 

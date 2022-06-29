@@ -3,11 +3,11 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@tempus-labs/contracts/utils/UntrustedERC20.sol";
 
 import "../TempusPool.sol";
 import "../protocols/aave/IAToken.sol";
 import "../protocols/aave/ILendingPool.sol";
-import "../utils/UntrustedERC20.sol";
 
 contract AaveTempusPool is TempusPool {
     using SafeERC20 for IERC20Metadata;

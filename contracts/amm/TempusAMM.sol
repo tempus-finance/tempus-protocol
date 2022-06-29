@@ -16,14 +16,13 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
+import "@tempus-labs/contracts/math/Fixed256x18.sol";
+import "@tempus-labs/contracts/utils/Ownable.sol";
 
 import "./ITempusAMM.sol";
 import "./../token/IPoolShare.sol";
-
 import "./math/StableMath.sol";
-import "../utils/Ownable.sol";
-import "../math/Fixed256x18.sol";
-import "../math/Fixed256xVar.sol";
 
 contract TempusAMM is ITempusAMM, ERC20Permit, Pausable, Ownable {
     using Fixed256x18 for uint256;

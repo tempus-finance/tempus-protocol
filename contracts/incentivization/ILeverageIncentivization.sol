@@ -3,9 +3,10 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@tempus-labs/contracts/utils/IOwnable.sol";
+
 import "./IStakingRewards.sol";
 import "../IPositionManager.sol";
-import "../utils/IOwnable.sol";
 
 /// @title Leveraged positions incentivization contract
 /// @dev This purpose of this contract is to incentivize users to create leveraged

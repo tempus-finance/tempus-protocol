@@ -3,9 +3,9 @@ pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
+import "@tempus-labs/contracts/utils/IOwnable.sol";
 
 import "../token/IPoolShare.sol";
-import "../utils/IOwnable.sol";
 
 interface ITempusAMM is IERC20Metadata, IERC20Permit, IOwnable {
     enum SwapType {

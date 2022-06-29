@@ -2,13 +2,13 @@ import { writeFile } from 'fs';
 import { join } from 'path';
 import { ethers } from 'hardhat';
 import { Contract } from '@ethersproject/contracts';
-import { ERC20 } from '@tempus-sdk/utils/ERC20';
+import { ERC20 } from '@tempus-labs/utils/ts/token/ERC20';
 import { generateTempusSharesNames, PoolType, TempusPool } from '@tempus-sdk/tempus/TempusPool';
-import { ContractBase, Signer } from '@tempus-sdk/utils/ContractBase';
+import { ContractBase, Signer } from '@tempus-labs/utils/ts/utils/ContractBase';
 import { TempusController } from '@tempus-sdk/tempus/TempusController';
 import { DAY, MONTH, AMP_PRECISION } from '@tempus-sdk/tempus/TempusAMM';
-import { toWei } from '@tempus-sdk/utils/DecimalUtils';
-import { ERC20Ether } from '@tempus-sdk/utils/ERC20Ether';
+import { toWei } from '@tempus-labs/utils/ts/utils/DecimalUtils';
+import { ERC20Ether } from '@tempus-labs/utils/ts/token/ERC20Ether';
 
 export interface DeployedPoolInfo {
   address: string;

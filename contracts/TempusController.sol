@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@tempus-labs/contracts/utils/UntrustedERC20.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
+import "@tempus-labs/contracts/utils/Ownable.sol";
 
 import "./amm/ITempusAMM.sol";
 import "./ITempusController.sol";
 import "./ITempusPool.sol";
-import "./math/Fixed256xVar.sol";
-import "./utils/UntrustedERC20.sol";
-import "./utils/Ownable.sol";
 
 /// @dev TempusController singleton with a transferrable ownership and re-entrancy guards
 ///      Owner is automatically set to the deployer of this contract

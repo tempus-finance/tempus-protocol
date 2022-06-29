@@ -2,10 +2,10 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@tempus-labs/contracts/math/Fixed256xVar.sol";
 
 import "./ChainlinkTokenPairPriceFeed/ChainlinkTokenPairPriceFeed.sol";
 import "../ITempusPool.sol";
-import "../math/Fixed256xVar.sol";
 import "../token/PoolShare.sol";
 import "../amm/ITempusAMM.sol";
 

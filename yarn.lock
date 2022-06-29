@@ -781,6 +781,18 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
+"@tempus-labs/contracts@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@tempus-labs/contracts/-/contracts-1.0.0.tgz#486d3f44f2bb8d80a4cb414a5274d7c4aca7a2cc"
+  integrity sha512-RL7WUF2dn4E0jQzP0vn9NbXnFHSQa27TkDOd/Egw20nn8x979YtwSIqoyqUbrItbfVxBfEbl/Bpx84z/Ot3lyg==
+  dependencies:
+    "@openzeppelin/contracts" "^4.1.0"
+
+"@tempus-labs/utils@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@tempus-labs/utils/-/utils-1.0.2.tgz#fbbc45fa3466d62c82f60de17e72dbf7b2f44214"
+  integrity sha512-1HDdYy8mAPQoZHbIupg7xX3WtSuc2oXcioSbv0gKxd8/t4EWwCOI647zxjz5gf7XU3kf/IkiKC/LSvEuQ7/VgQ==
+
 "@truffle/error@^0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@truffle/error/-/error-0.1.0.tgz#5e9fed79e6cda624c926d314b280a576f8b22a36"

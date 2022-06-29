@@ -1,8 +1,8 @@
 import { Contract } from "ethers";
-import { Decimal } from "@tempus-sdk/utils/Decimal";
-import { Numberish } from "@tempus-sdk/utils/DecimalUtils";
-import { ContractBase } from "@tempus-sdk/utils/ContractBase";
-import { ERC20Ether } from "@tempus-sdk/utils/ERC20Ether";
+import { Decimal } from "@tempus-labs/utils/ts/utils/Decimal";
+import { Numberish } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20Ether } from "@tempus-labs/utils/ts/token/ERC20Ether";
 import { TokenInfo } from "../pool-utils/TokenInfo";
 import { LidoContract } from "./LidoContract";
 

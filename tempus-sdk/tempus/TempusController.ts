@@ -1,9 +1,9 @@
 import { Contract, Transaction } from "ethers";
-import { Numberish, toWei } from "../utils/DecimalUtils";
-import { ContractBase, Signer, Addressable, addressOf } from "../utils/ContractBase";
+import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { ContractBase, Signer, Addressable, addressOf } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { PoolType, TempusPool } from "./TempusPool";
 import { PoolTestFixture } from "./PoolTestFixture";
-import { constructPermit } from "../utils/PermitUtils";
+import { constructPermit } from "@tempus-labs/utils/ts/token/PermitUtils";
 
 /**
  * Wrapper around TempusController

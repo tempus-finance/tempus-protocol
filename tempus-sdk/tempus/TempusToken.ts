@@ -1,6 +1,6 @@
-import { Numberish } from "../utils/DecimalUtils";
-import { Signer, Addressable, addressOf } from "../utils/ContractBase";
-import { ERC20 } from "../utils/ERC20";
+import { Numberish } from "@tempus-labs/utils/ts/utils/DecimalUtils";
+import { Signer, Addressable, addressOf } from "@tempus-labs/utils/ts/utils/ContractBase";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
 import { Transaction } from "@ethersproject/transactions";
 
 /**

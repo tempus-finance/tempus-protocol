@@ -49,6 +49,8 @@
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.10",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@openzeppelin/contracts": "^4.1.0",
+    "@tempus-labs/utils": "^1.0.2",
+    "@tempus-labs/contracts": "^1.0.0",
     "tsconfig-paths": "^4.0.0"
   },
   "scripts": {

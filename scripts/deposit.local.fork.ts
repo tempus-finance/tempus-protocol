@@ -1,6 +1,6 @@
 import { ethers, network } from 'hardhat';
-import { ERC20 } from '@tempus-sdk/utils/ERC20';
-import { Signer } from '@tempus-sdk/utils/ContractBase';
+import { ERC20 } from '@tempus-labs/utils/ts/token/ERC20';
+import { Signer } from '@tempus-labs/utils/ts/utils/ContractBase';
 import depositConfig from '../deposit.local.config';
 
 class DepositLocalForked {

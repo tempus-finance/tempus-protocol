@@ -3,13 +3,12 @@ import "hardhat-deploy"; // hardhat.deployments
 import { expect } from "chai";
 import { Transaction } from "ethers";
 import { deployments, ethers } from "hardhat";
-import { ContractBase, Signer, Addressable } from "../utils/ContractBase";
+import { ContractBase, Signer, Addressable } from "@tempus-labs/utils/ts/utils/ContractBase";
 import { TempusPool, PoolType, TempusSharesNames, generateTempusSharesNames } from "./TempusPool";
-import { blockTimestamp, setEvmTime, setNextBlockTimestamp } from "../utils/Utils";
-import { ERC20 } from "../utils/ERC20";
-import { IERC20 } from "../utils/IERC20";
-import { Numberish } from "../utils/DecimalUtils";
-import { getRevertMessage } from "../utils/Utils";
+import { blockTimestamp, setEvmTime, setNextBlockTimestamp, getRevertMessage } from "@tempus-labs/utils/ts/utils/Utils";
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { IERC20 } from "@tempus-labs/utils/ts/token/IERC20";
+import { Numberish } from "@tempus-labs/utils/ts/utils/DecimalUtils";
 import { TempusController } from "../tempus/TempusController";
 import { TempusPoolAMM } from "../tempus/TempusPoolAMM";
 import { PoolShare } from "../tempus/PoolShare";

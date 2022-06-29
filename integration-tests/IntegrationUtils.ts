@@ -1,7 +1,7 @@
 import { ethers, getNamedAccounts, getUnnamedAccounts } from 'hardhat';
-import { ERC20 } from "@tempus-sdk/utils/ERC20";
-import { Decimal, decimal } from "@tempus-sdk/utils/Decimal";
-import { Signer } from '@tempus-sdk/utils/ContractBase';
+import { ERC20 } from "@tempus-labs/utils/ts/token/ERC20";
+import { Decimal, decimal } from "@tempus-labs/utils/ts/utils/Decimal";
+import { Signer } from '@tempus-labs/utils/ts/utils/ContractBase';
 
 export class Balances
 {

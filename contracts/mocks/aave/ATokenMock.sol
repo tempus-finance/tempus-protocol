@@ -2,8 +2,8 @@
 pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@tempus-labs/contracts/token/ERC20OwnerMintableToken.sol";
 
-import "./../../token/ERC20OwnerMintableToken.sol";
 import "../../protocols/aave/ILendingPool.sol";
 import "../../protocols/aave/IAToken.sol";
 import "./WadRayMath.sol";
