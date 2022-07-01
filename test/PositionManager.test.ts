@@ -8,6 +8,7 @@ import { TempusPoolAMM } from "@tempus-sdk/tempus/TempusPoolAMM";
 import { Decimal } from "@tempus-labs/utils/ts/utils/Decimal";
 import { Numberish, toWei } from "@tempus-labs/utils/ts/utils/DecimalUtils";
 import { Contract, constants } from "ethers";
+import { anyUint } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
 {
@@ -102,6 +103,45 @@ describeForEachPool("PositionManager", (testPool:PoolTestFixture) =>
     const pos = await position(1);
     expect(pos.yields.eq(0)).to.be.true;
     expect(pos.capitals.gt(1.0)).to.be.true;
+  });
+
+  it("verifies minting a position emits an event correctly", async () => {
+    const expectedTempusAmm = amm.address;
+    const expectedTokenId = 1;
+    const minter = user1;
+    const recipient = user2;
+    const leverageMultiplier = 1.2;
+    const tokenAmountToDeposit = 1.123;
+    const isBackingToken = true;
+
+    await expect(mint(minter, leverageMultiplier, tokenAmountToDeposit, /*worstRate*/"9.5", recipient, isBackingToken)).to.emit(positionManager, 'Minted').withArgs(
+        minter.address,
+        recipient.address,
+        expectedTempusAmm,
+        expectedTokenId,
+        toWei(leverageMultiplier),
+        pool.asset.toBigNum(tokenAmountToDeposit),
+        isBackingToken,
+        anyUint,
+        anyUint,
+        anyUint
+      );
+  });
+
+  it("verifies burning a position emits an event correctly", async () => {
+    const tokenId = 1;
+    const burner = user1;
+    const recipient = user2;
+    const toBackingToken = false;
+    
+    await mint(burner, /*leverage*/2.0, /*deposit*/1.0, /*worstRate*/"9.0");
+    await expect(burn(burner, tokenId, /*yieldsRate*/"0.1", /*maxSlippage*/0.03, recipient, toBackingToken)).to.emit(positionManager, 'Burned').withArgs(
+      burner.address,
+      recipient.address,
+      tokenId,
+      anyUint,
+      toBackingToken
+    );
   });
 
   it("verifies position ids increment correctly", async () => {
