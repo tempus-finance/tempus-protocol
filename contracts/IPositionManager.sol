@@ -18,6 +18,44 @@ interface IPositionManager is IERC721, IERC721Metadata {
     /// @dev An invalid Tempus Controller was provided
     error InvalidTempusController();
 
+    /// @dev Event emitted on a successful position mint.
+    /// @param minter Address of the position minter (and funds depositor)
+    /// @param recipient Address of the recipient to which the position was minted
+    /// @param tempusAmm The TempusAmm which was used to create the position
+    /// @param tokenId The token ID that was minted
+    /// @param leverageMultiplier The provided leverage multiplier parameter which was used to create the position
+    /// @param tokenAmountDeposited Token amount that was deposited into the TempusPool
+    /// @param isBackingToken Specfies whether Backing Tokens or Yield Bearing Tokens were deposited
+    /// @param mintedShares The amount of Capitals and Yields minted during position creation (pre-swap)
+    /// @param capitalsReceived Final amount of Capitals sent to `recipient` (post-swap)
+    /// @param yieldsReceived Final amount of Yields sent to `recipient` (post-swap)
+    event Minted(
+        address indexed minter,
+        address indexed recipient,
+        ITempusAMM indexed tempusAmm,
+        uint256 tokenId,
+        uint256 leverageMultiplier,
+        uint256 tokenAmountDeposited,
+        bool isBackingToken,
+        uint256 mintedShares,
+        uint256 capitalsReceived,
+        uint256 yieldsReceived
+    );
+
+    /// @dev Event emitted on a successful position burn.
+    /// @param burner Address of the position burner
+    /// @param recipient Address of the recipient of the funds received from liquidating the position
+    /// @param tokenId The token ID that was burned
+    /// @param liquidatedTokenAmount Token amount that was liquidated from burning the position
+    /// @param toBackingToken Specfies whether the position was liquidated to Backing Tokens or Yield Bearing Tokens
+    event Burned(
+        address indexed burner,
+        address indexed recipient,
+        uint256 tokenId,
+        uint256 liquidatedTokenAmount,
+        bool toBackingToken
+    );
+
     /// @dev Holds information about an open position
     /// @param capitals Amount of Capitals owned by the position
     /// @param yields Amount of Yields owned by the position
