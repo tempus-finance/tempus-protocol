@@ -72,6 +72,7 @@ export class TempusPool extends ContractBase {
   principalShare:PoolShare;
   yieldShare:PoolShare;
   exchangeRatePrec:number;
+  underlyingProtocolAddr?:string; // underlying pool's address, such as AavePool.address
 
   constructor(
     type:PoolType,
@@ -82,7 +83,8 @@ export class TempusPool extends ContractBase {
     yieldBearing:ERC20,
     principalShare:PoolShare,
     yieldShare:PoolShare,
-    exchangeRatePrecision:number
+    exchangeRatePrecision:number,
+    underlyingProtocolAddr?:string
   ) {
     super(type+"TempusPool", asset.decimals, pool);
     this.type = type;
@@ -93,6 +95,7 @@ export class TempusPool extends ContractBase {
     this.principalShare = principalShare;
     this.yieldShare = yieldShare;
     this.exchangeRatePrec = exchangeRatePrecision;
+    this.underlyingProtocolAddr = underlyingProtocolAddr;
   }
 
   /**
@@ -200,7 +203,7 @@ export class TempusPool extends ContractBase {
     maturityTime:number,
     estimatedYield:number,
     shareNames:TempusSharesNames,
-    underlyingProtocolContractAddress?: string
+    underlyingProtocolAddr?: string
   ): Promise<TempusPool> {
     let exchangeRatePrec:number;
     let pool:Contract;
@@ -306,7 +309,7 @@ export class TempusPool extends ContractBase {
     // NOTE: Principals and Yields always have BackingToken precision
     const tps = await PoolShare.attach(ShareKind.Principal, await pool.principalShare(), asset.decimals);
     const tys = await PoolShare.attach(ShareKind.Yield, await pool.yieldShare(), asset.decimals);
-    const tempusPool = new TempusPool(type, owner, pool!, controller, asset, yieldToken, tps, tys, exchangeRatePrec);
+    const tempusPool = new TempusPool(type, owner, pool!, controller, asset, yieldToken, tps, tys, exchangeRatePrec, underlyingProtocolAddr);
     await controller.register(owner, tempusPool.address);
     return tempusPool;
   }
